@@ -8,7 +8,7 @@ import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
-import LoadingSpinner from '../components/ui/LoadingSpinner'
+import InterviewCenterSkeleton from '../components/ui/skeletons/InterviewCenterSkeleton'
 
 const TODAY = new Date()
 const LEAD_BLANKS = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1).getDay()
@@ -67,7 +67,7 @@ export default function InterviewCenterScreen({ navigation }) {
   const { colors, spacing, fontFamily } = useTheme()
   const { data: interviews = [], isLoading, refetch, isRefetching } = useInterviewsQuery()
 
-  if (isLoading) return <LoadingSpinner />
+  if (isLoading) return <InterviewCenterSkeleton />
 
   const eventDays = new Set(
     interviews

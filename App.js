@@ -5,21 +5,32 @@ import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_7
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './src/lib/queryClient'
 import { AuthProvider } from './src/context/AuthContext'
+import { ThemeProvider, useTheme } from './src/theme'
 import RootNavigator from './src/navigation/RootNavigator'
+
+function AppContent({ fontsLoaded }) {
+  const { colors, isDark, ready } = useTheme()
+
+  if (!fontsLoaded || !ready) return <View style={{ flex: 1, backgroundColor: colors.bg }} />
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RootNavigator />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+      </AuthProvider>
+    </QueryClientProvider>
+  )
+}
 
 export default function App() {
   const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold })
 
-  if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: '#ffffff' }} />
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <RootNavigator />
-          <StatusBar style="auto" />
-        </AuthProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <AppContent fontsLoaded={fontsLoaded} />
+      </ThemeProvider>
     </GestureHandlerRootView>
   )
 }

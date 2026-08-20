@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { View, Text } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker'
+import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useResumeQuery, useUploadResumeMutation } from '../hooks/useResume'
 import { resumeStatusTone, titleCase } from '../lib/statusTone'
@@ -9,7 +10,7 @@ import ScreenContainer from '../components/ui/ScreenContainer'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
-import LoadingSpinner from '../components/ui/LoadingSpinner'
+import ResumeSkeleton from '../components/ui/skeletons/ResumeSkeleton'
 
 export default function ResumeScreen() {
   const { colors, spacing, fontFamily } = useTheme()
@@ -17,7 +18,7 @@ export default function ResumeScreen() {
   const uploadMutation = useUploadResumeMutation()
   const [error, setError] = useState('')
 
-  if (isLoading) return <LoadingSpinner />
+  if (isLoading) return <ResumeSkeleton />
 
   const resume = data?.resume
   const history = data?.resumeHistory ?? []
@@ -47,15 +48,20 @@ export default function ResumeScreen() {
 
       <Card style={{ marginTop: spacing.lg }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <View style={{ flex: 1, paddingRight: spacing.sm }}>
-            <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 15 }}>
-              {resume?.file || 'No resume uploaded yet'}
-            </Text>
-            {resume?.uploadedOn ? (
-              <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, marginTop: 3 }}>
-                Version {resume.version} · Uploaded {fmtDate(resume.uploadedOn)}
+          <View style={{ flexDirection: 'row', gap: spacing.sm, flex: 1, paddingRight: spacing.sm }}>
+            <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.navyTint, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="file-text" size={17} color={colors.navy} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 15 }}>
+                {resume?.file || 'No resume uploaded yet'}
               </Text>
-            ) : null}
+              {resume?.uploadedOn ? (
+                <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, marginTop: 3 }}>
+                  Version {resume.version} · Uploaded {fmtDate(resume.uploadedOn)}
+                </Text>
+              ) : null}
+            </View>
           </View>
           <Badge label={titleCase(status)} tone={resumeStatusTone[status] ?? 'gray'} />
         </View>

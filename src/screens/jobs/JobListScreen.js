@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { View, Text, Pressable, FlatList } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
@@ -9,7 +10,11 @@ import ScreenContainer from '../../components/ui/ScreenContainer'
 import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
 import EmptyState from '../../components/ui/EmptyState'
-import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import SearchBar from '../../components/ui/SearchBar'
+import FilterChip from '../../components/ui/FilterChip'
+import JobRowSkeleton from '../../components/ui/skeletons/JobRowSkeleton'
+
+const WORK_MODES = ['All', 'Remote', 'Hybrid', 'On-site']
 
 function JobRow({ job, applied, onPress }) {
   const { colors, spacing, fontFamily, radius } = useTheme()
@@ -48,37 +53,71 @@ function JobRow({ job, applied, onPress }) {
 }
 
 export default function JobListScreen({ navigation }) {
+  const { spacing } = useTheme()
   const { data: jobs = [], isLoading, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
   const { data: profile } = useProfileQuery()
+  const [query, setQuery] = useState('')
+  const [workMode, setWorkMode] = useState('All')
 
-  if (isLoading) return <LoadingSpinner />
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return jobs.filter((job) => {
+      const matchesMode = workMode === 'All' || job.workMode === workMode
+      if (!matchesMode) return false
+      if (!q) return true
+      const haystack = [job.title, job.company, job.location, ...(job.skills ?? [])].join(' ').toLowerCase()
+      return haystack.includes(q)
+    })
+  }, [jobs, query, workMode])
+
+  if (isLoading) return <JobRowSkeleton />
 
   const appliedJobIds = new Set(applications.map((a) => a.jobId ?? a.job?.id))
   const eligible = profile?.resume?.status === 'verified'
 
   return (
     <ScreenContainer scroll={false}>
-      <View style={{ marginBottom: 8 }}>
-        {!eligible ? (
+      <View style={{ marginBottom: spacing.sm }}>
+        <SearchBar value={query} onChangeText={setQuery} placeholder="Search title, company or skill" />
+      </View>
+
+      <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm }}>
+        {WORK_MODES.map((mode) => (
+          <FilterChip key={mode} label={mode} active={workMode === mode} onPress={() => setWorkMode(mode)} />
+        ))}
+      </View>
+
+      {!eligible ? (
+        <View style={{ marginBottom: 8 }}>
           <Card>
             <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
               <Feather name="shield" size={16} color="#c68a1f" />
               <Text style={{ flex: 1, fontSize: 12.5 }}>Applications open once your resume is verified by the Mzobs team.</Text>
             </View>
           </Card>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
       <FlatList
         style={{ flex: 1 }}
-        data={jobs}
+        data={filtered}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <JobRow job={item} applied={appliedJobIds.has(item.id)} onPress={() => navigation.navigate('JobDetail', { id: item.id })} />
+        renderItem={({ item, index }) => (
+          <JobRow
+            job={item}
+            applied={appliedJobIds.has(item.id)}
+            onPress={() => navigation.navigate('JobDetail', { id: item.id })}
+          />
         )}
         refreshing={isRefetching}
         onRefresh={refetch}
-        ListEmptyComponent={<EmptyState icon="briefcase" title="No live openings right now" message="Check back soon for new requirements." />}
+        ListEmptyComponent={
+          <EmptyState
+            icon="briefcase"
+            title={query || workMode !== 'All' ? 'No matching openings' : 'No live openings right now'}
+            message={query || workMode !== 'All' ? 'Try a different search term or filter.' : 'Check back soon for new requirements.'}
+          />
+        }
       />
     </ScreenContainer>
   )

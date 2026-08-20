@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Text } from 'react-native'
+import { Text, View, Switch } from 'react-native'
+import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useAuth } from '../context/AuthContext'
 import { useProfileQuery, useUpdateProfileMutation } from '../hooks/useProfile'
@@ -12,7 +13,7 @@ import Button from '../components/ui/Button'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 
 export default function SettingsScreen() {
-  const { colors, spacing, fontFamily } = useTheme()
+  const { colors, spacing, fontFamily, isDark, toggleTheme } = useTheme()
   const { logout } = useAuth()
   const { data: profile, isLoading } = useProfileQuery()
   const updateMutation = useUpdateProfileMutation()
@@ -47,6 +48,27 @@ export default function SettingsScreen() {
       </Text>
 
       <Card>
+        <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14, marginBottom: spacing.md }}>Appearance</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <Feather name={isDark ? 'moon' : 'sun'} size={18} color={colors.navy} />
+            <View>
+              <Text style={{ color: colors.ink, fontFamily: fontFamily.medium, fontSize: 13.5 }}>Dark mode</Text>
+              <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, marginTop: 1 }}>
+                {isDark ? 'On — easier on the eyes at night' : 'Off — matches your device in daylight'}
+              </Text>
+            </View>
+          </View>
+          <Switch
+            value={isDark}
+            onValueChange={toggleTheme}
+            trackColor={{ false: colors.surfaceSunken, true: colors.navyTintStrong }}
+            thumbColor={isDark ? colors.navy : '#ffffff'}
+          />
+        </View>
+      </Card>
+
+      <Card style={{ marginTop: spacing.md }}>
         <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14, marginBottom: spacing.md }}>Account details</Text>
         <TextField label="Full name" value={name ?? profile.name ?? ''} onChangeText={setName} />
         <TextField label="Email" value={profile.email} editable={false} style={{ opacity: 0.6 }} />

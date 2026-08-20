@@ -6,7 +6,8 @@ import ScreenContainer from '../components/ui/ScreenContainer'
 import Card from '../components/ui/Card'
 import TextField from '../components/ui/TextField'
 import Button from '../components/ui/Button'
-import LoadingSpinner from '../components/ui/LoadingSpinner'
+import Avatar from '../components/ui/Avatar'
+import ProfileSkeleton from '../components/ui/skeletons/ProfileSkeleton'
 
 const EDITABLE_FIELDS = [
   { key: 'name', label: 'Full name' },
@@ -37,7 +38,7 @@ export default function ProfileScreen() {
     }
   }, [profile])
 
-  if (isLoading || !form) return <LoadingSpinner />
+  if (isLoading || !form) return <ProfileSkeleton />
 
   const set = (key) => (value) => {
     setSaved(false)
@@ -56,12 +57,17 @@ export default function ProfileScreen() {
 
   return (
     <ScreenContainer>
-      <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20 }}>Profile</Text>
-      <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5, marginTop: 4, marginBottom: spacing.lg }}>
-        Keep this up to date — recruiters see it when Mzobs shares your profile.
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <Avatar name={form.name || profile.name} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20 }}>{form.name || 'Profile'}</Text>
+          <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, marginTop: 2 }}>
+            Keep this up to date — recruiters see it when Mzobs shares your profile.
+          </Text>
+        </View>
+      </View>
 
-      <Card>
+      <Card style={{ marginTop: spacing.lg }}>
         {EDITABLE_FIELDS.map(({ key, label }) => (
           <TextField key={key} label={label} value={form[key]} onChangeText={set(key)} />
         ))}

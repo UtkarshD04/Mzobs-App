@@ -1,0 +1,40 @@
+import { View, TextInput, Pressable } from 'react-native'
+import { Feather } from '@expo/vector-icons'
+import { useTheme } from '../../theme'
+
+export default function SearchBar({ value, onChangeText, placeholder = 'Search', style }) {
+  const { colors, radius, spacing, fontFamily } = useTheme()
+
+  return (
+    <View
+      style={[
+        {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing.md,
+          paddingVertical: 9,
+        },
+        style,
+      ]}
+    >
+      <Feather name="search" size={16} color={colors.inkTertiary} />
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={colors.inkTertiary}
+        style={{ flex: 1, color: colors.ink, fontFamily: fontFamily.regular, fontSize: 14, padding: 0 }}
+      />
+      {value ? (
+        <Pressable onPress={() => onChangeText('')} hitSlop={8}>
+          <Feather name="x-circle" size={16} color={colors.inkTertiary} />
+        </Pressable>
+      ) : null}
+    </View>
+  )
+}

@@ -1,9 +1,12 @@
 import { Pressable, Text, ActivityIndicator } from 'react-native'
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
 import { useTheme } from '../../theme'
 
 export default function Button({ title, onPress, variant = 'primary', disabled = false, loading = false, style }) {
   const { colors, radius, spacing, fontFamily } = useTheme()
   const isDisabled = disabled || loading
+  const scale = useSharedValue(1)
+  const wrapperStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
 
   const variants = {
     primary: { bg: colors.navy, border: colors.navy, text: '#ffffff' },
@@ -13,11 +16,17 @@ export default function Button({ title, onPress, variant = 'primary', disabled =
   const v = variants[variant] ?? variants.primary
 
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={isDisabled}
-      style={({ pressed }) => [
-        {
+    <Animated.View style={[wrapperStyle, style]}>
+      <Pressable
+        onPress={onPress}
+        disabled={isDisabled}
+        onPressIn={() => {
+          scale.value = withSpring(0.96, { damping: 15, stiffness: 400 })
+        }}
+        onPressOut={() => {
+          scale.value = withSpring(1, { damping: 15, stiffness: 400 })
+        }}
+        style={{
           backgroundColor: v.bg,
           borderWidth: 1,
           borderColor: v.border,
@@ -25,16 +34,15 @@ export default function Button({ title, onPress, variant = 'primary', disabled =
           paddingVertical: spacing.md,
           alignItems: 'center',
           justifyContent: 'center',
-          opacity: isDisabled ? 0.5 : pressed ? 0.85 : 1,
-        },
-        style,
-      ]}
-    >
-      {loading ? (
-        <ActivityIndicator color={v.text} />
-      ) : (
-        <Text style={{ color: v.text, fontFamily: fontFamily.semibold, fontSize: 15 }}>{title}</Text>
-      )}
-    </Pressable>
+          opacity: isDisabled ? 0.5 : 1,
+        }}
+      >
+        {loading ? (
+          <ActivityIndicator color={v.text} />
+        ) : (
+          <Text style={{ color: v.text, fontFamily: fontFamily.semibold, fontSize: 15 }}>{title}</Text>
+        )}
+      </Pressable>
+    </Animated.View>
   )
 }

@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { View, Text } from 'react-native'
 import { useTheme } from '../theme'
 import { useApplicationsQuery } from '../hooks/useApplications'
@@ -6,10 +7,12 @@ import ScreenContainer from '../components/ui/ScreenContainer'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
-import LoadingSpinner from '../components/ui/LoadingSpinner'
+import FilterChip from '../components/ui/FilterChip'
+import ApplicationsSkeleton from '../components/ui/skeletons/ApplicationsSkeleton'
 
 const STAGE_INDEX = { new: 1, screening: 2, shortlisted: 3, shared: 4, interview: 5, selected: 6, rejected: 6 }
 const STAGE_LABELS = ['Applied to Mzobs', 'Mzobs screening', 'Shortlisted', 'Profile shared', 'Interview scheduled', 'Result']
+const FILTERS = ['All', 'Active', 'Selected', 'Rejected']
 
 function Stepper({ stage, rejected }) {
   const { colors, fontFamily } = useTheme()
@@ -34,8 +37,16 @@ function Stepper({ stage, rejected }) {
 export default function ApplicationsScreen() {
   const { colors, spacing, fontFamily } = useTheme()
   const { data: applications = [], isLoading, refetch, isRefetching } = useApplicationsQuery()
+  const [filter, setFilter] = useState('All')
 
-  if (isLoading) return <LoadingSpinner />
+  if (isLoading) return <ApplicationsSkeleton />
+
+  const filtered = applications.filter((a) => {
+    if (filter === 'All') return true
+    if (filter === 'Selected') return a.status === 'selected'
+    if (filter === 'Rejected') return a.status === 'rejected'
+    return a.status !== 'selected' && a.status !== 'rejected'
+  })
 
   return (
     <ScreenContainer onRefresh={refetch} refreshing={isRefetching}>
@@ -44,12 +55,24 @@ export default function ApplicationsScreen() {
         Follow every application from the moment it reaches Mzobs to the employer's decision.
       </Text>
 
+      {applications.length > 0 ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.lg }}>
+          {FILTERS.map((f) => (
+            <FilterChip key={f} label={f} active={filter === f} onPress={() => setFilter(f)} />
+          ))}
+        </View>
+      ) : null}
+
       {applications.length === 0 ? (
         <Card style={{ marginTop: spacing.lg }}>
           <EmptyState icon="clipboard" title="No applications yet" message="Browse job openings and apply — they'll show up here with live status." />
         </Card>
+      ) : filtered.length === 0 ? (
+        <Card style={{ marginTop: spacing.lg }}>
+          <EmptyState icon="filter" title="No applications match this filter" message="Try a different filter to see more." />
+        </Card>
       ) : (
-        applications.map((a) => {
+        filtered.map((a) => {
           const stage = STAGE_INDEX[a.status] ?? 1
           return (
             <Card key={a.id} style={{ marginTop: spacing.lg }}>

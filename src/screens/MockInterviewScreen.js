@@ -9,14 +9,14 @@ import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import ProgressBar from '../components/ui/ProgressBar'
-import LoadingSpinner from '../components/ui/LoadingSpinner'
+import MockInterviewSkeleton from '../components/ui/skeletons/MockInterviewSkeleton'
 
 export default function MockInterviewScreen({ navigation }) {
   const { colors, spacing, fontFamily } = useTheme()
   const { data: profile, isLoading: profileLoading } = useProfileQuery()
   const { data: mock, isLoading: mockLoading, refetch, isRefetching } = useMockInterviewQuery()
 
-  if (profileLoading || mockLoading) return <LoadingSpinner />
+  if (profileLoading || mockLoading) return <MockInterviewSkeleton />
 
   const done = mock?.status === 'completed'
   const scheduled = mock?.status === 'scheduled'
