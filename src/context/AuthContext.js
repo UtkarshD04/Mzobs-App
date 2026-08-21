@@ -1,6 +1,19 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { tokenStore, setUnauthorizedHandler } from '../lib/api'
 import * as authService from '../services/authService'
+import * as pushService from '../services/pushService'
+import { registerForPushNotificationsAsync } from '../lib/pushNotifications'
+
+// Fire-and-forget: a denied permission or offline device shouldn't block
+// login/signup/bootstrap, so failures here are swallowed.
+async function registerPushToken() {
+  try {
+    const token = await registerForPushNotificationsAsync()
+    if (token) await pushService.registerExpoToken(token)
+  } catch {
+    // ignore — push registration is best-effort
+  }
+}
 
 const AuthContext = createContext(null)
 
@@ -30,6 +43,7 @@ export function AuthProvider({ children }) {
         const me = await authService.getMe()
         setToken(stored)
         setEmployee(me)
+        registerPushToken()
       } catch {
         // 401 interceptor already clears the stored token on auth failure.
       } finally {
@@ -43,6 +57,7 @@ export function AuthProvider({ children }) {
     await tokenStore.set(newToken)
     setToken(newToken)
     setEmployee(summary)
+    registerPushToken()
   }, [])
 
   const signup = useCallback(async (input) => {
@@ -50,6 +65,7 @@ export function AuthProvider({ children }) {
     await tokenStore.set(newToken)
     setToken(newToken)
     setEmployee(summary)
+    registerPushToken()
   }, [])
 
   const value = {
