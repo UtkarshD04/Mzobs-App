@@ -1,4 +1,5 @@
-import { SafeAreaView, ScrollView, View, RefreshControl } from 'react-native'
+import { ScrollView, View, RefreshControl } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useTheme } from '../../theme'
 
 export default function ScreenContainer({ children, scroll = true, onRefresh, refreshing = false, style }) {

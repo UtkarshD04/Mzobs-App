@@ -33,6 +33,7 @@ export default function AppTabs() {
 
   return (
     <Tab.Navigator
+      initialRouteName="Jobs"
       screenOptions={({ route, navigation }) => ({
         headerShown: route.name !== 'Jobs',
         headerStyle: { backgroundColor: colors.bg },

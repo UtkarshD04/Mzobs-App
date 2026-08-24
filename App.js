@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar'
 import { View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
 import { QueryClientProvider } from '@tanstack/react-query'
 import * as Notifications from 'expo-notifications'
@@ -39,9 +40,11 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <AppContent fontsLoaded={fontsLoaded} />
-      </ThemeProvider>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AppContent fontsLoaded={fontsLoaded} />
+        </ThemeProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   )
 }
