@@ -9,6 +9,7 @@ import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import ProgressBar from '../components/ui/ProgressBar'
+import PaymentLock from '../components/ui/PaymentLock'
 import MockInterviewSkeleton from '../components/ui/skeletons/MockInterviewSkeleton'
 
 export default function MockInterviewScreen({ navigation }) {
@@ -17,6 +18,22 @@ export default function MockInterviewScreen({ navigation }) {
   const { data: mock, isLoading: mockLoading, refetch, isRefetching } = useMockInterviewQuery()
 
   if (profileLoading || mockLoading) return <MockInterviewSkeleton />
+
+  if (profile?.subscription?.status !== 'paid') {
+    return (
+      <ScreenContainer>
+        <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20 }}>Mock Interview</Text>
+        <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5, marginTop: 4 }}>
+          The verification round the Mzobs panel runs after your resume clears. Your score decides your skill track.
+        </Text>
+        <PaymentLock
+          title="Activate placement support to unlock this round"
+          body="A one-time ₹299 payment unlocks resume upload and verification — once your resume clears, this is where your mock interview shows up."
+          navigation={navigation}
+        />
+      </ScreenContainer>
+    )
+  }
 
   const done = mock?.status === 'completed'
   const scheduled = mock?.status === 'scheduled'

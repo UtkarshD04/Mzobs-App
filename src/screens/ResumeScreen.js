@@ -4,21 +4,40 @@ import * as DocumentPicker from 'expo-document-picker'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useResumeQuery, useUploadResumeMutation } from '../hooks/useResume'
+import { useProfileQuery } from '../hooks/useProfile'
 import { resumeStatusTone, titleCase } from '../lib/statusTone'
 import { fmtDate } from '../lib/format'
 import ScreenContainer from '../components/ui/ScreenContainer'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
+import PaymentLock from '../components/ui/PaymentLock'
 import ResumeSkeleton from '../components/ui/skeletons/ResumeSkeleton'
 
-export default function ResumeScreen() {
+export default function ResumeScreen({ navigation }) {
   const { colors, spacing, fontFamily } = useTheme()
   const { data, isLoading, refetch, isRefetching } = useResumeQuery()
+  const { data: profile, isLoading: profileLoading } = useProfileQuery()
   const uploadMutation = useUploadResumeMutation()
   const [error, setError] = useState('')
 
-  if (isLoading) return <ResumeSkeleton />
+  if (isLoading || profileLoading) return <ResumeSkeleton />
+
+  if (profile?.subscription?.status !== 'paid') {
+    return (
+      <ScreenContainer>
+        <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20 }}>Resume Center</Text>
+        <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5, marginTop: 4 }}>
+          The Mzobs team reviews every resume before it can be used to apply.
+        </Text>
+        <PaymentLock
+          title="Activate placement support to upload your resume"
+          body="A one-time ₹299 payment unlocks resume upload, verification, your mock interview, and job applications."
+          navigation={navigation}
+        />
+      </ScreenContainer>
+    )
+  }
 
   const resume = data?.resume
   const history = data?.resumeHistory ?? []

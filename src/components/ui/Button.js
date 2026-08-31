@@ -12,6 +12,7 @@ export default function Button({ title, onPress, variant = 'primary', disabled =
     primary: { bg: colors.navy, border: colors.navy, text: '#ffffff' },
     secondary: { bg: colors.surfaceHover, border: colors.border, text: colors.ink },
     danger: { bg: colors.redTint, border: colors.red, text: colors.red },
+    gold: { bg: colors.goldTint, border: colors.goldTint, text: colors.goldStrong },
   }
   const v = variants[variant] ?? variants.primary
 

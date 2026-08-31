@@ -1,4 +1,6 @@
 import Constants from 'expo-constants'
+import { Platform } from 'react-native'
+import * as Device from 'expo-device'
 
 const BACKEND_PORT = 4000
 
@@ -8,7 +10,11 @@ const BACKEND_PORT = 4000
 // that Expo Go already connected to — same machine, so same LAN IP.
 function getDevServerApiUrl() {
   const hostUri = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoGo?.debuggerHost
-  const host = hostUri?.split(':')[0]
+  let host = hostUri?.split(':')[0]
+  // The iOS Simulator shares the Mac's own network stack, so routing back out
+  // through the Mac's LAN IP can silently fail (local NAT/firewall hairpin) —
+  // `localhost` always reaches it directly since it's the same machine.
+  if (Platform.OS === 'ios' && !Device.isDevice) host = 'localhost'
   return host ? `http://${host}:${BACKEND_PORT}` : null
 }
 

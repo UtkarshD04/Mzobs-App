@@ -4,7 +4,9 @@ import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useAuth } from '../context/AuthContext'
 import { useNotificationsQuery } from '../hooks/useNotifications'
+import { useProfileQuery } from '../hooks/useProfile'
 import BrandLogo from '../components/ui/BrandLogo'
+import Avatar from '../components/ui/Avatar'
 
 function getActiveRouteName(state) {
   const route = state.routes[state.index]
@@ -43,6 +45,8 @@ function Row({ icon, label, active, badge, onPress }) {
           paddingHorizontal: spacing.md,
           borderRadius: 9,
           backgroundColor: active ? colors.navyTint : 'transparent',
+          borderLeftWidth: 3,
+          borderLeftColor: active ? colors.navy : 'transparent',
           marginBottom: 2,
         }}
       >
@@ -81,8 +85,9 @@ function GroupLabel({ children }) {
 }
 
 export default function DrawerContent(props) {
-  const { colors, spacing } = useTheme()
-  const { logout } = useAuth()
+  const { colors, spacing, fontFamily } = useTheme()
+  const { logout, employee } = useAuth()
+  const { data: profile } = useProfileQuery()
   const { data: notifications = [] } = useNotificationsQuery()
   const unreadCount = notifications.filter((n) => n.unread).length
   const activeRoute = getActiveRouteName(props.state)
@@ -99,6 +104,29 @@ export default function DrawerContent(props) {
     <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: spacing.lg, paddingHorizontal: spacing.sm }}>
       <View style={{ paddingHorizontal: spacing.md, marginBottom: spacing.lg }}>
         <BrandLogo height={28} />
+      </View>
+
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+          paddingHorizontal: spacing.md,
+          paddingBottom: spacing.md,
+          marginBottom: spacing.sm,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <Avatar name={profile?.name ?? employee?.name} size={40} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14 }} numberOfLines={1}>
+            {profile?.name ?? employee?.name ?? 'Candidate'}
+          </Text>
+          <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12 }} numberOfLines={1}>
+            {profile?.email ?? employee?.email ?? ''}
+          </Text>
+        </View>
       </View>
 
       {VERIFICATION.map((item) => (

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, KeyboardAvoidingView, Platform, Pressable } from 'react-native'
+import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { useAuth } from '../../context/AuthContext'
 import TextField from '../../components/ui/TextField'
@@ -30,9 +31,52 @@ export default function LoginScreen({ navigation }) {
   return (
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ marginTop: spacing.xxl, marginBottom: spacing.xl }}>
-          <BrandLogo height={40} />
-          <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 15, marginTop: spacing.md }}>
+        <View style={{ height: 180, marginTop: -spacing.lg, marginHorizontal: -spacing.lg, overflow: 'hidden' }}>
+          <View
+            style={{
+              position: 'absolute',
+              top: -60,
+              right: -50,
+              width: 180,
+              height: 180,
+              borderRadius: 90,
+              backgroundColor: colors.navyTint,
+            }}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              top: 30,
+              left: -40,
+              width: 110,
+              height: 110,
+              borderRadius: 55,
+              backgroundColor: colors.goldTint,
+            }}
+          />
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: spacing.lg }}>
+            <View
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: 20,
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: spacing.md,
+              }}
+            >
+              <Feather name="briefcase" size={26} color={colors.navy} />
+            </View>
+            <BrandLogo height={26} />
+          </View>
+        </View>
+
+        <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
+          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 19 }}>Welcome back</Text>
+          <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 }}>
             Sign in to continue your placement journey
           </Text>
         </View>

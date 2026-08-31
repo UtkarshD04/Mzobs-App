@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, KeyboardAvoidingView, Platform, Pressable } from 'react-native'
+import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { useAuth } from '../../context/AuthContext'
 import TextField from '../../components/ui/TextField'
@@ -51,10 +52,52 @@ export default function SignupScreen({ navigation }) {
   return (
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}>
-          <BrandLogo height={32} />
-          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 22, marginTop: spacing.lg }}>Create your account</Text>
-          <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14.5, marginTop: 6 }}>
+        <View style={{ height: 160, marginTop: -spacing.lg, marginHorizontal: -spacing.lg, overflow: 'hidden' }}>
+          <View
+            style={{
+              position: 'absolute',
+              top: -60,
+              right: -50,
+              width: 180,
+              height: 180,
+              borderRadius: 90,
+              backgroundColor: colors.navyTint,
+            }}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              top: 20,
+              left: -40,
+              width: 100,
+              height: 100,
+              borderRadius: 50,
+              backgroundColor: colors.goldTint,
+            }}
+          />
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: spacing.lg }}>
+            <View
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 18,
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: spacing.md,
+              }}
+            >
+              <Feather name="user-plus" size={24} color={colors.navy} />
+            </View>
+            <BrandLogo height={24} />
+          </View>
+        </View>
+
+        <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
+          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 19 }}>Create your account</Text>
+          <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 }}>
             Takes less than a minute
           </Text>
         </View>

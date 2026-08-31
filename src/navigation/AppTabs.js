@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { openDrawer } from '../lib/navigation'
+import HomeStack from './HomeStack'
 import DashboardScreen from '../screens/DashboardScreen'
 import JobsStack from './JobsStack'
 import ApplicationsScreen from '../screens/ApplicationsScreen'
@@ -13,6 +14,7 @@ import HamburgerButton from '../components/ui/HamburgerButton'
 const Tab = createBottomTabNavigator()
 
 const ICONS = {
+  Home: 'home',
   Dashboard: 'grid',
   Jobs: 'briefcase',
   Applications: 'clipboard',
@@ -33,9 +35,9 @@ export default function AppTabs() {
 
   return (
     <Tab.Navigator
-      initialRouteName="Jobs"
+      initialRouteName="Home"
       screenOptions={({ route, navigation }) => ({
-        headerShown: route.name !== 'Jobs',
+        headerShown: route.name !== 'Home' && route.name !== 'Jobs',
         headerStyle: { backgroundColor: colors.bg },
         headerTintColor: colors.ink,
         headerShadowVisible: false,
@@ -46,6 +48,7 @@ export default function AppTabs() {
         tabBarIcon: ({ color, size }) => <Feather name={ICONS[route.name]} color={color} size={size - 2} />,
       })}
     >
+      <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}

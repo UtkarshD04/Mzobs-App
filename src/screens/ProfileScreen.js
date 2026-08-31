@@ -7,20 +7,59 @@ import Card from '../components/ui/Card'
 import TextField from '../components/ui/TextField'
 import Button from '../components/ui/Button'
 import Avatar from '../components/ui/Avatar'
+import Tag from '../components/ui/Tag'
 import ProfileSkeleton from '../components/ui/skeletons/ProfileSkeleton'
 
-const EDITABLE_FIELDS = [
-  { key: 'name', label: 'Full name' },
-  { key: 'phone', label: 'Phone' },
-  { key: 'currentCity', label: 'Current city' },
-  { key: 'currentCompany', label: 'Current company' },
-  { key: 'designation', label: 'Designation' },
-  { key: 'preferredRole', label: 'Preferred role' },
-  { key: 'resumeHeadline', label: 'Resume headline' },
-  { key: 'portfolioLink', label: 'Portfolio link' },
-  { key: 'linkedin', label: 'LinkedIn' },
-  { key: 'github', label: 'GitHub' },
+const FIELD_GROUPS = [
+  {
+    title: 'Personal details',
+    fields: [
+      { key: 'name', label: 'Full name' },
+      { key: 'phone', label: 'Phone' },
+      { key: 'currentCity', label: 'Current city' },
+    ],
+  },
+  {
+    title: 'Work & experience',
+    fields: [
+      { key: 'currentCompany', label: 'Current company' },
+      { key: 'designation', label: 'Designation' },
+      { key: 'preferredRole', label: 'Preferred role' },
+      { key: 'resumeHeadline', label: 'Resume headline' },
+    ],
+  },
+  {
+    title: 'Links',
+    fields: [
+      { key: 'portfolioLink', label: 'Portfolio link' },
+      { key: 'linkedin', label: 'LinkedIn' },
+      { key: 'github', label: 'GitHub' },
+    ],
+  },
 ]
+const EDITABLE_FIELDS = FIELD_GROUPS.flatMap((g) => g.fields)
+
+function SectionLabel({ children, style }) {
+  const { colors, spacing, fontFamily } = useTheme()
+  return (
+    <Text
+      style={[
+        {
+          color: colors.inkTertiary,
+          fontFamily: fontFamily.semibold,
+          fontSize: 11.5,
+          letterSpacing: 0.4,
+          textTransform: 'uppercase',
+          marginTop: spacing.lg,
+          marginBottom: spacing.sm,
+        },
+        style,
+      ]}
+    >
+      {children}
+    </Text>
+  )
+}
 
 export default function ProfileScreen() {
   const { colors, spacing, fontFamily } = useTheme()
@@ -68,18 +107,21 @@ export default function ProfileScreen() {
       </View>
 
       <Card style={{ marginTop: spacing.lg }}>
-        {EDITABLE_FIELDS.map(({ key, label }) => (
-          <TextField key={key} label={label} value={form[key]} onChangeText={set(key)} />
+        {FIELD_GROUPS.map((group, i) => (
+          <View key={group.title}>
+            <SectionLabel style={i === 0 ? { marginTop: 0 } : undefined}>{group.title}</SectionLabel>
+            {group.fields.map(({ key, label }) => (
+              <TextField key={key} label={label} value={form[key]} onChangeText={set(key)} />
+            ))}
+          </View>
         ))}
 
         {(profile.skills ?? []).length > 0 ? (
           <View style={{ marginBottom: spacing.md }}>
-            <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.medium, fontSize: 12.5, marginBottom: 6 }}>Skills</Text>
+            <SectionLabel>Skills</SectionLabel>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               {profile.skills.map((skill) => (
-                <View key={skill} style={{ backgroundColor: colors.surfaceSunken, borderRadius: 8, paddingVertical: 4, paddingHorizontal: 8 }}>
-                  <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.semibold, fontSize: 11.5 }}>{skill}</Text>
-                </View>
+                <Tag key={skill} label={skill} />
               ))}
             </View>
           </View>

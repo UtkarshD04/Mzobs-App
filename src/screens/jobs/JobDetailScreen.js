@@ -4,11 +4,14 @@ import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { useJobQuery } from '../../hooks/useJobs'
 import { useApplicationsQuery, useApplyToJobMutation } from '../../hooks/useApplications'
+import { useProfileQuery } from '../../hooks/useProfile'
 import { fmtSalaryRange } from '../../lib/format'
 import ScreenContainer from '../../components/ui/ScreenContainer'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
+import Tag from '../../components/ui/Tag'
+import EligibilityNote from '../../components/ui/EligibilityNote'
 import JobDetailSkeleton from '../../components/ui/skeletons/JobDetailSkeleton'
 
 function MetaRow({ icon, text }) {
@@ -22,17 +25,21 @@ function MetaRow({ icon, text }) {
   )
 }
 
-export default function JobDetailScreen({ route }) {
-  const { colors, spacing, fontFamily, radius } = useTheme()
+export default function JobDetailScreen({ route, navigation }) {
+  const { colors, spacing, fontFamily } = useTheme()
   const { id } = route.params
   const { data: job, isLoading } = useJobQuery(id)
   const { data: applications = [] } = useApplicationsQuery()
+  const { data: profile, isLoading: profileLoading } = useProfileQuery()
   const applyMutation = useApplyToJobMutation()
   const [error, setError] = useState('')
 
-  if (isLoading || !job) return <JobDetailSkeleton />
+  if (isLoading || profileLoading || !job) return <JobDetailSkeleton />
 
   const applied = applications.some((a) => (a.jobId ?? a.job?.id) === id)
+  const paid = profile?.subscription?.status === 'paid'
+  const verified = profile?.resume?.status === 'verified'
+  const eligible = paid && verified
 
   async function handleApply() {
     setError('')
@@ -62,9 +69,7 @@ export default function JobDetailScreen({ route }) {
       {(job.skills ?? []).length > 0 ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.md }}>
           {job.skills.map((skill) => (
-            <View key={skill} style={{ backgroundColor: colors.surfaceSunken, borderRadius: radius.sm, paddingVertical: 4, paddingHorizontal: 8 }}>
-              <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.semibold, fontSize: 11.5 }}>{skill}</Text>
-            </View>
+            <Tag key={skill} label={skill} />
           ))}
         </View>
       ) : null}
@@ -91,11 +96,13 @@ export default function JobDetailScreen({ route }) {
 
       {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13, marginTop: spacing.lg }}>{error}</Text> : null}
 
+      {!applied && !eligible ? <EligibilityNote paid={paid} verified={verified} navigation={navigation} style={{ marginTop: spacing.xl }} /> : null}
+
       <View style={{ marginTop: spacing.xl }}>
         {applied ? (
           <Badge label="Applied — with Mzobs" tone="green" />
         ) : (
-          <Button title="Apply through Mzobs" onPress={handleApply} loading={applyMutation.isPending} />
+          <Button title="Apply through Mzobs" onPress={handleApply} loading={applyMutation.isPending} disabled={!eligible} />
         )}
       </View>
     </ScreenContainer>

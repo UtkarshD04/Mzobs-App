@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, Pressable, ScrollView } from 'react-native'
+import Animated, { FadeInDown } from 'react-native-reanimated'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation } from '../hooks/useNotifications'
@@ -31,13 +32,14 @@ function Pill({ label, active, onPress }) {
   )
 }
 
-function NotifRow({ n, onOpen, isLast }) {
+function NotifRow({ n, onOpen, isLast, index }) {
   const { colors, spacing, fontFamily, radius } = useTheme()
   const meta = CATEGORY_META[n.category] ?? CATEGORY_META.system
   const tintKey = `${meta.tone}Tint`
   const iconColorKey = meta.tone === 'gold' ? 'goldStrong' : meta.tone
 
   return (
+    <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(220)}>
     <Pressable onPress={() => n.unread && onOpen(n.id)}>
       <View
         style={{
@@ -72,6 +74,7 @@ function NotifRow({ n, onOpen, isLast }) {
         </View>
       </View>
     </Pressable>
+    </Animated.View>
   )
 }
 
@@ -118,7 +121,7 @@ export default function NotificationsScreen() {
         ) : (
           <Card style={{ padding: 0 }}>
             {list.map((n, i) => (
-              <NotifRow key={n.id} n={n} onOpen={markRead.mutate} isLast={i === list.length - 1} />
+              <NotifRow key={n.id} n={n} onOpen={markRead.mutate} isLast={i === list.length - 1} index={i} />
             ))}
           </Card>
         )}

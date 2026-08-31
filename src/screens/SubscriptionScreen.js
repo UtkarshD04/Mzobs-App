@@ -31,7 +31,7 @@ export default function SubscriptionScreen() {
 
   if (l1 || l2) return <LoadingSpinner />
 
-  const fee = subscription.amount ?? 99
+  const fee = subscription.amount ?? 299
   const isPaid = subscription.status === 'paid'
 
   return (

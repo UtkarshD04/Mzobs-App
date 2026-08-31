@@ -1,25 +1,51 @@
 import { useMemo, useState } from 'react'
 import { View, Text, Pressable, FlatList } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
-import { useTheme } from '../../theme'
-import { useJobsQuery } from '../../hooks/useJobs'
-import { useApplicationsQuery } from '../../hooks/useApplications'
-import { useProfileQuery } from '../../hooks/useProfile'
-import { fmtSalaryRange } from '../../lib/format'
-import ScreenContainer from '../../components/ui/ScreenContainer'
-import Card from '../../components/ui/Card'
-import Badge from '../../components/ui/Badge'
-import Avatar from '../../components/ui/Avatar'
-import Tag from '../../components/ui/Tag'
-import EmptyState from '../../components/ui/EmptyState'
-import SearchBar from '../../components/ui/SearchBar'
-import FilterChip from '../../components/ui/FilterChip'
-import EligibilityNote from '../../components/ui/EligibilityNote'
-import JobRowSkeleton from '../../components/ui/skeletons/JobRowSkeleton'
+import { useTheme } from '../theme'
+import { useAuth } from '../context/AuthContext'
+import { useJobsQuery } from '../hooks/useJobs'
+import { useApplicationsQuery } from '../hooks/useApplications'
+import { useProfileQuery } from '../hooks/useProfile'
+import { fmtSalaryRange } from '../lib/format'
+import ScreenContainer from '../components/ui/ScreenContainer'
+import Card from '../components/ui/Card'
+import Badge from '../components/ui/Badge'
+import Avatar from '../components/ui/Avatar'
+import Tag from '../components/ui/Tag'
+import EmptyState from '../components/ui/EmptyState'
+import SearchBar from '../components/ui/SearchBar'
+import FilterChip from '../components/ui/FilterChip'
+import JobRowSkeleton from '../components/ui/skeletons/JobRowSkeleton'
 
 const WORK_MODES = ['All', 'Remote', 'Hybrid', 'On-site']
 
-function JobRow({ job, applied, index, onPress }) {
+function greeting() {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
+function StatChip({ icon, label }) {
+  const { colors, fontFamily } = useTheme()
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: colors.navyTint,
+        borderRadius: 999,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+      }}
+    >
+      <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 12.5 }}>{label}</Text>
+    </View>
+  )
+}
+
+function JobOpeningCard({ job, applied, index, onPress }) {
   const { colors, spacing, fontFamily } = useTheme()
   return (
     <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(220)}>
@@ -45,6 +71,11 @@ function JobRow({ job, applied, index, onPress }) {
                 {job.posted ? (
                   <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12 }}>Posted {job.posted}</Text>
                 ) : null}
+                {job.vacancies ? (
+                  <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12 }}>
+                    {job.vacancies} opening{job.vacancies > 1 ? 's' : ''}
+                  </Text>
+                ) : null}
               </View>
 
               {(job.skills ?? []).length > 0 ? (
@@ -62,13 +93,16 @@ function JobRow({ job, applied, index, onPress }) {
   )
 }
 
-export default function JobListScreen({ navigation }) {
-  const { spacing } = useTheme()
+export default function HomeScreen({ navigation }) {
+  const { colors, spacing, fontFamily } = useTheme()
+  const { employee } = useAuth()
+  const { data: profile } = useProfileQuery()
   const { data: jobs = [], isLoading, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
-  const { data: profile } = useProfileQuery()
   const [query, setQuery] = useState('')
   const [workMode, setWorkMode] = useState('All')
+
+  const firstName = (profile?.name ?? employee?.name ?? '').split(' ')[0]
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -84,10 +118,21 @@ export default function JobListScreen({ navigation }) {
   if (isLoading) return <JobRowSkeleton />
 
   const appliedJobIds = new Set(applications.map((a) => a.jobId ?? a.job?.id))
-  const paid = profile?.subscription?.status === 'paid'
 
   return (
     <ScreenContainer scroll={false}>
+      <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 22 }}>
+        {greeting()}, {firstName || 'there'}
+      </Text>
+      <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4, marginBottom: spacing.md }}>
+        Live job openings picked for you today.
+      </Text>
+
+      <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md }}>
+        <StatChip label={`${jobs.length} live opening${jobs.length === 1 ? '' : 's'}`} />
+        <StatChip label={`${applications.length} applied`} />
+      </View>
+
       <View style={{ marginBottom: spacing.sm }}>
         <SearchBar value={query} onChangeText={setQuery} placeholder="Search title, company or skill" />
       </View>
@@ -98,14 +143,12 @@ export default function JobListScreen({ navigation }) {
         ))}
       </View>
 
-      <EligibilityNote paid={paid} verified={profile?.resume?.status === 'verified'} navigation={navigation} style={{ marginBottom: spacing.sm }} />
-
       <FlatList
         style={{ flex: 1 }}
         data={filtered}
         keyExtractor={(item) => item.id}
         renderItem={({ item, index }) => (
-          <JobRow
+          <JobOpeningCard
             job={item}
             applied={appliedJobIds.has(item.id)}
             index={index}
