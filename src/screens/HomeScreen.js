@@ -1,170 +1,144 @@
 import { useMemo, useState } from 'react'
-import { View, Text, Pressable, FlatList } from 'react-native'
+import { View, ScrollView, RefreshControl } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { useTheme } from '../theme'
-import { useAuth } from '../context/AuthContext'
 import { useJobsQuery } from '../hooks/useJobs'
 import { useApplicationsQuery } from '../hooks/useApplications'
 import { useProfileQuery } from '../hooks/useProfile'
-import { fmtSalaryRange } from '../lib/format'
-import ScreenContainer from '../components/ui/ScreenContainer'
-import Card from '../components/ui/Card'
-import Badge from '../components/ui/Badge'
-import Avatar from '../components/ui/Avatar'
-import Tag from '../components/ui/Tag'
+import { useSubscriptionQuery } from '../hooks/useSubscription'
+import { useNotificationsQuery } from '../hooks/useNotifications'
 import EmptyState from '../components/ui/EmptyState'
-import SearchBar from '../components/ui/SearchBar'
-import FilterChip from '../components/ui/FilterChip'
 import JobRowSkeleton from '../components/ui/skeletons/JobRowSkeleton'
+import HomeTopBar from '../components/home/HomeTopBar'
+import JobSearchSection from '../components/home/JobSearchSection'
+import CategorySection from '../components/home/CategorySection'
+import SectionHeader from '../components/home/SectionHeader'
+import CompaniesHiringSection from '../components/home/CompaniesHiringSection'
+import JobOpeningCard from '../components/home/JobOpeningCard'
+import HomeProgressCard from '../components/home/HomeProgressCard'
+import { jobMatchesCategory } from '../components/home/categoryData'
 
-const WORK_MODES = ['All', 'Remote', 'Hybrid', 'On-site']
-
-function greeting() {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Good morning'
-  if (hour < 17) return 'Good afternoon'
-  return 'Good evening'
-}
-
-function StatChip({ icon, label }) {
-  const { colors, fontFamily } = useTheme()
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        backgroundColor: colors.navyTint,
-        borderRadius: 999,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-      }}
-    >
-      <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 12.5 }}>{label}</Text>
-    </View>
-  )
-}
-
-function JobOpeningCard({ job, applied, index, onPress }) {
-  const { colors, spacing, fontFamily } = useTheme()
-  return (
-    <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(220)}>
-      <Pressable onPress={onPress}>
-        <Card style={{ marginBottom: spacing.md }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-            <Avatar name={job.company} size={44} style={{ marginRight: spacing.md }} />
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <View style={{ flex: 1, paddingRight: spacing.sm }}>
-                  <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 15 }}>{job.title}</Text>
-                  <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 3 }}>
-                    {job.company} · {job.location} · {job.workMode}
-                  </Text>
-                </View>
-                {applied ? <Badge label="Applied" tone="green" /> : null}
-              </View>
-
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
-                {fmtSalaryRange(job) ? (
-                  <Text style={{ color: colors.ink, fontFamily: fontFamily.medium, fontSize: 13 }}>{fmtSalaryRange(job)}</Text>
-                ) : null}
-                {job.posted ? (
-                  <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12 }}>Posted {job.posted}</Text>
-                ) : null}
-                {job.vacancies ? (
-                  <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12 }}>
-                    {job.vacancies} opening{job.vacancies > 1 ? 's' : ''}
-                  </Text>
-                ) : null}
-              </View>
-
-              {(job.skills ?? []).length > 0 ? (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm }}>
-                  {job.skills.slice(0, 4).map((skill) => (
-                    <Tag key={skill} label={skill} />
-                  ))}
-                </View>
-              ) : null}
-            </View>
-          </View>
-        </Card>
-      </Pressable>
-    </Animated.View>
-  )
-}
+const WORK_MODE_DEFAULT = 'All'
+const MAX_VISIBLE_JOBS = 6
 
 export default function HomeScreen({ navigation }) {
-  const { colors, spacing, fontFamily } = useTheme()
-  const { employee } = useAuth()
+  const { colors, spacing } = useTheme()
   const { data: profile } = useProfileQuery()
   const { data: jobs = [], isLoading, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
-  const [query, setQuery] = useState('')
-  const [workMode, setWorkMode] = useState('All')
+  const { data: subscription } = useSubscriptionQuery()
+  const { data: notifications = [] } = useNotificationsQuery()
 
-  const firstName = (profile?.name ?? employee?.name ?? '').split(' ')[0]
+  const [query, setQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [workMode, setWorkMode] = useState(WORK_MODE_DEFAULT)
+
+  const unreadCount = notifications.filter((n) => n.unread).length
+  const isPaid = subscription?.status === 'paid'
+  const fee = subscription?.amount ?? 299
+  const resumeStatus = profile?.resume?.status ?? 'none'
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return jobs.filter((job) => {
-      const matchesMode = workMode === 'All' || job.workMode === workMode
-      if (!matchesMode) return false
+      if (workMode !== 'All' && job.workMode !== workMode) return false
+      if (!jobMatchesCategory(job, selectedCategory)) return false
       if (!q) return true
       const haystack = [job.title, job.company, job.location, ...(job.skills ?? [])].join(' ').toLowerCase()
       return haystack.includes(q)
     })
-  }, [jobs, query, workMode])
+  }, [jobs, query, workMode, selectedCategory])
 
   if (isLoading) return <JobRowSkeleton />
 
   const appliedJobIds = new Set(applications.map((a) => a.jobId ?? a.job?.id))
+  const visibleJobs = filtered.slice(0, MAX_VISIBLE_JOBS)
+  const hasActiveFilters = !!query || selectedCategory !== 'all' || workMode !== 'All'
+
+  function goTo(screen) {
+    navigation.navigate(screen)
+  }
+
+  let progressVariant = 'progress'
+  if (!isPaid) progressVariant = 'activate'
+  else if (resumeStatus === 'none') progressVariant = 'resume'
 
   return (
-    <ScreenContainer scroll={false}>
-      <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 22 }}>
-        {greeting()}, {firstName || 'there'}
-      </Text>
-      <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4, marginBottom: spacing.md }}>
-        Live job openings picked for you today.
-      </Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'left', 'right']}>
+      <HomeTopBar navigation={navigation} unreadCount={unreadCount} />
 
-      <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md }}>
-        <StatChip label={`${jobs.length} live opening${jobs.length === 1 ? '' : 's'}`} />
-        <StatChip label={`${applications.length} applied`} />
-      </View>
-
-      <View style={{ marginBottom: spacing.sm }}>
-        <SearchBar value={query} onChangeText={setQuery} placeholder="Search title, company or skill" />
-      </View>
-
-      <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm }}>
-        {WORK_MODES.map((mode) => (
-          <FilterChip key={mode} label={mode} active={workMode === mode} onPress={() => setWorkMode(mode)} />
-        ))}
-      </View>
-
-      <FlatList
+      {/* A plain vertical ScrollView (not a FlatList) is the outer container on
+          purpose: RN's VirtualizedList wraps ListHeaderComponent/ListFooterComponent
+          in cell views that can swallow touch-move gestures meant for a nested
+          horizontal scroller (the Companies row) before it claims the responder.
+          Job cards are a handful at most (MAX_VISIBLE_JOBS), so plain views cost
+          nothing — horizontal FlatLists/ScrollViews below are a different scroll
+          axis than this container, so no same-direction nesting either. */}
+      <ScrollView
         style={{ flex: 1 }}
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <JobOpeningCard
-            job={item}
-            applied={appliedJobIds.has(item.id)}
-            index={index}
-            onPress={() => navigation.navigate('JobDetail', { id: item.id })}
+        contentContainerStyle={{ paddingBottom: spacing.xxl }}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.teal} />}
+      >
+        <Animated.View entering={FadeInDown.duration(280)}>
+          <JobSearchSection
+            query={query}
+            onChangeQuery={setQuery}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            workMode={workMode}
+            onSelectWorkMode={setWorkMode}
           />
-        )}
-        refreshing={isRefetching}
-        onRefresh={refetch}
-        ListEmptyComponent={
-          <EmptyState
-            icon="briefcase"
-            title={query || workMode !== 'All' ? 'No matching openings' : 'No live openings right now'}
-            message={query || workMode !== 'All' ? 'Try a different search term or filter.' : 'Check back soon for new requirements.'}
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(60).duration(280)}>
+          <CategorySection jobs={jobs} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(120).duration(280)} style={{ marginTop: spacing.xl }}>
+          <SectionHeader
+            title="Latest opportunities"
+            statusLabel="Fresh roles"
+            subtitle={
+              hasActiveFilters
+                ? `${filtered.length} matching opening${filtered.length === 1 ? '' : 's'}`
+                : `${filtered.length} live opening${filtered.length === 1 ? '' : 's'}`
+            }
+            actionLabel="See all"
+            onAction={() => goTo('Jobs')}
           />
-        }
-      />
-    </ScreenContainer>
+
+          {visibleJobs.length === 0 ? (
+            <View style={{ paddingHorizontal: spacing.lg }}>
+              <EmptyState
+                icon="briefcase"
+                title={hasActiveFilters ? 'No matching openings' : 'No live openings right now'}
+                message={hasActiveFilters ? 'Try a different search term, category or filter.' : 'Check back soon for new requirements.'}
+              />
+            </View>
+          ) : (
+            <View style={{ paddingHorizontal: spacing.lg }}>
+              {visibleJobs.map((job, index) => (
+                <JobOpeningCard
+                  key={job.id}
+                  job={job}
+                  applied={appliedJobIds.has(job.id)}
+                  index={index}
+                  onPress={() => navigation.navigate('JobDetail', { id: job.id })}
+                />
+              ))}
+            </View>
+          )}
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(180).duration(280)}>
+          <CompaniesHiringSection onSeeAll={() => goTo('Jobs')} />
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(240).duration(280)} style={{ marginTop: spacing.xl }}>
+          <HomeProgressCard variant={progressVariant} fee={fee} applicationsCount={applications.length} onNavigate={goTo} />
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   )
 }

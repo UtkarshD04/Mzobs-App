@@ -1,4 +1,4 @@
-import { Pressable } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
@@ -38,14 +38,27 @@ export default function AppTabs() {
       initialRouteName="Home"
       screenOptions={({ route, navigation }) => ({
         headerShown: route.name !== 'Home' && route.name !== 'Jobs',
-        headerStyle: { backgroundColor: colors.bg },
+        headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.ink,
         headerShadowVisible: false,
         headerLeft: () => <HamburgerButton navigation={navigation} />,
         tabBarActiveTintColor: colors.navy,
         tabBarInactiveTintColor: colors.inkTertiary,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-        tabBarIcon: ({ color, size }) => <Feather name={ICONS[route.name]} color={color} size={size - 2} />,
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, height: 62, paddingTop: 6 },
+        tabBarIcon: ({ color, focused, size }) => (
+          <View
+            style={{
+              width: 36,
+              height: 26,
+              borderRadius: 13,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: focused ? colors.navyTint : 'transparent',
+            }}
+          >
+            <Feather name={ICONS[route.name]} color={color} size={size - 2} />
+          </View>
+        ),
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />

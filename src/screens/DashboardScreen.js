@@ -63,7 +63,7 @@ function SectionHeader({ title, action, onAction }) {
 }
 
 export default function DashboardScreen({ navigation }) {
-  const { colors, spacing, fontFamily } = useTheme()
+  const { colors, spacing, radius, fontFamily } = useTheme()
   const { employee } = useAuth()
   const { data: profile, isLoading, refetch, isRefetching } = useProfileQuery()
   const { data: applications = [] } = useApplicationsQuery()
@@ -88,12 +88,14 @@ export default function DashboardScreen({ navigation }) {
 
   return (
     <ScreenContainer onRefresh={refetch} refreshing={isRefetching}>
-      <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 22 }}>
-        {greeting()}, {firstName || 'there'}
-      </Text>
-      <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 }}>
-        Here's where you stand in the Mzobs placement programme today.
-      </Text>
+      <View style={{ backgroundColor: colors.navy, borderRadius: radius.lg, padding: spacing.lg }}>
+        <Text style={{ color: '#ffffff', fontFamily: fontFamily.bold, fontSize: 22 }}>
+          {greeting()}, {firstName || 'there'}
+        </Text>
+        <Text style={{ color: 'rgba(255,255,255,0.72)', fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 }}>
+          Here's where you stand in the Mzobs placement programme today.
+        </Text>
+      </View>
 
       <View style={{ flexDirection: 'row', gap: spacing.md, marginTop: spacing.lg }}>
         <Button title="Update resume" variant="secondary" onPress={() => navigation.navigate('Resume')} style={{ flex: 1 }} />
@@ -140,8 +142,8 @@ export default function DashboardScreen({ navigation }) {
             <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.semibold, fontSize: 11.5, letterSpacing: 0.4, textTransform: 'uppercase' }}>
               Subscription
             </Text>
-            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: colors.navyTint, alignItems: 'center', justifyContent: 'center' }}>
-              <Feather name="credit-card" size={14} color={colors.navy} />
+            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: colors.goldTint, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="credit-card" size={14} color={colors.goldStrong} />
             </View>
           </View>
           <View style={{ marginTop: spacing.sm }}>

@@ -15,6 +15,7 @@ function getActiveRouteName(state) {
 }
 
 const VERIFICATION = [
+  { icon: 'home', label: 'Home', target: { screen: 'Main', params: { screen: 'Home' } }, match: 'HomeFeed' },
   { icon: 'grid', label: 'Dashboard', target: { screen: 'Main', params: { screen: 'Dashboard' } }, match: 'Dashboard' },
   { icon: 'user', label: 'Profile', target: { screen: 'Main', params: { screen: 'Profile' } }, match: 'Profile' },
   { icon: 'file-text', label: 'Resume Center', target: { screen: 'Main', params: { screen: 'Resume' } }, match: 'Resume' },
@@ -101,8 +102,8 @@ export default function DrawerContent(props) {
   }
 
   return (
-    <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: spacing.lg, paddingHorizontal: spacing.sm }}>
-      <View style={{ paddingHorizontal: spacing.md, marginBottom: spacing.lg }}>
+    <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: spacing.lg, paddingHorizontal: spacing.sm, paddingBottom: spacing.lg }}>
+      <View style={{ paddingHorizontal: spacing.md, marginBottom: spacing.md }}>
         <BrandLogo height={28} />
       </View>
 
@@ -111,19 +112,19 @@ export default function DrawerContent(props) {
           flexDirection: 'row',
           alignItems: 'center',
           gap: spacing.sm,
-          paddingHorizontal: spacing.md,
-          paddingBottom: spacing.md,
-          marginBottom: spacing.sm,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
+          backgroundColor: colors.navy,
+          borderRadius: 14,
+          padding: spacing.md,
+          marginHorizontal: spacing.sm,
+          marginBottom: spacing.md,
         }}
       >
         <Avatar name={profile?.name ?? employee?.name} size={40} />
         <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14 }} numberOfLines={1}>
+          <Text style={{ color: '#ffffff', fontFamily: fontFamily.semibold, fontSize: 14 }} numberOfLines={1}>
             {profile?.name ?? employee?.name ?? 'Candidate'}
           </Text>
-          <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12 }} numberOfLines={1}>
+          <Text style={{ color: 'rgba(255,255,255,0.68)', fontFamily: fontFamily.regular, fontSize: 12 }} numberOfLines={1}>
             {profile?.email ?? employee?.email ?? ''}
           </Text>
         </View>

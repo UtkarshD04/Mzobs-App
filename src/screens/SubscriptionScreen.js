@@ -1,13 +1,22 @@
+import { useState } from 'react'
 import { View, Text } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
-import { useSubscriptionQuery } from '../hooks/useSubscription'
+import {
+  useSubscriptionQuery,
+  useCreateSubscriptionOrderMutation,
+  useVerifySubscriptionPaymentMutation,
+  useConfirmMockSubscriptionPaymentMutation,
+} from '../hooks/useSubscription'
 import { useProfileQuery } from '../hooks/useProfile'
 import { fmtDate } from '../lib/format'
 import ScreenContainer from '../components/ui/ScreenContainer'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
+import Button from '../components/ui/Button'
+import CouponBox from '../components/ui/CouponBox'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import RazorpayCheckoutModal from '../components/payment/RazorpayCheckoutModal'
 
 const UNLOCKS = [
   ['shield', 'Resume verification', 'Line-by-line review before any employer sees it.', 'navy'],
@@ -28,11 +37,65 @@ export default function SubscriptionScreen() {
   const { colors, spacing, fontFamily, radius } = useTheme()
   const { data: subscription, isLoading: l1, refetch, isRefetching } = useSubscriptionQuery()
   const { data: profile, isLoading: l2 } = useProfileQuery()
+  const createOrder = useCreateSubscriptionOrderMutation()
+  const verifyPayment = useVerifySubscriptionPaymentMutation()
+  const confirmMockPayment = useConfirmMockSubscriptionPaymentMutation()
+  const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState('')
+  const [couponResult, setCouponResult] = useState(null)
+  const [checkoutOrder, setCheckoutOrder] = useState(null)
 
   if (l1 || l2) return <LoadingSpinner />
 
   const fee = subscription.amount ?? 299
   const isPaid = subscription.status === 'paid'
+
+  // Same order -> checkout -> signature-verify flow as the web account page
+  // (Website/Frontend/src/pages/Subscription.jsx) — WebView stands in for
+  // the browser Checkout widget, see RazorpayCheckoutModal.
+  async function payNow() {
+    setPayError('')
+    setPaying(true)
+    try {
+      const order = await createOrder.mutateAsync(couponResult?.code)
+      if (order.mock) {
+        await confirmMockPayment.mutateAsync(order.orderId)
+        setPaying(false)
+        return
+      }
+      setCheckoutOrder(order)
+    } catch (err) {
+      setPayError(err.response?.data?.message ?? 'Something went wrong. Please try again.')
+      setPaying(false)
+    }
+  }
+
+  async function handleCheckoutSuccess(result) {
+    setCheckoutOrder(null)
+    try {
+      await verifyPayment.mutateAsync({
+        razorpay_order_id: result.razorpay_order_id,
+        razorpay_payment_id: result.razorpay_payment_id,
+        razorpay_signature: result.razorpay_signature,
+      })
+    } catch (err) {
+      setPayError(err.response?.data?.message ?? 'Payment verification failed. Please contact support.')
+    } finally {
+      setPaying(false)
+    }
+  }
+
+  function handleCheckoutDismiss() {
+    setCheckoutOrder(null)
+    setPaying(false)
+    setPayError('Payment cancelled')
+  }
+
+  function handleCheckoutFail(message) {
+    setCheckoutOrder(null)
+    setPaying(false)
+    setPayError(message)
+  }
 
   return (
     <ScreenContainer onRefresh={refetch} refreshing={isRefetching}>
@@ -48,9 +111,44 @@ export default function SubscriptionScreen() {
           {subscription.paidOn ? `Purchased ${fmtDate(subscription.paidOn)} · ` : ''}One-time payment · No renewal
         </Text>
         <Text style={{ color: 'rgba(255,255,255,0.7)', fontFamily: fontFamily.regular, fontSize: 12.5, marginTop: 2 }}>Candidate ID {profile.id}</Text>
-        <Text style={{ color: '#ffffff', fontFamily: fontFamily.bold, fontSize: 26, marginTop: spacing.md }}>₹{fee}</Text>
-        <Text style={{ color: 'rgba(255,255,255,0.6)', fontFamily: fontFamily.regular, fontSize: 11 }}>Paid once, valid for life</Text>
+
+        {isPaid ? (
+          <>
+            <Text style={{ color: '#ffffff', fontFamily: fontFamily.bold, fontSize: 26, marginTop: spacing.md }}>₹{fee}</Text>
+            <Text style={{ color: 'rgba(255,255,255,0.6)', fontFamily: fontFamily.regular, fontSize: 11 }}>Paid once, valid for life</Text>
+          </>
+        ) : (
+          <>
+            {couponResult ? (
+              <>
+                <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: fontFamily.regular, fontSize: 13, marginTop: spacing.md, textDecorationLine: 'line-through' }}>
+                  ₹{fee}
+                </Text>
+                <Text style={{ color: '#ffffff', fontFamily: fontFamily.bold, fontSize: 26 }}>₹{couponResult.finalAmount}</Text>
+              </>
+            ) : (
+              <Text style={{ color: '#ffffff', fontFamily: fontFamily.bold, fontSize: 26, marginTop: spacing.md }}>₹{fee}</Text>
+            )}
+            <Button
+              title={paying ? 'Processing…' : `Pay ₹${couponResult?.finalAmount ?? fee} now`}
+              variant="gold"
+              loading={paying}
+              disabled={paying}
+              onPress={payNow}
+              style={{ marginTop: spacing.md }}
+            />
+            <View style={{ marginTop: spacing.md }}>
+              <CouponBox applied={couponResult} onApply={setCouponResult} onRemove={() => setCouponResult(null)} />
+            </View>
+          </>
+        )}
       </View>
+
+      {payError ? (
+        <Card style={{ marginTop: spacing.md, backgroundColor: colors.redTint, borderColor: colors.redTint }}>
+          <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13 }}>{payError}</Text>
+        </Card>
+      ) : null}
 
       <Card style={{ marginTop: spacing.lg, backgroundColor: colors.goldTint, borderColor: colors.goldTint }}>
         <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' }}>
@@ -111,6 +209,13 @@ export default function SubscriptionScreen() {
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5 }}>No payment recorded yet.</Text>
         )}
       </Card>
+
+      <RazorpayCheckoutModal
+        order={checkoutOrder}
+        onSuccess={handleCheckoutSuccess}
+        onDismiss={handleCheckoutDismiss}
+        onFail={handleCheckoutFail}
+      />
     </ScreenContainer>
   )
 }

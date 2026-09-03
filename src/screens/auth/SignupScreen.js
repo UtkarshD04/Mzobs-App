@@ -3,6 +3,7 @@ import { View, Text, KeyboardAvoidingView, Platform, Pressable } from 'react-nat
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { useAuth } from '../../context/AuthContext'
+import * as authService from '../../services/authService'
 import TextField from '../../components/ui/TextField'
 import SelectField from '../../components/ui/SelectField'
 import Button from '../../components/ui/Button'
@@ -33,15 +34,58 @@ export default function SignupScreen({ navigation }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const set = (key) => (value) => setForm((f) => ({ ...f, [key]: value }))
+  const [otp, setOtp] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [sendingOtp, setSendingOtp] = useState(false)
+  const [verifyingOtp, setVerifyingOtp] = useState(false)
+  const [otpError, setOtpError] = useState('')
+  const [phoneToken, setPhoneToken] = useState(null)
+
+  const set = (key) => (value) => {
+    setForm((f) => ({ ...f, [key]: value }))
+    // Phone changed after verifying — the token was minted for the old
+    // number, so it can't be trusted for the new one anymore.
+    if (key === 'phone') {
+      setPhoneToken(null)
+      setOtpSent(false)
+      setOtp('')
+      setOtpError('')
+    }
+  }
   const canSubmit =
-    form.name && form.email && form.phone.length === 10 && form.password.length >= 8 && form.graduation && experience
+    form.name && form.email && form.phone.length === 10 && !!phoneToken && form.password.length >= 8 && form.graduation && experience
+
+  async function handleSendOtp() {
+    setOtpError('')
+    setSendingOtp(true)
+    try {
+      await authService.sendOtp(form.phone)
+      setOtpSent(true)
+    } catch (err) {
+      setOtpError(err.response?.data?.message ?? 'Could not send OTP. Please try again.')
+    } finally {
+      setSendingOtp(false)
+    }
+  }
+
+  async function handleVerifyOtp() {
+    setOtpError('')
+    setVerifyingOtp(true)
+    try {
+      const { phoneToken: token } = await authService.verifyOtp(form.phone, otp)
+      setPhoneToken(token)
+    } catch (err) {
+      setOtpError(err.response?.data?.message ?? 'Could not verify OTP. Please try again.')
+    } finally {
+      setVerifyingOtp(false)
+    }
+  }
 
   async function handleSignup() {
     setError('')
     setLoading(true)
     try {
-      await signup({ ...form, experience })
+      await signup({ ...form, experience, phoneToken })
     } catch (err) {
       setError(err.response?.data?.message ?? 'Something went wrong. Please try again.')
     } finally {
@@ -111,7 +155,59 @@ export default function SignupScreen({ navigation }) {
           keyboardType="phone-pad"
           maxLength={10}
           placeholder="98765 43210"
+          editable={!phoneToken}
+          style={{ marginBottom: phoneToken ? 4 : spacing.md }}
         />
+
+        {phoneToken ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg }}>
+            <Feather name="check-circle" size={14} color={colors.green ?? '#1a9c5b'} />
+            <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.medium, fontSize: 12.5, marginLeft: 6 }}>
+              Mobile number verified
+            </Text>
+          </View>
+        ) : otpSent ? (
+          <View style={{ marginBottom: spacing.lg }}>
+            <TextField
+              label="Enter OTP"
+              value={otp}
+              onChangeText={(value) => setOtp(value.replace(/\D/g, '').slice(0, 6))}
+              keyboardType="number-pad"
+              maxLength={6}
+              placeholder="6-digit code"
+              error={otpError}
+            />
+            <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+              <Button
+                title="Verify"
+                variant="secondary"
+                onPress={handleVerifyOtp}
+                loading={verifyingOtp}
+                disabled={otp.length !== 6}
+                style={{ flex: 1 }}
+              />
+              <Pressable onPress={handleSendOtp} disabled={sendingOtp} hitSlop={8}>
+                <Text style={{ color: colors.navy, fontFamily: fontFamily.medium, fontSize: 12.5 }}>
+                  {sendingOtp ? 'Resending…' : 'Resend OTP'}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : (
+          <View style={{ marginBottom: spacing.lg }}>
+            <Button
+              title="Send OTP"
+              variant="secondary"
+              onPress={handleSendOtp}
+              loading={sendingOtp}
+              disabled={form.phone.length !== 10}
+            />
+            {otpError ? (
+              <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 12, marginTop: 6 }}>{otpError}</Text>
+            ) : null}
+          </View>
+        )}
+
         <SelectField
           label="Highest graduation"
           value={form.graduation}

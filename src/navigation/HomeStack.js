@@ -1,6 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useTheme } from '../theme'
-import HamburgerButton from '../components/ui/HamburgerButton'
 import HomeScreen from '../screens/HomeScreen'
 import JobDetailScreen from '../screens/jobs/JobDetailScreen'
 
@@ -16,11 +15,7 @@ export default function HomeStack() {
         headerShadowVisible: false,
       }}
     >
-      <Stack.Screen
-        name="HomeFeed"
-        component={HomeScreen}
-        options={({ navigation }) => ({ title: 'Home', headerLeft: () => <HamburgerButton navigation={navigation} /> })}
-      />
+      <Stack.Screen name="HomeFeed" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'Job Details' }} />
     </Stack.Navigator>
   )

@@ -8,6 +8,7 @@ export default function FilterChip({ label, active, onPress }) {
     <Pressable
       onPress={onPress}
       style={{
+        alignSelf: 'flex-start',
         backgroundColor: active ? colors.navy : colors.surfaceSunken,
         borderRadius: radius.xl,
         paddingVertical: 7,
