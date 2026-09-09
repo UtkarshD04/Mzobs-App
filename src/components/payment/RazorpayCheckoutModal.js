@@ -16,7 +16,7 @@ function buildCheckoutHtml(order) {
     name: order.name,
     description: order.description,
     prefill: order.prefill,
-    theme: { color: '#3d5c34' },
+    theme: { color: '#0B7A6D' },
   }
 
   return `<!DOCTYPE html>

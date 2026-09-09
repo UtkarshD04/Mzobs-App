@@ -1,10 +1,10 @@
-import { View } from 'react-native'
+import { View, ActivityIndicator } from 'react-native'
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../theme'
 import AuthStack from './AuthStack'
 import AppDrawer from './AppDrawer'
-import LoadingSpinner from '../components/ui/LoadingSpinner'
+import BrandLogo from '../components/ui/BrandLogo'
 
 export default function RootNavigator() {
   const { isAuthenticated, isBootstrapping } = useAuth()
@@ -24,8 +24,9 @@ export default function RootNavigator() {
 
   if (isBootstrapping)
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg }}>
-        <LoadingSpinner />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg, gap: 20 }}>
+        <BrandLogo height={30} />
+        <ActivityIndicator size="small" color={colors.navy} />
       </View>
     )
 

@@ -34,7 +34,7 @@ export default function TextField({
             {
               borderWidth: 1,
               borderColor: error ? colors.red : colors.border,
-              borderRadius: radius.md,
+              borderRadius: radius.sm,
               paddingVertical: 11,
               paddingHorizontal: spacing.md,
               paddingRight: isPasswordField ? 44 : spacing.md,

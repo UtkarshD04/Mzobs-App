@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar'
-import { View, LogBox } from 'react-native'
+import { View, ActivityIndicator, LogBox } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
@@ -9,6 +9,7 @@ import { queryClient } from './src/lib/queryClient'
 import { AuthProvider } from './src/context/AuthContext'
 import { ThemeProvider, useTheme } from './src/theme'
 import RootNavigator from './src/navigation/RootNavigator'
+import BrandLogo from './src/components/ui/BrandLogo'
 
 // Expo Go on Android has no remote-push capability since SDK 53 — expo-notifications
 // logs this on import to warn about it. registerPushToken() in AuthContext already
@@ -28,7 +29,14 @@ Notifications.setNotificationHandler({
 function AppContent({ fontsLoaded }) {
   const { colors, isDark, ready } = useTheme()
 
-  if (!fontsLoaded || !ready) return <View style={{ flex: 1, backgroundColor: colors.bg }} />
+  if (!fontsLoaded || !ready) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg, gap: 20 }}>
+        <BrandLogo height={30} />
+        <ActivityIndicator size="small" color={colors.navy} />
+      </View>
+    )
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { View, Text } from 'react-native'
 import { useTheme } from '../theme'
 import { useApplicationsQuery } from '../hooks/useApplications'
@@ -8,31 +8,11 @@ import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 import FilterChip from '../components/ui/FilterChip'
+import StatusTimeline from '../components/ui/StatusTimeline'
 import ApplicationsSkeleton from '../components/ui/skeletons/ApplicationsSkeleton'
 
 const STAGE_INDEX = { new: 1, screening: 2, shortlisted: 3, shared: 4, interview: 5, selected: 6, rejected: 6 }
-const STAGE_LABELS = ['Applied to Mzobs', 'Mzobs screening', 'Shortlisted', 'Profile shared', 'Interview scheduled', 'Result']
 const FILTERS = ['All', 'Active', 'Selected', 'Rejected']
-
-function Stepper({ stage, rejected }) {
-  const { colors, fontFamily } = useTheme()
-  return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-      {STAGE_LABELS.map((label, i) => {
-        const isRejectedHere = rejected && i === stage - 1
-        const done = i < stage - 1
-        const current = i === stage - 1
-        const color = isRejectedHere ? colors.red : done || current ? colors.navy : colors.inkTertiary
-        const bg = isRejectedHere ? colors.redTint : done || current ? colors.navyTint : colors.surfaceSunken
-        return (
-          <View key={label} style={{ backgroundColor: bg, borderRadius: 8, paddingVertical: 4, paddingHorizontal: 8 }}>
-            <Text style={{ color, fontFamily: fontFamily.semibold, fontSize: 10.5 }}>{label}</Text>
-          </View>
-        )
-      })}
-    </View>
-  )
-}
 
 export default function ApplicationsScreen() {
   const { colors, spacing, fontFamily } = useTheme()
@@ -54,6 +34,12 @@ export default function ApplicationsScreen() {
       <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5, marginTop: 4 }}>
         Follow every application from the moment it reaches Mzobs to the employer's decision.
       </Text>
+
+      {applications.length > 0 ? (
+        <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 13.5, marginTop: spacing.sm }}>
+          You've applied to {applications.length} {applications.length === 1 ? 'job' : 'jobs'}
+        </Text>
+      ) : null}
 
       {applications.length > 0 ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.lg }}>
@@ -94,7 +80,7 @@ export default function ApplicationsScreen() {
                 )}
               </View>
 
-              <Stepper stage={stage} rejected={a.status === 'rejected'} />
+              <StatusTimeline stage={stage} rejected={a.status === 'rejected'} />
 
               {a.note ? (
                 <Text

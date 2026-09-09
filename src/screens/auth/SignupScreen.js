@@ -96,51 +96,22 @@ export default function SignupScreen({ navigation }) {
   return (
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ height: 160, marginTop: -spacing.lg, marginHorizontal: -spacing.lg, overflow: 'hidden' }}>
+        <View style={{ alignItems: 'center', paddingTop: spacing.lg, marginBottom: spacing.xl }}>
           <View
             style={{
-              position: 'absolute',
-              top: -60,
-              right: -50,
-              width: 180,
-              height: 180,
-              borderRadius: 90,
+              width: 56,
+              height: 56,
+              borderRadius: 18,
               backgroundColor: colors.navyTint,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: spacing.md,
             }}
-          />
-          <View
-            style={{
-              position: 'absolute',
-              top: 20,
-              left: -40,
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              backgroundColor: colors.goldTint,
-            }}
-          />
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: spacing.lg }}>
-            <View
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 18,
-                backgroundColor: colors.surface,
-                borderWidth: 1,
-                borderColor: colors.border,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: spacing.md,
-              }}
-            >
-              <Feather name="user-plus" size={24} color={colors.navy} />
-            </View>
-            <BrandLogo height={24} />
+          >
+            <Feather name="user-plus" size={24} color={colors.navy} />
           </View>
-        </View>
-
-        <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
-          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 19 }}>Create your account</Text>
+          <BrandLogo height={22} />
+          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, marginTop: spacing.lg }}>Create your account</Text>
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 }}>
             Takes less than a minute
           </Text>
@@ -228,11 +199,15 @@ export default function SignupScreen({ navigation }) {
             <Pressable
               key={opt.key}
               onPress={() => setExperience(opt.key)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: experience === opt.key }}
               style={{
                 flex: 1,
+                minHeight: 44,
                 paddingVertical: 10,
                 borderRadius: 10,
                 alignItems: 'center',
+                justifyContent: 'center',
                 borderWidth: 1,
                 borderColor: experience === opt.key ? colors.navy : colors.border,
                 backgroundColor: experience === opt.key ? colors.navyTint : colors.surface,
@@ -247,9 +222,9 @@ export default function SignupScreen({ navigation }) {
 
         {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13, marginBottom: spacing.md }}>{error}</Text> : null}
 
-        <Button title="Create Account" onPress={handleSignup} loading={loading} disabled={!canSubmit} />
+        <Button title="Create Account" onPress={handleSignup} loading={loading} disabled={!canSubmit} style={{ marginTop: spacing.xs }} />
 
-        <Pressable onPress={() => navigation.navigate('Login')} style={{ marginTop: spacing.lg, alignItems: 'center' }}>
+        <Pressable onPress={() => navigation.navigate('Login')} style={{ marginTop: spacing.lg, alignItems: 'center', minHeight: 44, justifyContent: 'center' }}>
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5 }}>
             Already have an account? <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }}>Sign in</Text>
           </Text>

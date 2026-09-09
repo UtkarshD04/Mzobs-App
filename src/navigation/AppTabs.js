@@ -1,10 +1,10 @@
 import { Pressable, View } from 'react-native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { openDrawer } from '../lib/navigation'
 import HomeStack from './HomeStack'
-import DashboardScreen from '../screens/DashboardScreen'
 import JobsStack from './JobsStack'
 import ApplicationsScreen from '../screens/ApplicationsScreen'
 import ResumeScreen from '../screens/ResumeScreen'
@@ -15,7 +15,6 @@ const Tab = createBottomTabNavigator()
 
 const ICONS = {
   Home: 'home',
-  Dashboard: 'grid',
   Jobs: 'briefcase',
   Applications: 'clipboard',
   Resume: 'file-text',
@@ -31,7 +30,9 @@ function NotificationsBell({ navigation, color }) {
 }
 
 export default function AppTabs() {
-  const { colors } = useTheme()
+  const { colors, fontFamily } = useTheme()
+  const insets = useSafeAreaInsets()
+  const bottomPad = Math.max(insets.bottom, 8)
 
   return (
     <Tab.Navigator
@@ -44,11 +45,19 @@ export default function AppTabs() {
         headerLeft: () => <HamburgerButton navigation={navigation} />,
         tabBarActiveTintColor: colors.navy,
         tabBarInactiveTintColor: colors.inkTertiary,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, height: 62, paddingTop: 6 },
+        tabBarLabelStyle: { fontFamily: fontFamily.semibold, fontSize: 10.5, marginTop: 2 },
+        tabBarItemStyle: { paddingTop: 2 },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          height: 56 + bottomPad,
+          paddingTop: 8,
+          paddingBottom: bottomPad,
+        },
         tabBarIcon: ({ color, focused, size }) => (
           <View
             style={{
-              width: 36,
+              width: 40,
               height: 26,
               borderRadius: 13,
               alignItems: 'center',
@@ -62,15 +71,22 @@ export default function AppTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />
+      <Tab.Screen name="Jobs" component={JobsStack} />
       <Tab.Screen
-        name="Dashboard"
-        component={DashboardScreen}
+        name="Applications"
+        component={ApplicationsScreen}
         options={({ navigation }) => ({ headerRight: () => <NotificationsBell navigation={navigation} color={colors.ink} /> })}
       />
-      <Tab.Screen name="Jobs" component={JobsStack} />
-      <Tab.Screen name="Applications" component={ApplicationsScreen} />
-      <Tab.Screen name="Resume" component={ResumeScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen
+        name="Resume"
+        component={ResumeScreen}
+        options={({ navigation }) => ({ headerRight: () => <NotificationsBell navigation={navigation} color={colors.ink} /> })}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={({ navigation }) => ({ headerRight: () => <NotificationsBell navigation={navigation} color={colors.ink} /> })}
+      />
     </Tab.Navigator>
   )
 }

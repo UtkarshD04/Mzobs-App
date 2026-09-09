@@ -6,7 +6,14 @@ export default function Tag({ label, style }) {
   return (
     <View
       style={[
-        { backgroundColor: colors.surfaceSunken, borderRadius: radius.sm, paddingVertical: 4, paddingHorizontal: 9 },
+        {
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: radius.sm,
+          paddingVertical: 4,
+          paddingHorizontal: 9,
+        },
         style,
       ]}
     >

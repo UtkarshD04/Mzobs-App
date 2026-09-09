@@ -1,27 +1,27 @@
-// Ported 1:1 from Website/Frontend/src/index.css's `@theme` token block
-// (each light-dark() pair becomes light/dark here) so the mobile app reads
-// as the same product as the web dashboard.
+// MZOBS teal design system — matches Website/Landing-Frontend/src/index.css's
+// `--explorer-*` tokens (job-discovery site) so the mobile app reads as a
+// direct extension of the current MZOBS website, not a separate product.
 export const light = {
-  bg: '#ffffff',
-  bgSecondary: '#fafafa',
-  surface: '#ffffff',
-  surfaceHover: '#f5f6f8',
-  surfaceSunken: '#f3f4f6',
+  bg: '#F7F9FC',
+  bgSecondary: '#F1F4F9',
+  surface: '#FFFFFF',
+  surfaceHover: '#F5F7FB',
+  surfaceSunken: '#EEF1F6',
 
-  ink: '#111827',
-  inkSecondary: '#6b7280',
-  inkTertiary: '#9ca3af',
+  ink: '#1E3A52',
+  inkSecondary: '#55677D',
+  inkTertiary: '#71809A',
 
-  border: '#e5e7eb',
-  borderStrong: '#d9dce3',
+  border: '#EBEFF4',
+  borderStrong: '#DEE4EC',
 
-  navy950: '#0c130e',
-  navy900: '#142016',
-  navy700: '#4a6f3f',
-  navy: '#3d5c34',
-  navyHover: '#314a2a',
-  navyTint: '#eef3ec',
-  navyTintStrong: '#e1ebdd',
+  navy950: '#0A1E30',
+  navy900: '#0F2338',
+  navy700: '#0E6B60',
+  navy: '#0B7A6D',
+  navyHover: '#075F55',
+  navyTint: '#E7F5F1',
+  navyTintStrong: '#D7EEE7',
 
   gold: '#c68a1f',
   goldStrong: '#9a6b14',
@@ -43,9 +43,9 @@ export const light = {
   violetDot: '#7c5fd6',
   violetTint: '#f1eefc',
 
-  teal: '#0e8a78',
-  tealDot: '#149684',
-  tealTint: '#e3f7f3',
+  teal: '#0F8F9D',
+  tealDot: '#12a5b5',
+  tealTint: '#E4F5F7',
 
   amber: '#c2540c',
   amberDot: '#d5610f',
@@ -53,26 +53,26 @@ export const light = {
 }
 
 export const dark = {
-  bg: '#0a0e17',
-  bgSecondary: '#0d111c',
-  surface: '#121826',
-  surfaceHover: '#19212f',
-  surfaceSunken: '#161d2b',
+  bg: '#0A1420',
+  bgSecondary: '#0D1826',
+  surface: '#122032',
+  surfaceHover: '#18283C',
+  surfaceSunken: '#152436',
 
-  ink: '#f2f3f5',
-  inkSecondary: '#9aa2b1',
-  inkTertiary: '#6b7383',
+  ink: '#EEF3F8',
+  inkSecondary: '#A9B7C8',
+  inkTertiary: '#7C8CA1',
 
-  border: '#232b3d',
-  borderStrong: '#2e374c',
+  border: '#22334A',
+  borderStrong: '#2C4059',
 
-  navy950: '#0c130e',
-  navy900: '#142016',
-  navy700: '#8fbd7d',
-  navy: '#6e9d5c',
-  navyHover: '#7eae6c',
-  navyTint: 'rgba(110, 157, 92, 0.14)',
-  navyTintStrong: 'rgba(110, 157, 92, 0.22)',
+  navy950: '#0A1E30',
+  navy900: '#0F2338',
+  navy700: '#3FC2AE',
+  navy: '#2FB39E',
+  navyHover: '#42C7B2',
+  navyTint: 'rgba(47, 179, 158, 0.16)',
+  navyTintStrong: 'rgba(47, 179, 158, 0.24)',
 
   gold: '#e3ac3d',
   goldStrong: '#f0c267',
@@ -94,9 +94,9 @@ export const dark = {
   violetDot: '#a594ff',
   violetTint: 'rgba(165, 148, 255, 0.16)',
 
-  teal: '#3fd9c4',
-  tealDot: '#3fd9c4',
-  tealTint: 'rgba(63, 217, 196, 0.16)',
+  teal: '#4FD4E3',
+  tealDot: '#4FD4E3',
+  tealTint: 'rgba(79, 212, 227, 0.16)',
 
   amber: '#f0894a',
   amberDot: '#f0894a',

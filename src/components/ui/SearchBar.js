@@ -2,7 +2,7 @@ import { View, TextInput, Pressable } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 
-export default function SearchBar({ value, onChangeText, placeholder = 'Search', style }) {
+export default function SearchBar({ value, onChangeText, placeholder = 'Search', onFocus, onBlur, autoFocus, style }) {
   const { colors, radius, spacing, fontFamily } = useTheme()
 
   return (
@@ -15,9 +15,9 @@ export default function SearchBar({ value, onChangeText, placeholder = 'Search',
           backgroundColor: colors.surface,
           borderWidth: 1,
           borderColor: colors.border,
-          borderRadius: radius.md,
+          borderRadius: radius.sm,
           paddingHorizontal: spacing.md,
-          paddingVertical: 9,
+          minHeight: 46,
         },
         style,
       ]}
@@ -26,12 +26,16 @@ export default function SearchBar({ value, onChangeText, placeholder = 'Search',
       <TextInput
         value={value}
         onChangeText={onChangeText}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        autoFocus={autoFocus}
         placeholder={placeholder}
         placeholderTextColor={colors.inkTertiary}
+        accessibilityLabel={placeholder}
         style={{ flex: 1, color: colors.ink, fontFamily: fontFamily.regular, fontSize: 14, padding: 0 }}
       />
       {value ? (
-        <Pressable onPress={() => onChangeText('')} hitSlop={8}>
+        <Pressable onPress={() => onChangeText('')} hitSlop={10} accessibilityRole="button" accessibilityLabel="Clear search">
           <Feather name="x-circle" size={16} color={colors.inkTertiary} />
         </Pressable>
       ) : null}

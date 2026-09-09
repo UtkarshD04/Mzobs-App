@@ -16,11 +16,11 @@ export default function Card({ children, style }) {
         Platform.select({
           ios: {
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: isDark ? 0 : 2 },
-            shadowOpacity: isDark ? 0.25 : 0.05,
+            shadowOffset: { width: 0, height: isDark ? 0 : 1 },
+            shadowOpacity: isDark ? 0.14 : 0.03,
             shadowRadius: 8,
           },
-          android: { elevation: isDark ? 0 : 2 },
+          android: { elevation: isDark ? 0 : 1 },
         }),
         style,
       ]}

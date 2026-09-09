@@ -18,15 +18,6 @@ import CouponBox from '../components/ui/CouponBox'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import RazorpayCheckoutModal from '../components/payment/RazorpayCheckoutModal'
 
-const UNLOCKS = [
-  ['shield', 'Resume verification', 'Line-by-line review before any employer sees it.', 'navy'],
-  ['video', 'Mock interview with our panel', 'A real interview round, with written feedback and a score.', 'gold'],
-  ['layers', 'Skill track assignment', "Placed in the track that matches your strengths.", 'violet'],
-  ['send', 'Profile dispatch to employers', 'We shortlist and send your resume when a match opens.', 'teal'],
-  ['book-open', 'Training & assessments', 'Courses, practice tests and live sessions for your track.', 'amber'],
-  ['message-square', 'Placement desk support', 'A direct line to the Mzobs team through your search.', 'green'],
-]
-
 const NEVER_CHARGED = [
   ['Applying to a job', 'Every requirement on your portal is free to apply to.'],
   ['Being shortlisted', 'Employers pay Mzobs for shortlists — you never do.'],
@@ -163,23 +154,7 @@ export default function SubscriptionScreen() {
         </View>
       </Card>
 
-      <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 17, marginTop: spacing.xl, marginBottom: spacing.md }}>
-        What your ₹{fee} unlocks
-      </Text>
-      {UNLOCKS.map(([icon, title, desc, tone]) => (
-        <Card key={title} style={{ marginBottom: spacing.sm }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors[`${tone}Tint`], alignItems: 'center', justifyContent: 'center' }}>
-              <Feather name={icon} size={16} color={colors[tone === 'gold' ? 'goldStrong' : tone]} />
-            </View>
-            <Feather name="check" size={15} color={colors.green} />
-          </View>
-          <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14, marginTop: spacing.sm }}>{title}</Text>
-          <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12, marginTop: 3, lineHeight: 17 }}>{desc}</Text>
-        </Card>
-      ))}
-
-      <Card style={{ marginTop: spacing.md }}>
+      <Card style={{ marginTop: spacing.lg }}>
         <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14, marginBottom: spacing.md }}>You'll never be charged for</Text>
         {NEVER_CHARGED.map(([t, b], i) => (
           <View key={t} style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: i === NEVER_CHARGED.length - 1 ? 0 : spacing.md }}>

@@ -1,5 +1,5 @@
 import { View, Text, Pressable, Platform } from 'react-native'
-import Animated, { FadeInDown } from 'react-native-reanimated'
+import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, useReducedMotion, withSpring } from 'react-native-reanimated'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { fmtSalaryRange, fmtExperience } from '../../lib/format'
@@ -27,7 +27,7 @@ function MetaItem({ icon, label }) {
   )
 }
 
-export default function JobOpeningCard({ job, applied, index = 0, onPress }) {
+export default function JobOpeningCard({ job, applied, index = 0, onPress, featured = false }) {
   const { colors, spacing, radius, fontFamily, isDark } = useTheme()
   const days = daysSince(job.postedOn)
   const isNew = days !== null && days <= 2
@@ -35,15 +35,30 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress }) {
   const workModeTone = WORK_MODE_TONE[job.workMode] ?? 'teal'
   const railColor = applied ? colors.green : isNew ? colors.teal : null
 
+  const reduceMotion = useReducedMotion()
+  const lift = useSharedValue(0)
+  const liftStyle = useAnimatedStyle(() => ({ transform: [{ translateY: lift.value }, { scale: 1 + lift.value * 0.005 }] }))
+
   return (
-    <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(220)}>
-      <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${job.title} at ${job.company}`}>
+    <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(220)} style={liftStyle}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => {
+          lift.value = withSpring(reduceMotion ? 0 : -2, { damping: 16, stiffness: 380 })
+        }}
+        onPressOut={() => {
+          lift.value = withSpring(0, { damping: 16, stiffness: 380 })
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={`${job.title} at ${job.company}`}
+      >
         <Card
           style={[
             { marginBottom: spacing.md, padding: spacing.md, overflow: 'hidden' },
+            featured ? { borderRadius: radius.md } : null,
             Platform.select({
-              ios: { shadowOpacity: isDark ? 0.3 : 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 3 } },
-              android: { elevation: isDark ? 0 : 3 },
+              ios: { shadowOpacity: isDark ? 0.14 : featured ? 0.035 : 0.045, shadowRadius: featured ? 6 : 10, shadowOffset: { width: 0, height: featured ? 1 : 2 } },
+              android: { elevation: isDark ? 0 : featured ? 1 : 2 },
             }),
           ]}
         >
@@ -63,6 +78,11 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress }) {
               <Avatar name={job.company} size={48} style={{ borderRadius: radius.sm }} />
             </View>
             <View style={{ flex: 1 }}>
+              {featured ? (
+                <Text style={{ color: colors.teal, fontFamily: fontFamily.bold, fontSize: 10.5, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 3 }}>
+                  Featured role
+                </Text>
+              ) : null}
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
                 <Text style={{ flex: 1, color: colors.ink, fontFamily: fontFamily.bold, fontSize: 15.5 }} numberOfLines={1}>
                   {job.title}
@@ -100,6 +120,15 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress }) {
                   <Tag key={skill} label={skill} />
                 ))}
               </View>
+
+              {featured && job.description ? (
+                <Text
+                  style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, lineHeight: 18, marginTop: spacing.sm }}
+                  numberOfLines={2}
+                >
+                  {job.description}
+                </Text>
+              ) : null}
 
               <View
                 style={{

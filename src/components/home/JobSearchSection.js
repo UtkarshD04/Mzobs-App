@@ -1,16 +1,19 @@
-import { View, Text, ScrollView } from 'react-native'
+import { View, Text, ScrollView, Pressable, Platform } from 'react-native'
+import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
-import SearchBar from '../ui/SearchBar'
-import CategoryChip from './CategoryChip'
-import WorkModeSegment from './WorkModeSegment'
 import HeroPattern from './HeroPattern'
-import { CATEGORY_BY_ID, QUICK_CHIP_IDS } from './categoryData'
+import PressableScale from '../ui/PressableScale'
 
-const WORK_MODES = ['All', 'Remote', 'Hybrid', 'On-site']
+// Mirrors the website's homepage hero (Website/Landing-Frontend's
+// JobSearchHero.jsx) — same eyebrow/heading/subhead copy and "Popular:"
+// quick-search links. The search field itself is a button, not a live text
+// input: tapping it (or a Popular term) opens the dedicated Search &
+// Filters page (Naukri/Indeed-style — a keyword field plus every filter
+// group at once), rather than filtering this Home screen in place.
+const POPULAR_SEARCHES = ['Software Developer', 'Sales Executive', 'HR Executive', 'Data Analyst', 'Fresher Jobs']
 
-export default function JobSearchSection({ query, onChangeQuery, selectedCategory, onSelectCategory, workMode, onSelectWorkMode }) {
-  const { colors, radius, spacing, fontFamily } = useTheme()
-  const quickChips = QUICK_CHIP_IDS.map((id) => CATEGORY_BY_ID[id]).filter(Boolean)
+export default function JobSearchSection({ onOpenSearch }) {
+  const { colors, radius, spacing, fontFamily, isDark } = useTheme()
 
   return (
     <View
@@ -23,46 +26,65 @@ export default function JobSearchSection({ query, onChangeQuery, selectedCategor
     >
       <HeroPattern />
 
-      <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.md }}>
-        <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 21, letterSpacing: -0.3 }}>
-          Find your next opportunity
-        </Text>
-        <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 3 }}>
-          Search live openings from verified employers.
-        </Text>
-
-        <View style={{ marginTop: spacing.md }}>
-          <SearchBar
-            value={query}
-            onChangeText={onChangeQuery}
-            placeholder="Job title, skill, company or location"
-            style={{
-              borderColor: colors.border,
-              borderRadius: radius.lg,
-              paddingVertical: 12,
-              backgroundColor: colors.surface,
-            }}
-          />
+      <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 5 }}>
+          <Feather name="shield" size={11} color={colors.teal} />
+          <Text style={{ color: colors.teal, fontFamily: fontFamily.semibold, fontSize: 11 }}>Verified opportunities. Real employers.</Text>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing.sm, paddingVertical: spacing.md }}
-          style={{ flexGrow: 0 }}
+        <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 18, letterSpacing: -0.2, lineHeight: 22 }} numberOfLines={2}>
+          Find work that moves your{'\n'}career forward.
+        </Text>
+        <Text
+          style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, marginTop: 4 }}
+          numberOfLines={1}
         >
-          {quickChips.map((cat) => (
-            <CategoryChip
-              key={cat.id}
-              label={cat.label}
-              icon={cat.icon}
-              active={selectedCategory === cat.id}
-              onPress={() => onSelectCategory(cat.id)}
-            />
-          ))}
-        </ScrollView>
+          Reviewed listings from employers who are actually hiring.
+        </Text>
 
-        <WorkModeSegment options={WORK_MODES} value={workMode} onChange={onSelectWorkMode} />
+        <PressableScale
+          onPress={() => onOpenSearch('')}
+          accessibilityRole="button"
+          accessibilityLabel="Search jobs and open filters"
+          scaleTo={0.985}
+          style={[
+            {
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.sm,
+              marginTop: spacing.md,
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.borderStrong,
+              borderRadius: radius.md,
+              paddingHorizontal: spacing.md,
+              minHeight: 48,
+            },
+            Platform.select({
+              ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: isDark ? 0 : 0.06, shadowRadius: 8 },
+              android: { elevation: isDark ? 0 : 1 },
+            }),
+          ]}
+        >
+          <Feather name="search" size={16} color={colors.inkTertiary} />
+          <Text style={{ flex: 1, color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 14 }}>
+            Job title, skill, company or location
+          </Text>
+          <Feather name="sliders" size={15} color={colors.inkTertiary} />
+        </PressableScale>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, gap: 6 }}>
+          <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.medium, fontSize: 11.5 }}>Popular:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              {POPULAR_SEARCHES.map((term) => (
+                <Pressable key={term} onPress={() => onOpenSearch(term)} hitSlop={6}>
+                  <Text style={{ color: colors.teal, fontFamily: fontFamily.medium, fontSize: 11.5 }}>{term}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
       </View>
     </View>
   )

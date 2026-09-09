@@ -31,51 +31,22 @@ export default function LoginScreen({ navigation }) {
   return (
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ height: 180, marginTop: -spacing.lg, marginHorizontal: -spacing.lg, overflow: 'hidden' }}>
+        <View style={{ alignItems: 'center', paddingTop: spacing.xl, marginBottom: spacing.xl }}>
           <View
             style={{
-              position: 'absolute',
-              top: -60,
-              right: -50,
-              width: 180,
-              height: 180,
-              borderRadius: 90,
+              width: 64,
+              height: 64,
+              borderRadius: 20,
               backgroundColor: colors.navyTint,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: spacing.md,
             }}
-          />
-          <View
-            style={{
-              position: 'absolute',
-              top: 30,
-              left: -40,
-              width: 110,
-              height: 110,
-              borderRadius: 55,
-              backgroundColor: colors.goldTint,
-            }}
-          />
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: spacing.lg }}>
-            <View
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: 20,
-                backgroundColor: colors.surface,
-                borderWidth: 1,
-                borderColor: colors.border,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: spacing.md,
-              }}
-            >
-              <Feather name="briefcase" size={26} color={colors.navy} />
-            </View>
-            <BrandLogo height={26} />
+          >
+            <Feather name="briefcase" size={28} color={colors.navy} />
           </View>
-        </View>
-
-        <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
-          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 19 }}>Welcome back</Text>
+          <BrandLogo height={24} />
+          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, marginTop: spacing.lg }}>Welcome back</Text>
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 }}>
             Sign in to continue your placement journey
           </Text>
@@ -93,9 +64,9 @@ export default function LoginScreen({ navigation }) {
 
         {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13, marginBottom: spacing.md }}>{error}</Text> : null}
 
-        <Button title="Sign In" onPress={handleLogin} loading={loading} disabled={!email || !password} />
+        <Button title="Sign In" onPress={handleLogin} loading={loading} disabled={!email || !password} style={{ marginTop: spacing.sm }} />
 
-        <Pressable onPress={() => navigation.navigate('Signup')} style={{ marginTop: spacing.lg, alignItems: 'center' }}>
+        <Pressable onPress={() => navigation.navigate('Signup')} style={{ marginTop: spacing.lg, alignItems: 'center', minHeight: 44, justifyContent: 'center' }}>
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5 }}>
             New here? <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }}>Create an account</Text>
           </Text>

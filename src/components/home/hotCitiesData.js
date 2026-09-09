@@ -1,0 +1,132 @@
+// Mirrors Website/Landing-Frontend's HOT_CITIES_DATA (src/lib/content.js) —
+// same curated cities, landmark photos, and category filters, so the app
+// reads as the same product as the website's "Hot Jobs by City" section.
+// `slug` matches Backend's HOT_CITIES (utils/hotCities.js) so real per-city
+// stats from GET /api/jobs/hot-cities join onto this by slug.
+export const HOT_CITIES_META = {
+  eyebrow: 'Live hiring activity',
+  title: 'Hot jobs by city',
+  subtitle: 'Discover where the best opportunities are hiring right now.',
+  filters: [
+    { key: 'all', label: 'All Jobs' },
+    { key: 'tech', label: 'IT & Tech' },
+    { key: 'sales', label: 'Sales' },
+    { key: 'finance', label: 'Finance' },
+    { key: 'marketing', label: 'Marketing' },
+    { key: 'ops', label: 'Operations' },
+  ],
+  cities: [
+    {
+      city: 'Bengaluru',
+      slug: 'bengaluru',
+      state: 'Karnataka',
+      landmark: 'Vidhana Soudha',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Vidhana_Soudha_2012.jpg?width=800',
+    },
+    {
+      city: 'Mumbai',
+      slug: 'mumbai',
+      state: 'Maharashtra',
+      landmark: 'Gateway of India',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Mumbai_03-2016_30_Gateway_of_India.jpg?width=800',
+    },
+    {
+      city: 'Delhi NCR',
+      slug: 'delhi-ncr',
+      state: 'Delhi',
+      landmark: 'India Gate',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/India_Gate_in_the_Evening.jpg?width=800',
+    },
+    {
+      city: 'Hyderabad',
+      slug: 'hyderabad',
+      state: 'Telangana',
+      landmark: 'Charminar',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Charminar_Hyderabad_1.jpg?width=800',
+    },
+    {
+      city: 'Pune',
+      slug: 'pune',
+      state: 'Maharashtra',
+      landmark: 'Shaniwar Wada',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Horizontal_side_view_of_Shaniwar_Wada_illuminated.jpg?width=800',
+    },
+    {
+      city: 'Chennai',
+      slug: 'chennai',
+      state: 'Tamil Nadu',
+      landmark: 'Marina Beach',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Chennai_Lighthouse,_Marina_Beach,_Chennai_01.jpg?width=800',
+    },
+    {
+      city: 'Noida',
+      slug: 'noida',
+      state: 'Uttar Pradesh',
+      landmark: 'DLF Mall of India',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/DLF_Mall_of_India_from_outside_03.jpg?width=800',
+    },
+    {
+      city: 'Gurugram',
+      slug: 'gurugram',
+      state: 'Haryana',
+      landmark: 'Cyber Hub',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/DLF_Cyber_Hub%2C_Gurgaon.jpg?width=800',
+    },
+    {
+      city: 'Kolkata',
+      slug: 'kolkata',
+      state: 'West Bengal',
+      landmark: 'Victoria Memorial',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Victoria_Memorial_situated_in_Kolkata.jpg?width=800',
+    },
+    {
+      city: 'Lucknow',
+      slug: 'lucknow',
+      state: 'Uttar Pradesh',
+      landmark: 'Bara Imambara',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Bara_Imambara%2C_Lucknow_2.jpg?width=800',
+    },
+    {
+      city: 'Ahmedabad',
+      slug: 'ahmedabad',
+      state: 'Gujarat',
+      landmark: 'Sabarmati Riverfront',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/River_Cruise_at_Atal_Pedestrian_Bridge.jpg?width=800',
+    },
+    {
+      city: 'Jaipur',
+      slug: 'jaipur',
+      state: 'Rajasthan',
+      landmark: 'Hawa Mahal',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/East_facade_Hawa_Mahal_Jaipur_from_ground_level_(July_2022)_-_img_01.jpg?width=800',
+    },
+    {
+      city: 'Chandigarh',
+      slug: 'chandigarh',
+      state: 'Chandigarh',
+      landmark: 'Open Hand Monument',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Open_Hand_Monument.JPG?width=800',
+    },
+    {
+      city: 'Indore',
+      slug: 'indore',
+      state: 'Madhya Pradesh',
+      landmark: 'Rajwada Palace',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Indore_Rajwada01.jpg?width=800',
+    },
+    {
+      city: 'Kochi',
+      slug: 'kochi',
+      state: 'Kerala',
+      landmark: 'Chinese Fishing Nets',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Chinese_fishingnet_kochi.jpg?width=800',
+    },
+    {
+      city: 'Bhopal',
+      slug: 'bhopal',
+      state: 'Madhya Pradesh',
+      landmark: 'Taj-ul-Masajid',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Taj-ul-Masjid%2C_Bhopal%2C_India.jpg?width=800',
+    },
+  ],
+}

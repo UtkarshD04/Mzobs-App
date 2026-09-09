@@ -16,18 +16,14 @@ function getActiveRouteName(state) {
 
 const VERIFICATION = [
   { icon: 'home', label: 'Home', target: { screen: 'Main', params: { screen: 'Home' } }, match: 'HomeFeed' },
-  { icon: 'grid', label: 'Dashboard', target: { screen: 'Main', params: { screen: 'Dashboard' } }, match: 'Dashboard' },
   { icon: 'user', label: 'Profile', target: { screen: 'Main', params: { screen: 'Profile' } }, match: 'Profile' },
   { icon: 'file-text', label: 'Resume Center', target: { screen: 'Main', params: { screen: 'Resume' } }, match: 'Resume' },
-  { icon: 'video', label: 'Mock Interview', target: { screen: 'MockInterview' }, match: 'MockInterview' },
 ]
 const PLACEMENT = [
   { icon: 'briefcase', label: 'Job Openings', target: { screen: 'Main', params: { screen: 'Jobs' } }, match: 'JobList' },
   { icon: 'clipboard', label: 'My Applications', target: { screen: 'Main', params: { screen: 'Applications' } }, match: 'Applications' },
-  { icon: 'calendar', label: 'Interview Center', target: { screen: 'InterviewCenter' }, match: 'InterviewCenter' },
 ]
 const ACCOUNT = [
-  { icon: 'message-square', label: 'Placement Desk', target: { screen: 'Messages' }, match: 'Messages' },
   { icon: 'bell', label: 'Notifications', target: { screen: 'Notifications' }, match: 'Notifications', badgeKey: 'notifications' },
   { icon: 'credit-card', label: 'Subscription', target: { screen: 'Subscription' }, match: 'Subscription' },
   { icon: 'settings', label: 'Settings', target: { screen: 'Settings' }, match: 'Settings' },

@@ -1,16 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { View, Text, Pressable, FlatList } from 'react-native'
-import Animated, { FadeInDown } from 'react-native-reanimated'
+import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { useJobsQuery } from '../../hooks/useJobs'
 import { useApplicationsQuery } from '../../hooks/useApplications'
 import { useProfileQuery } from '../../hooks/useProfile'
-import { fmtSalaryRange } from '../../lib/format'
+import { DEFAULT_FILTERS, matchesFilters, matchesQuery } from '../../lib/jobFilters'
+import JobOpeningCard from '../../components/home/JobOpeningCard'
 import ScreenContainer from '../../components/ui/ScreenContainer'
-import Card from '../../components/ui/Card'
-import Badge from '../../components/ui/Badge'
-import Avatar from '../../components/ui/Avatar'
-import Tag from '../../components/ui/Tag'
 import EmptyState from '../../components/ui/EmptyState'
 import SearchBar from '../../components/ui/SearchBar'
 import FilterChip from '../../components/ui/FilterChip'
@@ -19,109 +16,175 @@ import JobRowSkeleton from '../../components/ui/skeletons/JobRowSkeleton'
 
 const WORK_MODES = ['All', 'Remote', 'Hybrid', 'On-site']
 
-function JobRow({ job, applied, index, onPress }) {
-  const { colors, spacing, fontFamily } = useTheme()
-  return (
-    <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(220)}>
-      <Pressable onPress={onPress}>
-        <Card style={{ marginBottom: spacing.md }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-            <Avatar name={job.company} size={44} style={{ marginRight: spacing.md }} />
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <View style={{ flex: 1, paddingRight: spacing.sm }}>
-                  <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 15 }}>{job.title}</Text>
-                  <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 3 }}>
-                    {job.company} · {job.location} · {job.workMode}
-                  </Text>
-                </View>
-                {applied ? <Badge label="Applied" tone="green" /> : null}
-              </View>
-
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
-                {fmtSalaryRange(job) ? (
-                  <Text style={{ color: colors.ink, fontFamily: fontFamily.medium, fontSize: 13 }}>{fmtSalaryRange(job)}</Text>
-                ) : null}
-                {job.posted ? (
-                  <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12 }}>Posted {job.posted}</Text>
-                ) : null}
-              </View>
-
-              {(job.skills ?? []).length > 0 ? (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm }}>
-                  {job.skills.slice(0, 4).map((skill) => (
-                    <Tag key={skill} label={skill} />
-                  ))}
-                </View>
-              ) : null}
-            </View>
-          </View>
-        </Card>
-      </Pressable>
-    </Animated.View>
-  )
-}
-
-export default function JobListScreen({ navigation }) {
-  const { spacing } = useTheme()
+export default function JobListScreen({ navigation, route }) {
+  const { colors, spacing, radius, fontFamily } = useTheme()
   const { data: jobs = [], isLoading, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
   const { data: profile } = useProfileQuery()
   const [query, setQuery] = useState('')
-  const [workMode, setWorkMode] = useState('All')
+  const [suggestionsVisible, setSuggestionsVisible] = useState(false)
+  const [filters, setFilters] = useState(DEFAULT_FILTERS)
 
-  const filtered = useMemo(() => {
+  // JobFiltersScreen hands the applied filters/query back through route
+  // params (a dedicated page, not a sheet, so there's no shared state to
+  // lift). appliedQuery is checked for !== undefined since '' (a cleared
+  // search) is a valid, falsy value that still needs applying.
+  useEffect(() => {
+    if (route.params?.appliedFilters) setFilters(route.params.appliedFilters)
+    if (route.params?.appliedQuery !== undefined) setQuery(route.params.appliedQuery)
+    if (route.params?.appliedFilters || route.params?.appliedQuery !== undefined) {
+      navigation.setParams({ appliedFilters: undefined, appliedQuery: undefined })
+    }
+  }, [route.params?.appliedFilters, route.params?.appliedQuery])
+
+  const suggestions = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return jobs.filter((job) => {
-      const matchesMode = workMode === 'All' || job.workMode === workMode
-      if (!matchesMode) return false
-      if (!q) return true
-      const haystack = [job.title, job.company, job.location, ...(job.skills ?? [])].join(' ').toLowerCase()
-      return haystack.includes(q)
-    })
-  }, [jobs, query, workMode])
+    if (!q) return []
+    const seen = new Set()
+    const results = []
+    for (const job of jobs) {
+      for (const value of [job.title, job.company]) {
+        if (value && value.toLowerCase().includes(q) && !seen.has(value)) {
+          seen.add(value)
+          results.push(value)
+        }
+      }
+      if (results.length >= 5) break
+    }
+    return results
+  }, [jobs, query])
+
+  const filtered = useMemo(() => jobs.filter((job) => matchesFilters(job, filters) && matchesQuery(job, query)), [jobs, query, filters])
 
   if (isLoading) return <JobRowSkeleton />
 
   const appliedJobIds = new Set(applications.map((a) => a.jobId ?? a.job?.id))
   const paid = profile?.subscription?.status === 'paid'
+  const activeFilterCount = Object.keys(DEFAULT_FILTERS).filter((k) => filters[k] !== DEFAULT_FILTERS[k]).length
+
+  function openFilters() {
+    navigation.navigate('JobFilters', { filters, query, jobs })
+  }
 
   return (
-    <ScreenContainer scroll={false}>
-      <View style={{ marginBottom: spacing.sm }}>
-        <SearchBar value={query} onChangeText={setQuery} placeholder="Search title, company or skill" />
-      </View>
-
-      <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm }}>
-        {WORK_MODES.map((mode) => (
-          <FilterChip key={mode} label={mode} active={workMode === mode} onPress={() => setWorkMode(mode)} />
-        ))}
-      </View>
-
-      <EligibilityNote paid={paid} verified={profile?.resume?.status === 'verified'} navigation={navigation} style={{ marginBottom: spacing.sm }} />
-
-      <FlatList
-        style={{ flex: 1 }}
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <JobRow
-            job={item}
-            applied={appliedJobIds.has(item.id)}
-            index={index}
-            onPress={() => navigation.navigate('JobDetail', { id: item.id })}
+    <ScreenContainer
+      scroll={false}
+      header={
+        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.sm, backgroundColor: colors.bg }}>
+          <SearchBar
+            value={query}
+            onChangeText={(v) => {
+              setQuery(v)
+              setSuggestionsVisible(!!v)
+            }}
+            onFocus={() => setSuggestionsVisible(!!query)}
+            onBlur={() => setTimeout(() => setSuggestionsVisible(false), 120)}
+            placeholder="Search title, company or skill"
           />
-        )}
-        refreshing={isRefetching}
-        onRefresh={refetch}
-        ListEmptyComponent={
-          <EmptyState
-            icon="briefcase"
-            title={query || workMode !== 'All' ? 'No matching openings' : 'No live openings right now'}
-            message={query || workMode !== 'All' ? 'Try a different search term or filter.' : 'Check back soon for new requirements.'}
-          />
-        }
-      />
+
+          {suggestionsVisible && suggestions.length > 0 ? (
+            <View
+              style={{
+                marginTop: 6,
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: radius.md,
+                overflow: 'hidden',
+              }}
+            >
+              {suggestions.map((s, i) => (
+                <Pressable
+                  key={s}
+                  onPress={() => {
+                    setQuery(s)
+                    setSuggestionsVisible(false)
+                  }}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: spacing.md,
+                    borderTopWidth: i === 0 ? 0 : 1,
+                    borderTopColor: colors.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.sm,
+                  }}
+                >
+                  <Feather name="search" size={13} color={colors.inkTertiary} />
+                  <Text style={{ color: colors.ink, fontFamily: fontFamily.regular, fontSize: 13.5 }}>{s}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+
+          <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm, alignItems: 'center' }}>
+            <View style={{ flex: 1, flexDirection: 'row', gap: spacing.sm }}>
+              {WORK_MODES.map((mode) => (
+                <FilterChip
+                  key={mode}
+                  label={mode}
+                  active={filters.workMode === mode}
+                  onPress={() => setFilters((f) => ({ ...f, workMode: mode }))}
+                />
+              ))}
+            </View>
+            <Pressable
+              onPress={openFilters}
+              accessibilityRole="button"
+              accessibilityLabel="Open filters"
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                minHeight: 40,
+                paddingHorizontal: 12,
+                borderRadius: radius.xl,
+                borderWidth: 1,
+                borderColor: activeFilterCount > 0 ? colors.navy : colors.border,
+                backgroundColor: activeFilterCount > 0 ? colors.navyTint : colors.surface,
+              }}
+            >
+              <Feather name="sliders" size={14} color={activeFilterCount > 0 ? colors.navy : colors.inkSecondary} />
+              <Text
+                style={{
+                  color: activeFilterCount > 0 ? colors.navy : colors.inkSecondary,
+                  fontFamily: fontFamily.semibold,
+                  fontSize: 12.5,
+                }}
+              >
+                Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      }
+    >
+      <View style={{ flex: 1 }}>
+        <EligibilityNote paid={paid} verified={profile?.resume?.status === 'verified'} navigation={navigation} style={{ marginBottom: spacing.sm }} />
+
+        <FlatList
+          style={{ flex: 1 }}
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <JobOpeningCard
+              job={item}
+              applied={appliedJobIds.has(item.id)}
+              index={index}
+              onPress={() => navigation.navigate('JobDetail', { id: item.id })}
+            />
+          )}
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          ListEmptyComponent={
+            <EmptyState
+              icon="briefcase"
+              title={query || activeFilterCount > 0 ? 'No matching openings' : 'No live openings right now'}
+              message={query || activeFilterCount > 0 ? 'Try a different search term or filter.' : 'Check back soon for new requirements.'}
+            />
+          }
+        />
+      </View>
     </ScreenContainer>
   )
 }

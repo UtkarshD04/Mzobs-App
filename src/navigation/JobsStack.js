@@ -3,6 +3,7 @@ import { useTheme } from '../theme'
 import HamburgerButton from '../components/ui/HamburgerButton'
 import JobListScreen from '../screens/jobs/JobListScreen'
 import JobDetailScreen from '../screens/jobs/JobDetailScreen'
+import JobFiltersScreen from '../screens/jobs/JobFiltersScreen'
 
 const Stack = createNativeStackNavigator()
 
@@ -22,6 +23,7 @@ export default function JobsStack() {
         options={({ navigation }) => ({ title: 'Job Openings', headerLeft: () => <HamburgerButton navigation={navigation} /> })}
       />
       <Stack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'Job Details' }} />
+      <Stack.Screen name="JobFilters" component={JobFiltersScreen} options={{ title: 'Filters' }} />
     </Stack.Navigator>
   )
 }
