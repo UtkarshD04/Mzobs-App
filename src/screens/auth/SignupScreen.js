@@ -5,27 +5,11 @@ import { useTheme } from '../../theme'
 import { useAuth } from '../../context/AuthContext'
 import * as authService from '../../services/authService'
 import TextField from '../../components/ui/TextField'
-import SelectField from '../../components/ui/SelectField'
 import Button from '../../components/ui/Button'
 import ScreenContainer from '../../components/ui/ScreenContainer'
 import BrandLogo from '../../components/ui/BrandLogo'
 import AuthBubbleField from '../../components/decor/AuthBubbleField'
 
-const GRADUATION_OPTIONS = [
-  '12th / No Degree',
-  'Diploma',
-  'B.Tech / B.E.',
-  'B.Sc',
-  'B.Com',
-  'BA',
-  'BBA',
-  'BCA',
-  'M.Tech / M.E.',
-  'MBA',
-  'MCA',
-  'M.Sc',
-  'Other',
-]
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const STEPS = ['Account', 'Mobile number']
 
@@ -53,8 +37,7 @@ export default function SignupScreen({ navigation }) {
   const { colors, spacing, fontFamily } = useTheme()
   const { signup } = useAuth()
   const [step, setStep] = useState(1)
-  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', graduation: '' })
-  const [experience, setExperience] = useState(null)
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' })
   const [stepError, setStepError] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -79,13 +62,12 @@ export default function SignupScreen({ navigation }) {
   }
 
   const canContinue = form.name.trim() && form.email.trim() && form.password.length >= 8
-  // Matches the website: phone verification, graduation and experience level
-  // are all optional — the backend only requires name/email/phone/password
-  // (Backend/src/controllers/employeeAuthController.js signup — "Phone OTP
-  // verification is optional, proceed either way, just record whether it was
-  // actually verified"). Blocking on phoneToken would make signup impossible
-  // whenever SMS isn't configured (e.g. no MSG91_AUTH_KEY), which the website
-  // never does.
+  // Matches the website: phone verification is optional — the backend only
+  // requires name/email/phone/password (Backend/src/controllers/
+  // employeeAuthController.js signup — "Phone OTP verification is optional,
+  // proceed either way, just record whether it was actually verified").
+  // Blocking on phoneToken would make signup impossible whenever SMS isn't
+  // configured (e.g. no MSG91_AUTH_KEY), which the website never does.
   const canSubmit = form.phone.length === 10
 
   function handleContinue() {
@@ -126,7 +108,7 @@ export default function SignupScreen({ navigation }) {
     setError('')
     setLoading(true)
     try {
-      await signup({ ...form, experience, phoneToken })
+      await signup({ ...form, phoneToken })
     } catch (err) {
       setError(err.response?.data?.message ?? 'Something went wrong. Please try again.')
     } finally {
@@ -186,46 +168,6 @@ export default function SignupScreen({ navigation }) {
             <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, marginTop: -8, marginBottom: spacing.lg }}>
               At least 8 characters.
             </Text>
-
-            <SelectField
-              label="Highest graduation (optional)"
-              value={form.graduation}
-              onChange={set('graduation')}
-              options={GRADUATION_OPTIONS}
-              placeholder="Select your graduation"
-            />
-
-            <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.medium, fontSize: 12.5, marginBottom: 8 }}>
-              Experience level (optional)
-            </Text>
-            <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg }}>
-              {[
-                { key: 'fresher', label: 'Fresher' },
-                { key: 'experienced', label: 'Experienced' },
-              ].map((opt) => (
-                <Pressable
-                  key={opt.key}
-                  onPress={() => setExperience(opt.key)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: experience === opt.key }}
-                  style={{
-                    flex: 1,
-                    minHeight: 44,
-                    paddingVertical: 10,
-                    borderRadius: 10,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderWidth: 1,
-                    borderColor: experience === opt.key ? colors.navy : colors.border,
-                    backgroundColor: experience === opt.key ? colors.navyTint : colors.surface,
-                  }}
-                >
-                  <Text style={{ color: experience === opt.key ? colors.navy : colors.inkSecondary, fontFamily: fontFamily.semibold, fontSize: 13.5 }}>
-                    {opt.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
 
             {stepError ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13, marginBottom: spacing.md }}>{stepError}</Text> : null}
 
