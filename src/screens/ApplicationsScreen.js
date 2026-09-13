@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { View, Text } from 'react-native'
+import { View, Text, Alert } from 'react-native'
 import { useTheme } from '../theme'
-import { useApplicationsQuery } from '../hooks/useApplications'
+import { useApplicationsQuery, useWithdrawApplicationMutation } from '../hooks/useApplications'
 import { fmtDate } from '../lib/format'
 import ScreenContainer from '../components/ui/ScreenContainer'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
+import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
 import FilterChip from '../components/ui/FilterChip'
 import StatusTimeline from '../components/ui/StatusTimeline'
@@ -13,13 +14,22 @@ import ApplicationsSkeleton from '../components/ui/skeletons/ApplicationsSkeleto
 
 const STAGE_INDEX = { new: 1, screening: 2, shortlisted: 3, shared: 4, interview: 5, selected: 6, rejected: 6 }
 const FILTERS = ['All', 'Active', 'Selected', 'Rejected']
+const WITHDRAWABLE_STATUSES = ['new', 'screening', 'shortlisted']
 
 export default function ApplicationsScreen() {
   const { colors, spacing, fontFamily } = useTheme()
   const { data: applications = [], isLoading, refetch, isRefetching } = useApplicationsQuery()
+  const withdrawMutation = useWithdrawApplicationMutation()
   const [filter, setFilter] = useState('All')
 
   if (isLoading) return <ApplicationsSkeleton />
+
+  function handleWithdraw(application) {
+    Alert.alert('Withdraw application?', `You'll no longer be considered for ${application.job?.title ?? 'this role'}.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Withdraw', style: 'destructive', onPress: () => withdrawMutation.mutate(application.id) },
+    ])
+  }
 
   const filtered = applications.filter((a) => {
     if (filter === 'All') return true
@@ -96,6 +106,16 @@ export default function ApplicationsScreen() {
                 >
                   {a.note}
                 </Text>
+              ) : null}
+
+              {WITHDRAWABLE_STATUSES.includes(a.status) ? (
+                <Button
+                  title="Withdraw application"
+                  variant="danger"
+                  onPress={() => handleWithdraw(a)}
+                  loading={withdrawMutation.isPending && withdrawMutation.variables === a.id}
+                  style={{ marginTop: spacing.md }}
+                />
               ) : null}
             </Card>
           )

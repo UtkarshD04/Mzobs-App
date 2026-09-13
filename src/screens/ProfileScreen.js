@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { View, Text } from 'react-native'
+import { View, Text, Pressable, Switch } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useProfileQuery, useUpdateProfileMutation } from '../hooks/useProfile'
@@ -13,6 +13,7 @@ import TextField from '../components/ui/TextField'
 import Button from '../components/ui/Button'
 import Avatar from '../components/ui/Avatar'
 import Tag from '../components/ui/Tag'
+import FilterChip from '../components/ui/FilterChip'
 import ProfileSkeleton from '../components/ui/skeletons/ProfileSkeleton'
 
 // Public fields are what recruiters see when Mzobs shares this profile.
@@ -51,6 +52,9 @@ const PRIVATE_FIELD_GROUP = {
 const FIELD_GROUPS = [...PUBLIC_FIELD_GROUPS, PRIVATE_FIELD_GROUP]
 const EDITABLE_FIELDS = FIELD_GROUPS.flatMap((g) => g.fields)
 
+const WORK_MODES = ['On-site', 'Hybrid', 'Remote']
+const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship']
+
 function SectionLabel({ children, style }) {
   const { colors, spacing, fontFamily } = useTheme()
   return (
@@ -73,6 +77,78 @@ function SectionLabel({ children, style }) {
   )
 }
 
+function ChipListEditor({ label, values, onChange, placeholder }) {
+  const { colors, radius, spacing, fontFamily } = useTheme()
+  const [draft, setDraft] = useState('')
+
+  function addValue() {
+    const v = draft.trim()
+    if (!v || values.includes(v)) return
+    onChange([...values, v])
+    setDraft('')
+  }
+
+  return (
+    <View style={{ marginBottom: spacing.md }}>
+      {label ? (
+        <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.medium, fontSize: 12.5, marginBottom: 6 }}>{label}</Text>
+      ) : null}
+      {values.length > 0 ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.sm }}>
+          {values.map((v) => (
+            <Pressable key={v} onPress={() => onChange(values.filter((x) => x !== v))} hitSlop={4} accessibilityLabel={`Remove ${v}`}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Tag label={v} />
+              </View>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+      <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
+        <View style={{ flex: 1 }}>
+          <TextField
+            value={draft}
+            onChangeText={setDraft}
+            placeholder={placeholder}
+            onSubmitEditing={addValue}
+            returnKeyType="done"
+            style={{ marginBottom: 0 }}
+          />
+        </View>
+        <Pressable
+          onPress={addValue}
+          style={{ width: 48, height: 48, borderRadius: radius.md, backgroundColor: colors.navyTint, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <Feather name="plus" size={18} color={colors.navy} />
+        </Pressable>
+      </View>
+      <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11, marginTop: 4 }}>Tap a tag to remove it.</Text>
+    </View>
+  )
+}
+
+function MultiSelectChips({ label, options, values, onChange }) {
+  const { colors, spacing, fontFamily } = useTheme()
+  return (
+    <View style={{ marginBottom: spacing.md }}>
+      <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.medium, fontSize: 12.5, marginBottom: 6 }}>{label}</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+        {options.map((opt) => {
+          const active = values.includes(opt)
+          return (
+            <FilterChip
+              key={opt}
+              label={opt}
+              active={active}
+              onPress={() => onChange(active ? values.filter((v) => v !== opt) : [...values, opt])}
+            />
+          )
+        })}
+      </View>
+    </View>
+  )
+}
+
 export default function ProfileScreen() {
   const { colors, spacing, fontFamily } = useTheme()
   const { data: profile, isLoading } = useProfileQuery()
@@ -86,6 +162,14 @@ export default function ProfileScreen() {
     if (profile && !form) {
       const initial = {}
       EDITABLE_FIELDS.forEach(({ key }) => (initial[key] = profile[key] ?? ''))
+      initial.skills = profile.skills ?? []
+      initial.preferredLocations = profile.preferredLocations ?? []
+      initial.workModePreference = profile.workModePreference ?? []
+      initial.jobTypePreference = profile.jobTypePreference ?? []
+      initial.expectedSalaryMin = profile.expectedSalaryMin != null ? String(profile.expectedSalaryMin) : ''
+      initial.expectedSalaryMax = profile.expectedSalaryMax != null ? String(profile.expectedSalaryMax) : ''
+      initial.openToOpportunities = profile.openToOpportunities ?? true
+      initial.jobAlertsEnabled = profile.jobAlertsEnabled ?? true
       setForm(initial)
     }
   }, [profile])
@@ -103,7 +187,11 @@ export default function ProfileScreen() {
   async function handleSave() {
     setError('')
     try {
-      await updateMutation.mutateAsync(form)
+      await updateMutation.mutateAsync({
+        ...form,
+        expectedSalaryMin: form.expectedSalaryMin ? Number(form.expectedSalaryMin) : null,
+        expectedSalaryMax: form.expectedSalaryMax ? Number(form.expectedSalaryMax) : null,
+      })
       setSaved(true)
     } catch (err) {
       setError(err.response?.data?.message ?? 'Could not save your changes. Please try again.')
@@ -150,16 +238,8 @@ export default function ProfileScreen() {
           </View>
         ))}
 
-        {(profile.skills ?? []).length > 0 ? (
-          <View>
-            <SectionLabel>Skills</SectionLabel>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.md }}>
-              {profile.skills.map((skill) => (
-                <Tag key={skill} label={skill} />
-              ))}
-            </View>
-          </View>
-        ) : null}
+        <SectionLabel>Skills</SectionLabel>
+        <ChipListEditor values={form.skills} onChange={set('skills')} placeholder="Add a skill" />
 
         <View style={{ marginTop: spacing.sm, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -175,14 +255,78 @@ export default function ProfileScreen() {
             <TextField key={key} label={label} value={form[key]} onChangeText={set(key)} />
           ))}
         </View>
-
-        {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 12.5, marginBottom: spacing.md }}>{error}</Text> : null}
-        {saved && !error ? (
-          <Text style={{ color: colors.green, fontFamily: fontFamily.regular, fontSize: 12.5, marginBottom: spacing.md }}>Saved.</Text>
-        ) : null}
-
-        <Button title="Save changes" onPress={handleSave} loading={updateMutation.isPending} />
       </Card>
+
+      <Card style={{ marginTop: spacing.md }}>
+        <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14, marginBottom: spacing.sm }}>Career preferences</Text>
+
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <View style={{ flex: 1 }}>
+            <TextField
+              label="Expected salary — min (₹/yr)"
+              value={form.expectedSalaryMin}
+              onChangeText={set('expectedSalaryMin')}
+              keyboardType="number-pad"
+              placeholder="e.g. 400000"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <TextField
+              label="Expected salary — max (₹/yr)"
+              value={form.expectedSalaryMax}
+              onChangeText={set('expectedSalaryMax')}
+              keyboardType="number-pad"
+              placeholder="e.g. 600000"
+            />
+          </View>
+        </View>
+
+        <ChipListEditor label="Preferred locations" values={form.preferredLocations} onChange={set('preferredLocations')} placeholder="Add a city" />
+
+        <MultiSelectChips label="Work mode" options={WORK_MODES} values={form.workModePreference} onChange={set('workModePreference')} />
+        <MultiSelectChips label="Job type" options={JOB_TYPES} values={form.jobTypePreference} onChange={set('jobTypePreference')} />
+      </Card>
+
+      <Card style={{ marginTop: spacing.md }}>
+        <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14, marginBottom: spacing.sm }}>Visibility</Text>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.xs }}>
+          <View style={{ flex: 1, paddingRight: spacing.sm }}>
+            <Text style={{ color: colors.ink, fontFamily: fontFamily.medium, fontSize: 13.5 }}>Open to opportunities</Text>
+            <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, marginTop: 1 }}>
+              Off hides you from new recruiter matches.
+            </Text>
+          </View>
+          <Switch
+            value={form.openToOpportunities}
+            onValueChange={set('openToOpportunities')}
+            trackColor={{ false: colors.surfaceSunken, true: colors.navyTintStrong }}
+            thumbColor={form.openToOpportunities ? colors.navy : '#ffffff'}
+          />
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.xs, marginTop: spacing.sm }}>
+          <View style={{ flex: 1, paddingRight: spacing.sm }}>
+            <Text style={{ color: colors.ink, fontFamily: fontFamily.medium, fontSize: 13.5 }}>Job alerts</Text>
+            <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, marginTop: 1 }}>
+              Get notified about roles that match your preferences.
+            </Text>
+          </View>
+          <Switch
+            value={form.jobAlertsEnabled}
+            onValueChange={set('jobAlertsEnabled')}
+            trackColor={{ false: colors.surfaceSunken, true: colors.navyTintStrong }}
+            thumbColor={form.jobAlertsEnabled ? colors.navy : '#ffffff'}
+          />
+        </View>
+      </Card>
+
+      {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 12.5, marginTop: spacing.md }}>{error}</Text> : null}
+      {saved && !error ? (
+        <Text style={{ color: colors.green, fontFamily: fontFamily.regular, fontSize: 12.5, marginTop: spacing.md }}>Saved.</Text>
+      ) : null}
+
+      <Button title="Save changes" onPress={handleSave} loading={updateMutation.isPending} style={{ marginTop: spacing.md }} />
     </ScreenContainer>
   )
 }

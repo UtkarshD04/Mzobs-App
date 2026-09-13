@@ -11,3 +11,7 @@ export function markNotificationRead(id) {
 export function markAllNotificationsRead() {
   return apiClient.patch('/notifications/read-all').then((r) => r.data)
 }
+
+export function sendTestPush() {
+  return apiClient.post('/notifications/test-push').then((r) => r.data)
+}

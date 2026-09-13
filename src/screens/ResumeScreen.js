@@ -28,7 +28,7 @@ export default function ResumeScreen({ navigation }) {
       <ScreenContainer>
         <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20 }}>Resume Center</Text>
         <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5, marginTop: 4 }}>
-          The Mzobs team reviews every resume before it can be used to apply.
+          Your resume is verified instantly on upload, so you can start applying right away.
         </Text>
         <PaymentLock
           title="Activate placement support to upload your resume"
@@ -62,7 +62,7 @@ export default function ResumeScreen({ navigation }) {
     <ScreenContainer onRefresh={refetch} refreshing={isRefetching}>
       <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20 }}>Resume Center</Text>
       <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5, marginTop: 4 }}>
-        The Mzobs team reviews every resume before it can be used to apply.
+        Your resume is verified instantly on upload, so you can start applying right away.
       </Text>
 
       <Card style={{ marginTop: spacing.lg }}>

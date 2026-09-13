@@ -121,6 +121,15 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, featu
                 ))}
               </View>
 
+              {job.matchReasons?.[0] ? (
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 4, marginTop: spacing.xs }}>
+                  <Feather name="star" size={11} color={colors.teal} style={{ marginTop: 1 }} />
+                  <Text style={{ flex: 1, color: colors.teal, fontFamily: fontFamily.semibold, fontSize: 11.5 }} numberOfLines={1}>
+                    {job.matchReasons[0]}
+                  </Text>
+                </View>
+              ) : null}
+
               {featured && job.description ? (
                 <Text
                   style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, lineHeight: 18, marginTop: spacing.sm }}

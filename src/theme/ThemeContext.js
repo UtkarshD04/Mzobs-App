@@ -2,13 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import * as SecureStore from 'expo-secure-store'
 import { light, dark } from './colors'
 
-// lg/xl bumped and corners softened slightly — the day-to-day building
-// blocks (card padding, tags, small icon tiles) stay on sm/md so nothing
-// that's already sized tightly (e.g. the fixed-height carousel cards)
-// starts clipping; the extra room shows up in the gaps between sections,
-// screen edges and card corners, where "everything feels packed together"
-// actually gets fixed.
-export const radius = { sm: 8, md: 12, lg: 18, xl: 22 }
+// Matches Website/Landing-Frontend's --radius-* tokens exactly (sm/md/lg/xl).
+export const radius = { sm: 8, md: 12, lg: 16, xl: 20 }
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 18, xl: 26, xxl: 34 }
 

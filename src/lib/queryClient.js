@@ -25,4 +25,6 @@ export const queryKeys = {
   notifications: ['notifications'],
   messageThreads: ['messageThreads'],
   threadMessages: (id) => ['messageThreads', id, 'messages'],
+  supportTickets: ['supportTickets'],
+  notificationPreferences: ['notificationPreferences'],
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { View, Text, Pressable, Share } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
@@ -6,6 +6,7 @@ import { useJobQuery } from '../../hooks/useJobs'
 import { useApplicationsQuery, useApplyToJobMutation } from '../../hooks/useApplications'
 import { useProfileQuery } from '../../hooks/useProfile'
 import { fmtSalaryRange, fmtExperience, fmtDate } from '../../lib/format'
+import { isJobSaved, toggleJobSaved } from '../../lib/savedJobs'
 import ScreenContainer from '../../components/ui/ScreenContainer'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -91,6 +92,17 @@ export default function JobDetailScreen({ route, navigation }) {
   const [saved, setSaved] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
 
+  useEffect(() => {
+    if (!job) return
+    let active = true
+    isJobSaved(job).then((value) => {
+      if (active) setSaved(value)
+    })
+    return () => {
+      active = false
+    }
+  }, [job])
+
   if (isLoading || profileLoading || !job) return <JobDetailSkeleton />
 
   const applied = applications.some((a) => (a.jobId ?? a.job?.id) === id)
@@ -110,6 +122,10 @@ export default function JobDetailScreen({ route, navigation }) {
     }
   }
 
+  async function handleToggleSaved() {
+    setSaved(await toggleJobSaved(job))
+  }
+
   function handleShare() {
     Share.share({ message: `${job.title} at ${job.company}${job.location ? ` — ${job.location}` : ''}, via Mzobs.` })
   }
@@ -125,7 +141,7 @@ export default function JobDetailScreen({ route, navigation }) {
           ) : (
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <Button title="Apply through Mzobs" onPress={handleApply} loading={applyMutation.isPending} disabled={!eligible} style={{ flex: 1 }} />
-              <IconAction icon="bookmark" active={saved} onPress={() => setSaved((v) => !v)} accessibilityLabel={saved ? 'Remove from saved' : 'Save job'} />
+              <IconAction icon="bookmark" active={saved} onPress={handleToggleSaved} accessibilityLabel={saved ? 'Remove from saved' : 'Save job'} />
               <IconAction icon="share-2" onPress={handleShare} accessibilityLabel="Share job" />
             </View>
           )}

@@ -13,3 +13,11 @@ export function useApplyToJobMutation() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.applications }),
   })
 }
+
+export function useWithdrawApplicationMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: applicationsService.withdrawApplication,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.applications }),
+  })
+}

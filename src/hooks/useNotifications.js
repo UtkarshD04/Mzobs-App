@@ -21,3 +21,7 @@ export function useMarkAllNotificationsReadMutation() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.notifications }),
   })
 }
+
+export function useSendTestPushMutation() {
+  return useMutation({ mutationFn: notificationsService.sendTestPush })
+}

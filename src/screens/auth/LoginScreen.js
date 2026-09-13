@@ -46,9 +46,9 @@ export default function LoginScreen({ navigation }) {
             <Feather name="briefcase" size={28} color={colors.navy} />
           </View>
           <BrandLogo height={24} />
-          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, marginTop: spacing.lg }}>Welcome back</Text>
-          <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 }}>
-            Sign in to continue your placement journey
+          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, marginTop: spacing.lg }}>Welcome back.</Text>
+          <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4, textAlign: 'center' }}>
+            Sign in to check your applications and pick up where you left off.
           </Text>
         </View>
 
@@ -62,9 +62,13 @@ export default function LoginScreen({ navigation }) {
         />
         <TextField label="Password" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
 
+        <Pressable onPress={() => navigation.navigate('ForgotPassword')} style={{ alignSelf: 'flex-end', minHeight: 32, justifyContent: 'center', marginBottom: spacing.sm }}>
+          <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 13 }}>Forgot password?</Text>
+        </Pressable>
+
         {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13, marginBottom: spacing.md }}>{error}</Text> : null}
 
-        <Button title="Sign In" onPress={handleLogin} loading={loading} disabled={!email || !password} style={{ marginTop: spacing.sm }} />
+        <Button title="Sign in →" onPress={handleLogin} loading={loading} disabled={!email || !password} style={{ marginTop: spacing.sm }} />
 
         <Pressable onPress={() => navigation.navigate('Signup')} style={{ marginTop: spacing.lg, alignItems: 'center', minHeight: 44, justifyContent: 'center' }}>
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5 }}>
