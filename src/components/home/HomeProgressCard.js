@@ -96,21 +96,8 @@ function ProgressStat({ icon, value, label }) {
   )
 }
 
-export default function HomeProgressCard({ variant, fee, applicationsCount, onNavigate }) {
+export default function HomeProgressCard({ variant, applicationsCount, onNavigate }) {
   const { colors, spacing, fontFamily } = useTheme()
-
-  if (variant === 'activate') {
-    return (
-      <ActionCard
-        icon="unlock"
-        accentTone="amber"
-        title="Activate your placement account"
-        message={`Pay ₹${fee} one-time to unlock job applications and interviews.`}
-        primaryLabel={`Pay ₹${fee} to activate`}
-        onPrimary={() => onNavigate('Subscription')}
-      />
-    )
-  }
 
   if (variant === 'resume') {
     return (

@@ -106,9 +106,8 @@ export default function JobDetailScreen({ route, navigation }) {
   if (isLoading || profileLoading || !job) return <JobDetailSkeleton />
 
   const applied = applications.some((a) => (a.jobId ?? a.job?.id) === id)
-  const paid = profile?.subscription?.status === 'paid'
   const verified = profile?.resume?.status === 'verified'
-  const eligible = paid && verified
+  const eligible = verified
   const days = daysSince(job.postedOn)
   const isNew = days !== null && days <= 1
   const salary = fmtSalaryRange(job)
@@ -237,7 +236,7 @@ export default function JobDetailScreen({ route, navigation }) {
         </Section>
       ) : null}
 
-      {!applied && !eligible ? <EligibilityNote paid={paid} verified={verified} navigation={navigation} style={{ marginTop: spacing.lg }} /> : null}
+      {!applied && !eligible ? <EligibilityNote verified={verified} style={{ marginTop: spacing.lg }} /> : null}
     </ScreenContainer>
   )
 }

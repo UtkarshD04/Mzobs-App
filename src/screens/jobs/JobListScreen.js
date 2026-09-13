@@ -59,7 +59,6 @@ export default function JobListScreen({ navigation, route }) {
   if (isLoading) return <JobRowSkeleton />
 
   const appliedJobIds = new Set(applications.map((a) => a.jobId ?? a.job?.id))
-  const paid = profile?.subscription?.status === 'paid'
   const activeFilterCount = Object.keys(DEFAULT_FILTERS).filter((k) => filters[k] !== DEFAULT_FILTERS[k]).length
 
   function openFilters() {
@@ -160,7 +159,7 @@ export default function JobListScreen({ navigation, route }) {
       }
     >
       <View style={{ flex: 1 }}>
-        <EligibilityNote paid={paid} verified={profile?.resume?.status === 'verified'} navigation={navigation} style={{ marginBottom: spacing.sm }} />
+        <EligibilityNote verified={profile?.resume?.status === 'verified'} style={{ marginBottom: spacing.sm }} />
 
         <FlatList
           style={{ flex: 1 }}

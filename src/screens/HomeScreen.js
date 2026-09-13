@@ -7,7 +7,6 @@ import { useTheme } from '../theme'
 import { useJobsQuery, useRecommendedJobsQuery, useAppliedBasedJobsQuery, useInstantHiringJobsQuery } from '../hooks/useJobs'
 import { useApplicationsQuery } from '../hooks/useApplications'
 import { useProfileQuery } from '../hooks/useProfile'
-import { useSubscriptionQuery } from '../hooks/useSubscription'
 import { useNotificationsQuery } from '../hooks/useNotifications'
 import { useInterviewsQuery } from '../hooks/useInterviews'
 import EmptyState from '../components/ui/EmptyState'
@@ -32,7 +31,6 @@ export default function HomeScreen({ navigation }) {
   const { data: profile } = useProfileQuery()
   const { data: jobs = [], isLoading, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
-  const { data: subscription } = useSubscriptionQuery()
   const { data: notifications = [] } = useNotificationsQuery()
   const { data: interviews = [] } = useInterviewsQuery()
   const { data: recommendedJobs = [], isLoading: isLoadingRecommended } = useRecommendedJobsQuery()
@@ -42,8 +40,6 @@ export default function HomeScreen({ navigation }) {
   const [selectedCategory, setSelectedCategory] = useState('all')
 
   const unreadCount = notifications.filter((n) => n.unread).length
-  const isPaid = subscription?.status === 'paid'
-  const fee = subscription?.amount ?? 299
   const resumeStatus = profile?.resume?.status ?? 'none'
 
   const filtered = useMemo(() => jobs.filter((job) => jobMatchesCategory(job, selectedCategory)), [jobs, selectedCategory])
@@ -66,8 +62,7 @@ export default function HomeScreen({ navigation }) {
   }
 
   let progressVariant = 'progress'
-  if (!isPaid) progressVariant = 'activate'
-  else if (resumeStatus === 'none') progressVariant = 'resume'
+  if (resumeStatus === 'none') progressVariant = 'resume'
 
   const upcomingInterview = interviews
     .filter((i) => ['Confirmed', 'Awaiting confirmation'].includes(i.status))
@@ -209,7 +204,7 @@ export default function HomeScreen({ navigation }) {
         ) : null}
 
         <Animated.View entering={FadeInDown.delay(280).duration(280)} style={{ marginTop: spacing.xl }}>
-          <HomeProgressCard variant={progressVariant} fee={fee} applicationsCount={applications.length} onNavigate={goTo} />
+          <HomeProgressCard variant={progressVariant} applicationsCount={applications.length} onNavigate={goTo} />
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
