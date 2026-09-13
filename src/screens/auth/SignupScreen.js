@@ -9,6 +9,7 @@ import SelectField from '../../components/ui/SelectField'
 import Button from '../../components/ui/Button'
 import ScreenContainer from '../../components/ui/ScreenContainer'
 import BrandLogo from '../../components/ui/BrandLogo'
+import AuthBubbleField from '../../components/decor/AuthBubbleField'
 
 const GRADUATION_OPTIONS = [
   '12th / No Degree',
@@ -136,7 +137,8 @@ export default function SignupScreen({ navigation }) {
   return (
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ alignItems: 'center', paddingTop: spacing.lg, marginBottom: spacing.xl }}>
+        <View style={{ position: 'relative', alignItems: 'center', paddingTop: spacing.lg, marginBottom: spacing.xl }}>
+          <AuthBubbleField />
           <View
             style={{
               width: 56,

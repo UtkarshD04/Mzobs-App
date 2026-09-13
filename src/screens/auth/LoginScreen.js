@@ -7,6 +7,7 @@ import TextField from '../../components/ui/TextField'
 import Button from '../../components/ui/Button'
 import ScreenContainer from '../../components/ui/ScreenContainer'
 import BrandLogo from '../../components/ui/BrandLogo'
+import AuthBubbleField from '../../components/decor/AuthBubbleField'
 
 export default function LoginScreen({ navigation }) {
   const { colors, spacing, fontFamily } = useTheme()
@@ -31,7 +32,8 @@ export default function LoginScreen({ navigation }) {
   return (
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ alignItems: 'center', paddingTop: spacing.xl, marginBottom: spacing.xl }}>
+        <View style={{ position: 'relative', alignItems: 'center', paddingTop: spacing.xl, marginBottom: spacing.xl }}>
+          <AuthBubbleField />
           <View
             style={{
               width: 64,
