@@ -15,7 +15,6 @@ import Card from '../components/ui/Card'
 import JobRowSkeleton from '../components/ui/skeletons/JobRowSkeleton'
 import HomeTopBar from '../components/home/HomeTopBar'
 import JobSearchSection from '../components/home/JobSearchSection'
-import TrustStrip from '../components/home/TrustStrip'
 import SectionHeader from '../components/home/SectionHeader'
 import CompaniesHiringSection from '../components/home/CompaniesHiringSection'
 import CategoryGrid from '../components/home/CategoryGrid'
@@ -94,11 +93,7 @@ export default function HomeScreen({ navigation }) {
           <JobSearchSection onOpenSearch={openSearch} />
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(120).duration(280)}>
-          <TrustStrip total={jobs.length} />
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(140).duration(280)} style={{ marginTop: spacing.xl }}>
+        <Animated.View entering={FadeInDown.delay(120).duration(280)} style={{ marginTop: spacing.xl }}>
           <SectionHeader
             title="Fresh opportunities"
             subtitle={
