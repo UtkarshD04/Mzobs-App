@@ -1,6 +1,9 @@
-// MZOBS teal design system — matches Website/Landing-Frontend/src/index.css's
-// `--explorer-*` tokens (job-discovery site) so the mobile app reads as a
-// direct extension of the current MZOBS website, not a separate product.
+// MZOBS blue design system — matches Website/Landing-Frontend/src/index.css's
+// `--explorer-*` tokens (job-discovery site, hero/CTA blue) so the mobile
+// app reads as a direct extension of the current MZOBS website, not a
+// separate product. `navy` is the app's primary-action color name (buttons,
+// links, focus) — historically teal, now the same blue as the website's
+// --explorer-blue/--explorer-blue-hover so both surfaces share one accent.
 export const light = {
   bg: '#F7F9FC',
   bgSecondary: '#F1F4F9',
@@ -17,11 +20,11 @@ export const light = {
 
   navy950: '#0A1E30',
   navy900: '#0F2338',
-  navy700: '#0E6B60',
-  navy: '#0B7A6D',
-  navyHover: '#075F55',
-  navyTint: '#E7F5F1',
-  navyTintStrong: '#D7EEE7',
+  navy700: '#1D4ED8',
+  navy: '#2563EB',
+  navyHover: '#1D4ED8',
+  navyTint: '#EFF6FF',
+  navyTintStrong: '#DCE7FE',
 
   gold: '#c68a1f',
   goldStrong: '#9a6b14',
@@ -68,11 +71,11 @@ export const dark = {
 
   navy950: '#0A1E30',
   navy900: '#0F2338',
-  navy700: '#3FC2AE',
-  navy: '#2FB39E',
-  navyHover: '#42C7B2',
-  navyTint: 'rgba(47, 179, 158, 0.16)',
-  navyTintStrong: 'rgba(47, 179, 158, 0.24)',
+  navy700: '#93C5FD',
+  navy: '#60A5FA',
+  navyHover: '#93C5FD',
+  navyTint: 'rgba(96, 165, 250, 0.16)',
+  navyTintStrong: 'rgba(96, 165, 250, 0.24)',
 
   gold: '#e3ac3d',
   goldStrong: '#f0c267',
