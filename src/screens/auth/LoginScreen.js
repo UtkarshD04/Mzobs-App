@@ -32,10 +32,10 @@ export default function LoginScreen({ navigation }) {
   return (
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ position: 'relative', alignItems: 'center', paddingTop: spacing.xl, marginBottom: spacing.xl }}>
-          <AuthBubbleField />
+        <View style={{ alignItems: 'center', paddingTop: spacing.xl, marginBottom: spacing.xl }}>
           <View
             style={{
+              position: 'relative',
               width: 64,
               height: 64,
               borderRadius: 20,
@@ -45,6 +45,7 @@ export default function LoginScreen({ navigation }) {
               marginBottom: spacing.md,
             }}
           >
+            <AuthBubbleField />
             <Feather name="briefcase" size={28} color={colors.navy} />
           </View>
           <BrandLogo height={24} />

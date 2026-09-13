@@ -137,10 +137,10 @@ export default function SignupScreen({ navigation }) {
   return (
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ position: 'relative', alignItems: 'center', paddingTop: spacing.lg, marginBottom: spacing.xl }}>
-          <AuthBubbleField />
+        <View style={{ alignItems: 'center', paddingTop: spacing.lg, marginBottom: spacing.xl }}>
           <View
             style={{
+              position: 'relative',
               width: 56,
               height: 56,
               borderRadius: 18,
@@ -150,6 +150,7 @@ export default function SignupScreen({ navigation }) {
               marginBottom: spacing.md,
             }}
           >
+            <AuthBubbleField />
             <Feather name="user-plus" size={24} color={colors.navy} />
           </View>
           <BrandLogo height={22} />
