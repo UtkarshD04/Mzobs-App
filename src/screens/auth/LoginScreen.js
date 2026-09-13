@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { View, Text, KeyboardAvoidingView, Platform, Pressable } from 'react-native'
-import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { useAuth } from '../../context/AuthContext'
 import TextField from '../../components/ui/TextField'
@@ -33,22 +32,13 @@ export default function LoginScreen({ navigation }) {
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={{ alignItems: 'center', paddingTop: spacing.xl, marginBottom: spacing.xl }}>
-          <View
-            style={{
-              position: 'relative',
-              width: 64,
-              height: 64,
-              borderRadius: 20,
-              backgroundColor: colors.navyTint,
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: spacing.md,
-            }}
-          >
+          <View style={{ position: 'relative', height: 44, width: 44 * (5000 / 2725), alignItems: 'center', justifyContent: 'center' }}>
             <AuthBubbleField />
-            <Feather name="briefcase" size={28} color={colors.navy} />
+            <BrandLogo height={44} />
           </View>
-          <BrandLogo height={24} />
+          <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 12.5, letterSpacing: 0.2, marginTop: spacing.md, textAlign: 'center' }}>
+            Where verified talent meets real work.
+          </Text>
           <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, marginTop: spacing.lg }}>Welcome back.</Text>
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4, textAlign: 'center' }}>
             Sign in to check your applications and pick up where you left off.

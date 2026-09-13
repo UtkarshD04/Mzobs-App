@@ -138,22 +138,13 @@ export default function SignupScreen({ navigation }) {
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={{ alignItems: 'center', paddingTop: spacing.lg, marginBottom: spacing.xl }}>
-          <View
-            style={{
-              position: 'relative',
-              width: 56,
-              height: 56,
-              borderRadius: 18,
-              backgroundColor: colors.navyTint,
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: spacing.md,
-            }}
-          >
+          <View style={{ position: 'relative', height: 44, width: 44 * (5000 / 2725), alignItems: 'center', justifyContent: 'center' }}>
             <AuthBubbleField />
-            <Feather name="user-plus" size={24} color={colors.navy} />
+            <BrandLogo height={44} />
           </View>
-          <BrandLogo height={22} />
+          <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 12.5, letterSpacing: 0.2, marginTop: spacing.md, textAlign: 'center' }}>
+            Where verified talent meets real work.
+          </Text>
           <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, marginTop: spacing.lg, textAlign: 'center' }}>
             Your next opportunity starts here.
           </Text>
