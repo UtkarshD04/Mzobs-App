@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { View, Text, Image, ScrollView } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { useHotCitiesQuery } from '../../hooks/useHotCities'
@@ -38,21 +39,45 @@ function FilterPill({ label, active, onPress }) {
   )
 }
 
+// Mirrors the website's own CityVisualPlaceholder (HotJobsByCity.jsx) — its
+// real fallback for a city with no photo yet *or* a photo that failed to
+// load, not a mobile-only stand-in: a navy-deep-to-teal gradient plus one
+// oversized translucent monogram. Rendered underneath the real photo at all
+// times (not swapped in only on error) so there's no flash of plain color
+// while the photo streams in — the photo just fades in over it once loaded.
 function CityImage({ city, imageUrl }) {
-  const { colors } = useTheme()
+  const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
+  const showPhoto = Boolean(imageUrl) && !failed
 
-  if (!imageUrl || failed) {
-    return (
-      <View style={{ ...StyleSheetAbsoluteFill, backgroundColor: colors.navy, alignItems: 'flex-end', justifyContent: 'flex-end', overflow: 'hidden' }}>
-        <Text style={{ color: 'rgba(255,255,255,0.16)', fontFamily: 'Inter_700Bold', fontSize: 72, lineHeight: 76, marginRight: -6, marginBottom: -14 }}>
+  return (
+    <View style={StyleSheetAbsoluteFill}>
+      <LinearGradient colors={['#0f2338', '#0b7a6d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ ...StyleSheetAbsoluteFill, overflow: 'hidden' }}>
+        <Text
+          style={{
+            position: 'absolute',
+            right: -6,
+            bottom: -16,
+            color: 'rgba(255,255,255,0.14)',
+            fontFamily: 'Inter_700Bold',
+            fontSize: 88,
+            lineHeight: 92,
+          }}
+        >
           {city[0]}
         </Text>
-      </View>
-    )
-  }
-
-  return <Image source={{ uri: imageUrl }} onError={() => setFailed(true)} resizeMode="cover" style={StyleSheetAbsoluteFill} />
+      </LinearGradient>
+      {showPhoto ? (
+        <Image
+          source={{ uri: imageUrl }}
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+          resizeMode="cover"
+          style={[StyleSheetAbsoluteFill, { opacity: loaded ? 1 : 0 }]}
+        />
+      ) : null}
+    </View>
+  )
 }
 
 const StyleSheetAbsoluteFill = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }

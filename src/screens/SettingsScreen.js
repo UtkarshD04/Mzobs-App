@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Text, View, Switch } from 'react-native'
+import { Text, View, Switch, Alert } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useAuth } from '../context/AuthContext'
-import { useProfileQuery, useUpdateProfileMutation } from '../hooks/useProfile'
+import { useProfileQuery, useUpdateProfileMutation, useDeleteAccountMutation } from '../hooks/useProfile'
 import { useSendTestPushMutation } from '../hooks/useNotifications'
 import { useNotificationPreferencesQuery, useUpdateNotificationPreferencesMutation } from '../hooks/useNotificationPreferences'
 import * as authService from '../services/authService'
@@ -51,6 +51,7 @@ export default function SettingsScreen() {
   const updateMutation = useUpdateProfileMutation()
   const updatePreferencesMutation = useUpdateNotificationPreferencesMutation()
   const testPushMutation = useSendTestPushMutation()
+  const deleteAccountMutation = useDeleteAccountMutation()
   const [name, setName] = useState(null)
   const [phone, setPhone] = useState(null)
   const [saved, setSaved] = useState(false)
@@ -76,6 +77,27 @@ export default function SettingsScreen() {
     } catch {
       setResetState('error')
     }
+  }
+
+  function handleDeleteAccount() {
+    Alert.alert(
+      'Delete account',
+      'This permanently deletes your account, applications, and all related data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAccountMutation.mutateAsync()
+            } finally {
+              await logout()
+            }
+          },
+        },
+      ],
+    )
   }
 
   return (
@@ -182,6 +204,13 @@ export default function SettingsScreen() {
       </Card>
 
       <Button title="Log out" variant="danger" onPress={logout} style={{ marginTop: spacing.xl }} />
+      <Button
+        title="Delete account"
+        variant="danger"
+        onPress={handleDeleteAccount}
+        loading={deleteAccountMutation.isPending}
+        style={{ marginTop: spacing.sm }}
+      />
     </ScreenContainer>
   )
 }

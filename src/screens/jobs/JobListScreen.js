@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { View, Text, Pressable, FlatList } from 'react-native'
+import { View, Text, Pressable, FlatList, Alert, Linking } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { useJobsQuery } from '../../hooks/useJobs'
 import { useApplicationsQuery } from '../../hooks/useApplications'
 import { useProfileQuery } from '../../hooks/useProfile'
+import { useDeviceLocation } from '../../hooks/useDeviceLocation'
 import { DEFAULT_FILTERS, matchesFilters, matchesQuery } from '../../lib/jobFilters'
+import { sortJobsByDistance, distanceToJob } from '../../lib/jobDistance'
 import JobOpeningCard from '../../components/home/JobOpeningCard'
 import ScreenContainer from '../../components/ui/ScreenContainer'
 import EmptyState from '../../components/ui/EmptyState'
@@ -24,6 +26,8 @@ export default function JobListScreen({ navigation, route }) {
   const [query, setQuery] = useState('')
   const [suggestionsVisible, setSuggestionsVisible] = useState(false)
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
+  const [nearMe, setNearMe] = useState(false)
+  const { coords, status: locationStatus, requestLocation } = useDeviceLocation()
 
   // JobFiltersScreen hands the applied filters/query back through route
   // params (a dedicated page, not a sheet, so there's no shared state to
@@ -54,7 +58,10 @@ export default function JobListScreen({ navigation, route }) {
     return results
   }, [jobs, query])
 
-  const filtered = useMemo(() => jobs.filter((job) => matchesFilters(job, filters) && matchesQuery(job, query)), [jobs, query, filters])
+  const filtered = useMemo(() => {
+    const base = jobs.filter((job) => matchesFilters(job, filters) && matchesQuery(job, query))
+    return nearMe && coords ? sortJobsByDistance(base, coords) : base
+  }, [jobs, query, filters, nearMe, coords])
 
   if (isLoading) return <JobRowSkeleton />
 
@@ -63,6 +70,26 @@ export default function JobListScreen({ navigation, route }) {
 
   function openFilters() {
     navigation.navigate('JobFilters', { filters, query, jobs })
+  }
+
+  async function handleToggleNearMe() {
+    if (nearMe) {
+      setNearMe(false)
+      return
+    }
+    if (coords) {
+      setNearMe(true)
+      return
+    }
+    const result = await requestLocation()
+    if (result.coords) {
+      setNearMe(true)
+    } else if (result.status === 'denied') {
+      Alert.alert('Location access needed', 'Turn on location access for MZOBS to see nearby openings first.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open settings', onPress: () => Linking.openSettings() },
+      ])
+    }
   }
 
   return (
@@ -116,8 +143,8 @@ export default function JobListScreen({ navigation, route }) {
             </View>
           ) : null}
 
-          <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm, alignItems: 'center' }}>
-            <View style={{ flex: 1, flexDirection: 'row', gap: spacing.sm }}>
+          <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
+            <View style={{ flex: 1, flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
               {WORK_MODES.map((mode) => (
                 <FilterChip
                   key={mode}
@@ -126,6 +153,12 @@ export default function JobListScreen({ navigation, route }) {
                   onPress={() => setFilters((f) => ({ ...f, workMode: mode }))}
                 />
               ))}
+              <FilterChip
+                label={locationStatus === 'requesting' ? 'Locating…' : 'Near me'}
+                icon="navigation"
+                active={nearMe}
+                onPress={handleToggleNearMe}
+              />
             </View>
             <Pressable
               onPress={openFilters}
@@ -170,6 +203,7 @@ export default function JobListScreen({ navigation, route }) {
               job={item}
               applied={appliedJobIds.has(item.id)}
               index={index}
+              distanceKm={nearMe && coords ? distanceToJob(item, coords) : null}
               onPress={() => navigation.navigate('JobDetail', { id: item.id })}
             />
           )}

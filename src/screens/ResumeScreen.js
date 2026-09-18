@@ -19,6 +19,7 @@ export default function ResumeScreen() {
   const { isLoading: profileLoading } = useProfileQuery()
   const uploadMutation = useUploadResumeMutation()
   const [error, setError] = useState('')
+  const [isPicking, setIsPicking] = useState(false)
 
   if (isLoading || profileLoading) return <ResumeSkeleton />
 
@@ -27,17 +28,27 @@ export default function ResumeScreen() {
   const status = resume?.status ?? 'none'
 
   async function handlePick() {
+    if (isPicking) return
     setError('')
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-      copyToCacheDirectory: true,
-    })
-    if (result.canceled) return
-
+    setIsPicking(true)
+    // Both the native file-browser launch and the upload itself can throw
+    // (e.g. Android's "document picker already active" if the button is
+    // tapped twice in quick succession) — without this try/catch around the
+    // whole flow, that exception was an unhandled promise rejection: no
+    // picker, no error message, nothing visibly happens on tap. isPicking
+    // covers the picker's own launch, which uploadMutation.isPending doesn't
+    // (that only tracks the upload, which starts after a file is chosen).
     try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        copyToCacheDirectory: true,
+      })
+      if (result.canceled) return
       await uploadMutation.mutateAsync(result.assets[0])
     } catch (err) {
-      setError(err.response?.data?.message ?? 'Upload failed. Please try again.')
+      setError(err.response?.data?.message ?? 'Could not open the file picker. Please try again.')
+    } finally {
+      setIsPicking(false)
     }
   }
 
@@ -80,7 +91,7 @@ export default function ResumeScreen() {
         <Button
           title={resume?.version ? 'Upload new version' : 'Upload resume'}
           onPress={handlePick}
-          loading={uploadMutation.isPending}
+          loading={isPicking || uploadMutation.isPending}
           style={{ marginTop: spacing.lg }}
         />
       </Card>

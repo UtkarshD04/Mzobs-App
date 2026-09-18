@@ -13,7 +13,7 @@ import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Tag from '../../components/ui/Tag'
 import Avatar from '../../components/ui/Avatar'
-import EligibilityNote from '../../components/ui/EligibilityNote'
+import EligibilityNote, { FREE_APPLICATION_LIMIT } from '../../components/ui/EligibilityNote'
 import JobDetailSkeleton from '../../components/ui/skeletons/JobDetailSkeleton'
 
 function daysSince(dateValue) {
@@ -107,7 +107,8 @@ export default function JobDetailScreen({ route, navigation }) {
 
   const applied = applications.some((a) => (a.jobId ?? a.job?.id) === id)
   const verified = profile?.resume?.status === 'verified'
-  const eligible = verified
+  const limitReached = !profile?.isPremium && applications.length >= FREE_APPLICATION_LIMIT
+  const eligible = verified && !limitReached
   const days = daysSince(job.postedOn)
   const isNew = days !== null && days <= 1
   const salary = fmtSalaryRange(job)
@@ -137,6 +138,12 @@ export default function JobDetailScreen({ route, navigation }) {
           {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 12.5, marginBottom: spacing.sm }}>{error}</Text> : null}
           {applied ? (
             <Badge label="Applied — with Mzobs" tone="green" style={{ alignSelf: 'center' }} />
+          ) : limitReached ? (
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <Button title="Upgrade to apply" variant="gold" onPress={() => navigation.navigate('Subscription')} style={{ flex: 1 }} />
+              <IconAction icon="bookmark" active={saved} onPress={handleToggleSaved} accessibilityLabel={saved ? 'Remove from saved' : 'Save job'} />
+              <IconAction icon="share-2" onPress={handleShare} accessibilityLabel="Share job" />
+            </View>
           ) : (
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <Button title="Apply through Mzobs" onPress={handleApply} loading={applyMutation.isPending} disabled={!eligible} style={{ flex: 1 }} />
@@ -236,7 +243,9 @@ export default function JobDetailScreen({ route, navigation }) {
         </Section>
       ) : null}
 
-      {!applied && !eligible ? <EligibilityNote verified={verified} style={{ marginTop: spacing.lg }} /> : null}
+      {!applied && !eligible ? (
+        <EligibilityNote verified={verified} limitReached={limitReached} navigation={navigation} style={{ marginTop: spacing.lg }} />
+      ) : null}
     </ScreenContainer>
   )
 }

@@ -2,19 +2,22 @@ import { useState } from 'react'
 import { View, Text, KeyboardAvoidingView, Platform, Pressable } from 'react-native'
 import { useTheme } from '../../theme'
 import { useAuth } from '../../context/AuthContext'
+import { googleSignIn } from '../../lib/googleSignIn'
 import TextField from '../../components/ui/TextField'
 import Button from '../../components/ui/Button'
+import GoogleAuthButton, { OrDivider } from '../../components/ui/GoogleAuthButton'
 import ScreenContainer from '../../components/ui/ScreenContainer'
 import BrandLogo from '../../components/ui/BrandLogo'
 import AuthBubbleField from '../../components/decor/AuthBubbleField'
 
 export default function LoginScreen({ navigation }) {
   const { colors, spacing, fontFamily } = useTheme()
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   async function handleLogin() {
     setError('')
@@ -25,6 +28,20 @@ export default function LoginScreen({ navigation }) {
       setError(err.response?.data?.message ?? 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setError('')
+    setGoogleLoading(true)
+    try {
+      const result = await googleSignIn()
+      if (!result) return
+      await loginWithGoogle(result.idToken)
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Google sign-in failed. Please try again.')
+    } finally {
+      setGoogleLoading(false)
     }
   }
 
@@ -45,6 +62,9 @@ export default function LoginScreen({ navigation }) {
           </Text>
         </View>
 
+        <GoogleAuthButton onPress={handleGoogleLogin} loading={googleLoading} disabled={loading} />
+        <OrDivider label="or sign in with email" />
+
         <TextField
           label="Email"
           value={email}
@@ -61,7 +81,7 @@ export default function LoginScreen({ navigation }) {
 
         {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13, marginBottom: spacing.md }}>{error}</Text> : null}
 
-        <Button title="Sign in →" onPress={handleLogin} loading={loading} disabled={!email || !password} style={{ marginTop: spacing.sm }} />
+        <Button title="Sign in →" onPress={handleLogin} loading={loading} disabled={!email || !password || googleLoading} style={{ marginTop: spacing.sm }} />
 
         <Pressable onPress={() => navigation.navigate('Signup')} style={{ marginTop: spacing.lg, alignItems: 'center', minHeight: 44, justifyContent: 'center' }}>
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5 }}>

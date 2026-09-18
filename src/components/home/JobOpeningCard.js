@@ -7,6 +7,7 @@ import Card from '../ui/Card'
 import Badge from '../ui/Badge'
 import Avatar from '../ui/Avatar'
 import Tag from '../ui/Tag'
+import { CARD_TONES } from './cardTones'
 
 const WORK_MODE_TONE = { Remote: 'violet', Hybrid: 'amber', 'On-site': 'navy' }
 
@@ -27,13 +28,14 @@ function MetaItem({ icon, label }) {
   )
 }
 
-export default function JobOpeningCard({ job, applied, index = 0, onPress, featured = false }) {
+export default function JobOpeningCard({ job, applied, index = 0, onPress, featured = false, tone = null, distanceKm = null }) {
   const { colors, spacing, radius, fontFamily, isDark } = useTheme()
   const days = daysSince(job.postedOn)
   const isNew = days !== null && days <= 2
   const salary = fmtSalaryRange(job)
   const workModeTone = WORK_MODE_TONE[job.workMode] ?? 'teal'
   const railColor = applied ? colors.green : isNew ? colors.teal : null
+  const cardTone = tone ?? (featured ? CARD_TONES[0] : null)
 
   const reduceMotion = useReducedMotion()
   const lift = useSharedValue(0)
@@ -56,6 +58,7 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, featu
           style={[
             { marginBottom: spacing.md, padding: spacing.md, overflow: 'hidden' },
             featured ? { borderRadius: radius.md } : null,
+            cardTone ? { backgroundColor: cardTone.bg, borderColor: cardTone.border } : null,
             Platform.select({
               ios: { shadowOpacity: isDark ? 0.14 : featured ? 0.035 : 0.045, shadowRadius: featured ? 6 : 10, shadowOffset: { width: 0, height: featured ? 1 : 2 } },
               android: { elevation: isDark ? 0 : featured ? 1 : 2 },
@@ -68,7 +71,7 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, featu
           <View style={{ flexDirection: 'row' }}>
             <View
               style={[
-                { borderRadius: radius.md + 2, padding: 2, marginRight: spacing.md, borderWidth: 1, borderColor: colors.border },
+                { borderRadius: radius.md + 2, padding: 2, marginRight: spacing.md, borderWidth: 1, borderColor: cardTone?.border ?? colors.border },
                 Platform.select({
                   ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: isDark ? 0 : 0.05, shadowRadius: 3 },
                   android: { elevation: 0 },
@@ -95,7 +98,7 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, featu
 
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 4, marginTop: spacing.sm }}>
                 <MetaItem icon="briefcase" label={fmtExperience(job)} />
-                <MetaItem icon="map-pin" label={job.location} />
+                <MetaItem icon="map-pin" label={distanceKm != null ? `${job.location} · ${Math.round(distanceKm)} km away` : job.location} />
               </View>
 
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm }}>
@@ -147,7 +150,7 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, featu
                   marginTop: spacing.md,
                   paddingTop: spacing.sm,
                   borderTopWidth: 1,
-                  borderTopColor: colors.border,
+                  borderTopColor: cardTone?.border ?? colors.border,
                 }}
               >
                 <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12 }}>

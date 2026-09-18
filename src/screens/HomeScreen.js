@@ -19,10 +19,10 @@ import CompaniesHiringSection from '../components/home/CompaniesHiringSection'
 import CategoryGrid from '../components/home/CategoryGrid'
 import HotJobsByCitySection from '../components/home/HotJobsByCitySection'
 import JobOpeningCard from '../components/home/JobOpeningCard'
-import JobCompactRow from '../components/home/JobCompactRow'
 import JobsSection from '../components/home/JobsSection'
 import HomeProgressCard from '../components/home/HomeProgressCard'
 import { jobMatchesCategory } from '../components/home/categoryData'
+import { CARD_TONES } from '../components/home/cardTones'
 
 const MAX_VISIBLE_JOBS = 5
 
@@ -116,11 +116,13 @@ export default function HomeScreen({ navigation }) {
                 featured
                 onPress={() => navigation.navigate('JobDetail', { id: visibleJobs[0].id })}
               />
-              {visibleJobs.slice(1, 3).map((job) => (
-                <JobCompactRow
+              {visibleJobs.slice(1).map((job, i) => (
+                <JobOpeningCard
                   key={job.id}
                   job={job}
                   applied={appliedJobIds?.has(job.id)}
+                  index={i + 1}
+                  tone={CARD_TONES[(i + 1) % CARD_TONES.length]}
                   onPress={() => navigation.navigate('JobDetail', { id: job.id })}
                 />
               ))}

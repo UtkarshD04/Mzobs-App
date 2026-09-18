@@ -11,10 +11,11 @@ const BACKEND_PORT = 4000
 function getDevServerApiUrl() {
   const hostUri = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoGo?.debuggerHost
   let host = hostUri?.split(':')[0]
-  // The iOS Simulator shares the Mac's own network stack, so routing back out
-  // through the Mac's LAN IP can silently fail (local NAT/firewall hairpin) —
-  // `localhost` always reaches it directly since it's the same machine.
-  if (Platform.OS === 'ios' && !Device.isDevice) host = 'localhost'
+  // Simulators/emulators share the host machine's network stack (or, for
+  // Android, a fixed NAT alias to it) — use that directly rather than relying
+  // on hostUri, which isn't reliably populated on every build type (dev
+  // client vs Expo Go) and, for iOS, can hairpin-fail through the Mac's LAN IP.
+  if (!Device.isDevice) host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost'
   return host ? `http://${host}:${BACKEND_PORT}` : null
 }
 
@@ -23,3 +24,11 @@ const FALLBACK_API_URL = 'http://localhost:4000'
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? getDevServerApiUrl() ?? FALLBACK_API_URL
 export const API_BASE = `${API_URL}/api/employee`
 export const FILE_BASE_URL = API_URL
+
+export const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? ''
+
+// Google's OAuth client only accepts https:// redirect URIs, so the browser
+// flow bounces through this backend route (same origin as API_URL — no
+// separate config needed), which forwards into the app via its own
+// "mzobs://" scheme. See Backend/src/controllers/googleBridgeController.js.
+export const GOOGLE_MOBILE_REDIRECT_BRIDGE_URL = `${API_URL}/mobile/google-callback`

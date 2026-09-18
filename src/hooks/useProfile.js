@@ -13,3 +13,7 @@ export function useUpdateProfileMutation() {
     onSuccess: (data) => queryClient.setQueryData(queryKeys.profile, data),
   })
 }
+
+export function useDeleteAccountMutation() {
+  return useMutation({ mutationFn: profileService.deleteAccount })
+}

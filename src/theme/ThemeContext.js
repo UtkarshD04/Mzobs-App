@@ -23,9 +23,14 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     ;(async () => {
-      const stored = await SecureStore.getItemAsync(THEME_KEY)
-      if (stored === 'dark' || stored === 'light') setModeState(stored)
-      setReady(true)
+      try {
+        const stored = await SecureStore.getItemAsync(THEME_KEY)
+        if (stored === 'dark' || stored === 'light') setModeState(stored)
+      } catch {
+        // ignore — fall back to default theme
+      } finally {
+        setReady(true)
+      }
     })()
   }, [])
 

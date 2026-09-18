@@ -4,20 +4,22 @@ import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import PressableScale from '../ui/PressableScale'
 import SectionHeader from './SectionHeader'
-import { CATEGORY_BY_ID, GRID_CATEGORY_IDS, jobMatchesCategory } from './categoryData'
+import { CATEGORY_BY_ID, GRID_CATEGORY_IDS, jobMatchesCategory, CATEGORY_TONES, DEFAULT_CATEGORY_TONE, EMPTY_CATEGORY_TONE } from './categoryData'
 
 const TILE_WIDTH = 144
 const TILE_HEIGHT = 116
 
-// Mirrors the website's CategoryGrid: every tile uses one monochrome teal
-// icon treatment (not a colour per category) and a real live-openings count,
-// with a single "Most in-demand" tag on whichever category has the most.
-// Fixed width/height + a horizontal snap-scroll (matching the job-card
-// carousels elsewhere on Home) instead of a wrapping grid, so every tile is
-// exactly the same size regardless of label length.
-function CategoryTile({ label, icon, count, mostInDemand, onPress }) {
+// Mirrors the website's CategoryGrid: each tile gets its own distinct
+// tonal card (CATEGORY_TONES, keyed by category id) and a real
+// live-openings count, with a single "Most in-demand" tag on whichever
+// category has the most. Fixed width/height + a horizontal snap-scroll
+// (matching the job-card carousels elsewhere on Home) instead of a
+// wrapping grid, so every tile is exactly the same size regardless of
+// label length.
+function CategoryTile({ id, label, icon, count, mostInDemand, onPress }) {
   const { colors, radius, spacing, fontFamily } = useTheme()
   const hasNoOpenings = count === 0
+  const tone = hasNoOpenings ? EMPTY_CATEGORY_TONE : CATEGORY_TONES[id] ?? DEFAULT_CATEGORY_TONE
 
   return (
     <PressableScale
@@ -27,31 +29,30 @@ function CategoryTile({ label, icon, count, mostInDemand, onPress }) {
       style={{
         width: TILE_WIDTH,
         height: TILE_HEIGHT,
-        backgroundColor: colors.surface,
+        backgroundColor: tone.bg,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: tone.border,
         borderRadius: radius.md,
         padding: spacing.md,
-        opacity: hasNoOpenings ? 0.7 : 1,
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ width: 32, height: 32, borderRadius: radius.sm, backgroundColor: colors.tealTint, alignItems: 'center', justifyContent: 'center' }}>
-          <Feather name={icon} size={15} color={colors.teal} />
+        <View style={{ width: 32, height: 32, borderRadius: radius.sm, backgroundColor: 'rgba(255,255,255,0.7)', alignItems: 'center', justifyContent: 'center' }}>
+          <Feather name={icon} size={15} color={tone.icon} />
         </View>
-        <Feather name="chevron-right" size={14} color={colors.inkTertiary} />
+        <Feather name="chevron-right" size={14} color={tone.icon} />
       </View>
       <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 13, marginTop: spacing.sm }} numberOfLines={1}>
         {label}
       </Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-        <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5 }} numberOfLines={1}>
-          {count} opening{count === 1 ? '' : 's'}
+        <Text style={{ color: tone.icon, fontFamily: fontFamily.medium, fontSize: 11.5 }} numberOfLines={1}>
+          {hasNoOpenings ? 'No openings yet' : `${count} opening${count === 1 ? '' : 's'}`}
         </Text>
       </View>
       {mostInDemand ? (
-        <View style={{ alignSelf: 'flex-start', backgroundColor: colors.tealTint, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1, marginTop: 4 }}>
-          <Text style={{ color: colors.teal, fontFamily: fontFamily.semibold, fontSize: 9 }}>MOST IN-DEMAND</Text>
+        <View style={{ alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20, paddingHorizontal: 6, paddingVertical: 2, marginTop: 4 }}>
+          <Text style={{ color: tone.icon, fontFamily: fontFamily.bold, fontSize: 9 }}>★ TOP</Text>
         </View>
       ) : null}
     </PressableScale>
@@ -98,6 +99,7 @@ export default function CategoryGrid({ jobs, onSelectCategory }) {
           return (
             <View key={id} style={{ marginRight: spacing.sm }}>
               <CategoryTile
+                id={id}
                 label={cat.label}
                 icon={cat.icon}
                 count={counts[id] ?? 0}

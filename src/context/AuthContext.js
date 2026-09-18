@@ -34,7 +34,12 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     ;(async () => {
-      const stored = await tokenStore.get()
+      let stored
+      try {
+        stored = await tokenStore.get()
+      } catch {
+        // stored token unreadable — treat as logged out
+      }
       if (!stored) {
         setIsBootstrapping(false)
         return
@@ -60,9 +65,21 @@ export function AuthProvider({ children }) {
     registerPushToken()
   }, [])
 
-  const signup = useCallback(async (input) => {
-    const { token: newToken, employee: summary } = await authService.signup(input)
+  const loginWithGoogle = useCallback(async (credential) => {
+    const { token: newToken, employee: summary } = await authService.googleLogin(credential)
     await tokenStore.set(newToken)
+    setToken(newToken)
+    setEmployee(summary)
+    registerPushToken()
+  }, [])
+
+  // Finishes a signup SignupScreen already ran itself (via authService.signup/
+  // googleSignup, called directly so it can persist the token — tokenStore.set,
+  // not this — before this runs, letting its resume-upload step authenticate
+  // requests while still showing the pre-Home "upload your resume" screen).
+  // This is the equivalent of login/loginWithGoogle's second half: flips
+  // isAuthenticated so RootNavigator swaps to the app tree.
+  const completeSession = useCallback((newToken, summary) => {
     setToken(newToken)
     setEmployee(summary)
     registerPushToken()
@@ -74,7 +91,8 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!token,
     isBootstrapping,
     login,
-    signup,
+    loginWithGoogle,
+    completeSession,
     logout,
   }
 

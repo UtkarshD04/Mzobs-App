@@ -1,26 +1,91 @@
+import { useEffect } from 'react'
 import { View } from 'react-native'
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  useReducedMotion,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated'
 import { useTheme } from '../../theme'
 
-// Purely decorative backdrop for the search hero — a single, very low-opacity
-// soft-teal shape (a plain View, no image/SVG dependency) that adds a hint of
-// depth without competing with the search UI on top of it.
-export default function HeroPattern() {
-  const { colors } = useTheme()
+// Same signature "floating bubble" identity as the website's hero
+// (HeroBubbleField.jsx's --bubble-*-rgb tones), scaled down to a small set
+// that fits the compact mobile hero card without competing with the search
+// UI on top of it. Each bubble is a soft tinted circle with a small
+// off-center highlight, echoing the site's glass radial-gradient look
+// without needing an SVG/blur dependency.
+const BUBBLE_TONES = {
+  blue: '37, 99, 235',
+  teal: '11, 122, 109',
+  gold: '198, 138, 31',
+  purple: '124, 92, 232',
+  pink: '236, 97, 163',
+  orange: '237, 137, 54',
+}
+
+const BUBBLES = [
+  { size: 56, top: -18, left: -14, tone: 'blue', opacity: 0.10, dur: 5200, delay: 0 },
+  { size: 30, top: -8, left: '70%', tone: 'purple', opacity: 0.10, dur: 4600, delay: 300 },
+  { size: 22, top: 80, left: '6%', tone: 'teal', opacity: 0.09, dur: 4200, delay: 500 },
+  { size: 18, top: 92, left: '90%', tone: 'gold', opacity: 0.10, dur: 4800, delay: 200 },
+]
+
+function Bubble({ size, top, left, tone, opacity, dur, delay, reduceMotion }) {
+  const rgb = BUBBLE_TONES[tone]
+  const float = useSharedValue(0)
+
+  useEffect(() => {
+    if (reduceMotion) return
+    float.value = withDelay(
+      delay,
+      withRepeat(withSequence(withTiming(1, { duration: dur, easing: Easing.inOut(Easing.sin) }), withTiming(0, { duration: dur, easing: Easing.inOut(Easing.sin) })), -1, false)
+    )
+  }, [reduceMotion])
+
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: float.value * -8 }] }))
 
   return (
-    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }} pointerEvents="none">
+    <Animated.View style={[{ position: 'absolute', top, left, width: size, height: size }, style]} pointerEvents="none">
+      <View
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: `rgba(${rgb}, ${opacity})`,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.35)',
+        }}
+      />
       <View
         style={{
           position: 'absolute',
-          top: -90,
-          right: -70,
-          width: 220,
-          height: 220,
-          borderRadius: 110,
-          backgroundColor: colors.teal,
-          opacity: 0.06,
+          top: size * 0.16,
+          left: size * 0.18,
+          width: size * 0.34,
+          height: size * 0.34,
+          borderRadius: size,
+          backgroundColor: 'rgba(255,255,255,0.55)',
         }}
       />
+    </Animated.View>
+  )
+}
+
+export default function HeroPattern() {
+  const { isDark } = useTheme()
+  const reduceMotion = useReducedMotion()
+
+  if (isDark) return null
+
+  return (
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 130, overflow: 'hidden' }} pointerEvents="none">
+      {BUBBLES.map((b, i) => (
+        <Bubble key={i} {...b} reduceMotion={reduceMotion} />
+      ))}
     </View>
   )
 }

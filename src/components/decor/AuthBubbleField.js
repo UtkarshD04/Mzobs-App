@@ -22,20 +22,20 @@ const TONE_RGB = {
   orange: '237, 137, 54',
 }
 
-const FIELD_W = 220
-const FIELD_H = 140
+const FIELD_W = 180
+const FIELD_H = 90
 // Offsets to center this field on its parent (a logo-sized box) —
 // (FIELD_W - logoWidth) / 2, (FIELD_H - logoHeight) / 2.
-const OFFSET_X = -70
-const OFFSET_Y = -48
+const OFFSET_X = -50
+const OFFSET_Y = -23
 
+// Kept to the top/sides of the logo only — the field used to extend well
+// below the logo box and visually crowd the tagline text right under it.
 const BUBBLES = [
-  { size: 20, top: 6, left: 10, tone: 'blue', amp: 6, dur: 3000, delay: 0 },
-  { size: 16, top: 10, left: 186, tone: 'purple', amp: 7, dur: 2600, delay: 300 },
-  { size: 14, top: 112, left: 16, tone: 'teal', amp: 6, dur: 2800, delay: 600 },
-  { size: 18, top: 106, left: 188, tone: 'pink', amp: 7, dur: 3200, delay: 150 },
-  { size: 10, top: 60, left: 2, tone: 'orange', amp: 5, dur: 2400, delay: 450 },
-  { size: 12, top: 64, left: 206, tone: 'blue', amp: 5, dur: 2700, delay: 750 },
+  { size: 16, top: 4, left: 6, tone: 'blue', amp: 6, dur: 3000, delay: 0 },
+  { size: 12, top: 8, left: 160, tone: 'purple', amp: 7, dur: 2600, delay: 300 },
+  { size: 10, top: 54, left: 2, tone: 'teal', amp: 5, dur: 2800, delay: 600 },
+  { size: 10, top: 58, left: 166, tone: 'orange', amp: 5, dur: 2700, delay: 450 },
 ]
 
 function Bubble({ b }) {
@@ -62,9 +62,9 @@ function Bubble({ b }) {
           width: b.size,
           height: b.size,
           borderRadius: b.size / 2,
-          backgroundColor: `rgba(${rgb}, 0.18)`,
+          backgroundColor: `rgba(${rgb}, 0.12)`,
           borderWidth: 1,
-          borderColor: `rgba(${rgb}, 0.25)`,
+          borderColor: `rgba(${rgb}, 0.18)`,
         },
         style,
       ]}

@@ -61,6 +61,29 @@ export const CATEGORIES = [
 
 export const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]))
 
+// Exact hex values from Website/Landing-Frontend's CategoryGrid.jsx
+// CATEGORY_TONES (keyed there by Job.track; re-keyed here by this file's
+// category `id`, e.g. 'operations' -> the website's 'ops' tone) — each
+// category gets its own distinct tonal card instead of one flat color.
+export const CATEGORY_TONES = {
+  technology: { bg: '#EAF2FE', border: '#D3E4FC', icon: '#2563EB' },
+  sales: { bg: '#FDF0E6', border: '#F6DDC3', icon: '#EA580C' },
+  marketing: { bg: '#E8F7F1', border: '#CBEADD', icon: '#059669' },
+  design: { bg: '#F1EEFC', border: '#DDD2F7', icon: '#7C3AED' },
+  finance: { bg: '#FBF7EF', border: '#EEE2C9', icon: '#D97706' },
+  hr: { bg: '#E0F2FE', border: '#BAE6FD', icon: '#0284C7' },
+  operations: { bg: '#FFF1F2', border: '#FECDD3', icon: '#E11D48' },
+  support: { bg: '#F0FDFA', border: '#99F6E4', icon: '#0D9488' },
+  freshers: { bg: '#ECFDF5', border: '#A7F3D0', icon: '#16A34A' },
+  remote: { bg: '#EFF6FF', border: '#BFDBFE', icon: '#3B82F6' },
+}
+export const DEFAULT_CATEGORY_TONE = CATEGORY_TONES.technology
+
+// Muted treatment for a category with zero live openings — same as the
+// website's EMPTY_TONE, quieter than a populated tile so it never competes
+// for attention with an actually-hiring category.
+export const EMPTY_CATEGORY_TONE = { bg: '#F6F8FB', border: '#e6eaf0', icon: '#64748b' }
+
 // Compact subset shown as quick chips right under the search bar.
 export const QUICK_CHIP_IDS = ['all', 'remote', 'technology', 'sales', 'marketing', 'hr', 'freshers']
 

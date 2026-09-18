@@ -4,6 +4,10 @@
 // separate product. `navy` is the app's primary-action color name (buttons,
 // links, focus) — historically teal, now the same blue as the website's
 // --explorer-blue/--explorer-blue-hover so both surfaces share one accent.
+// ink/inkSecondary/border pull the exact --explorer-navy/--explorer-muted/
+// --explorer-border hex values (headings, secondary text, card borders);
+// teal/inkTertiary fall back to the sitewide --color-teal*/--color-ink-
+// tertiary since the explorer palette doesn't define its own.
 export const light = {
   bg: '#F7F9FC',
   bgSecondary: '#F1F4F9',
@@ -11,11 +15,14 @@ export const light = {
   surfaceHover: '#F5F7FB',
   surfaceSunken: '#EEF1F6',
 
-  ink: '#1E3A52',
-  inkSecondary: '#55677D',
-  inkTertiary: '#71809A',
+  // ink/inkSecondary = --explorer-navy/--explorer-muted (headings/primary
+  // text, secondary text on the home page); inkTertiary has no explorer
+  // equivalent so it falls back to sitewide --color-ink-tertiary.
+  ink: '#16324f',
+  inkSecondary: '#64748b',
+  inkTertiary: '#9ca3af',
 
-  border: '#EBEFF4',
+  border: '#e6eaf0',
   borderStrong: '#DEE4EC',
 
   navy950: '#0A1E30',
@@ -24,7 +31,7 @@ export const light = {
   navy: '#2563EB',
   navyHover: '#1D4ED8',
   navyTint: '#EFF6FF',
-  navyTintStrong: '#DCE7FE',
+  navyTintStrong: '#bfd3fb',
 
   gold: '#c68a1f',
   goldStrong: '#9a6b14',
@@ -46,9 +53,9 @@ export const light = {
   violetDot: '#7c5fd6',
   violetTint: '#f1eefc',
 
-  teal: '#0F8F9D',
-  tealDot: '#12a5b5',
-  tealTint: '#E4F5F7',
+  teal: '#0e8a78',
+  tealDot: '#149684',
+  tealTint: '#e3f7f3',
 
   amber: '#c2540c',
   amberDot: '#d5610f',
@@ -62,12 +69,12 @@ export const dark = {
   surfaceHover: '#18283C',
   surfaceSunken: '#152436',
 
-  ink: '#EEF3F8',
-  inkSecondary: '#A9B7C8',
-  inkTertiary: '#7C8CA1',
+  ink: '#f2f3f5',
+  inkSecondary: '#9aa2b1',
+  inkTertiary: '#6b7383',
 
-  border: '#22334A',
-  borderStrong: '#2C4059',
+  border: '#232b3d',
+  borderStrong: '#2e374c',
 
   navy950: '#0A1E30',
   navy900: '#0F2338',
@@ -97,9 +104,9 @@ export const dark = {
   violetDot: '#a594ff',
   violetTint: 'rgba(165, 148, 255, 0.16)',
 
-  teal: '#4FD4E3',
-  tealDot: '#4FD4E3',
-  tealTint: 'rgba(79, 212, 227, 0.16)',
+  teal: '#3fd9c4',
+  tealDot: '#3fd9c4',
+  tealTint: 'rgba(63, 217, 196, 0.16)',
 
   amber: '#f0894a',
   amberDot: '#f0894a',
