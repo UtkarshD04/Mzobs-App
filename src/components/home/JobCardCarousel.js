@@ -7,7 +7,7 @@ import JobOpeningCard from './JobOpeningCard'
 // line, a longer location string) which reads as uneven card sizes in a
 // side-by-side carousel, even though it's barely noticeable stacked
 // vertically one at a time.
-const CARD_HEIGHT = 210
+const CARD_HEIGHT = 272
 
 // Horizontal, snap-scrolling row of job cards — used for the personalized
 // job rows on Home. Each card is a deliberate ~88% of the viewport so the

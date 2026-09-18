@@ -9,7 +9,7 @@
 // teal/inkTertiary fall back to the sitewide --color-teal*/--color-ink-
 // tertiary since the explorer palette doesn't define its own.
 export const light = {
-  bg: '#F7F9FC',
+  bg: '#F6F7F9',
   bgSecondary: '#F1F4F9',
   surface: '#FFFFFF',
   surfaceHover: '#F5F7FB',
@@ -22,16 +22,16 @@ export const light = {
   inkSecondary: '#64748b',
   inkTertiary: '#9ca3af',
 
-  border: '#e6eaf0',
+  border: '#E5E7EB',
   borderStrong: '#DEE4EC',
 
   navy950: '#0A1E30',
   navy900: '#0F2338',
-  navy700: '#1D4ED8',
-  navy: '#2563EB',
-  navyHover: '#1D4ED8',
-  navyTint: '#EFF6FF',
-  navyTintStrong: '#bfd3fb',
+  navy700: '#123B5D',
+  navy: '#123B5D',
+  navyHover: '#0E2E49',
+  navyTint: '#EAF0F4',
+  navyTintStrong: '#C7D6E0',
 
   gold: '#c68a1f',
   goldStrong: '#9a6b14',

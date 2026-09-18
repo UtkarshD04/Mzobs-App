@@ -19,15 +19,15 @@ export default function SectionHeader({ title, statusLabel, subtitle, actionLabe
             alignItems: 'center',
             alignSelf: 'flex-start',
             gap: 4,
-            backgroundColor: colors.tealTint,
+            backgroundColor: colors.navyTint,
             paddingHorizontal: 7,
             paddingVertical: 3,
             borderRadius: 20,
             marginBottom: 4,
           }}
         >
-          <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: colors.teal }} />
-          <Text style={{ color: colors.teal, fontFamily: fontFamily.semibold, fontSize: 10.5 }}>{statusLabel}</Text>
+          <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: colors.navy }} />
+          <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 10.5 }}>{statusLabel}</Text>
         </View>
       ) : null}
 
@@ -41,8 +41,8 @@ export default function SectionHeader({ title, statusLabel, subtitle, actionLabe
             hitSlop={8}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 1, paddingTop: 1 }}
           >
-            <Text style={{ color: colors.teal, fontFamily: fontFamily.semibold, fontSize: 13 }}>{actionLabel}</Text>
-            <Feather name="chevron-right" size={15} color={colors.teal} />
+            <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 13 }}>{actionLabel}</Text>
+            <Feather name="chevron-right" size={15} color={colors.navy} />
           </Pressable>
         ) : null}
       </View>

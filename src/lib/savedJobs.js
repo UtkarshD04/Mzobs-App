@@ -28,6 +28,10 @@ export function jobSaveKey(job) {
   return job.id ?? `${job.title}::${job.company}`
 }
 
+export async function getSavedJobIds() {
+  return readIds()
+}
+
 export async function isJobSaved(job) {
   const ids = await readIds()
   return ids.includes(jobSaveKey(job))

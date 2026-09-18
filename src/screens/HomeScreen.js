@@ -22,7 +22,6 @@ import JobOpeningCard from '../components/home/JobOpeningCard'
 import JobsSection from '../components/home/JobsSection'
 import HomeProgressCard from '../components/home/HomeProgressCard'
 import { jobMatchesCategory } from '../components/home/categoryData'
-import { CARD_TONES } from '../components/home/cardTones'
 
 const MAX_VISIBLE_JOBS = 5
 
@@ -110,19 +109,12 @@ export default function HomeScreen({ navigation }) {
             </View>
           ) : (
             <View style={{ paddingHorizontal: spacing.lg }}>
-              <JobOpeningCard
-                job={visibleJobs[0]}
-                applied={appliedJobIds?.has(visibleJobs[0].id)}
-                featured
-                onPress={() => navigation.navigate('JobDetail', { id: visibleJobs[0].id })}
-              />
-              {visibleJobs.slice(1).map((job, i) => (
+              {visibleJobs.map((job, i) => (
                 <JobOpeningCard
                   key={job.id}
                   job={job}
                   applied={appliedJobIds?.has(job.id)}
-                  index={i + 1}
-                  tone={CARD_TONES[(i + 1) % CARD_TONES.length]}
+                  index={i}
                   onPress={() => navigation.navigate('JobDetail', { id: job.id })}
                 />
               ))}

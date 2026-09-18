@@ -19,9 +19,14 @@ function toneOf(name) {
   return TONES[hash % TONES.length]
 }
 
-export default function Avatar({ name, size = 56, style }) {
+// tone="gray" opts a caller out of the per-name colour hash for a flat,
+// neutral mark instead — used by job cards, where a recruiter-grade list
+// reads as a serious product with one flat avatar treatment, not a
+// per-company colour hash (that's still the right default for people).
+export default function Avatar({ name, size = 56, style, tone: toneOverride = null }) {
   const { colors, fontFamily } = useTheme()
-  const tone = toneOf(name)
+  const tone = toneOverride ?? toneOf(name)
+  const isNeutral = tone === 'gray'
 
   return (
     <View
@@ -33,16 +38,18 @@ export default function Avatar({ name, size = 56, style }) {
           // company mark rather than a person's profile photo — matches the
           // website's job-card avatars.
           borderRadius: Math.round(size * 0.32),
-          backgroundColor: colors[`${tone}Tint`] ?? colors.navyTint,
+          backgroundColor: isNeutral ? colors.grayTint : colors[`${tone}Tint`] ?? colors.navyTint,
           alignItems: 'center',
           justifyContent: 'center',
           borderWidth: 1,
-          borderColor: colors[`${tone}TintStrong`] ?? colors[`${tone}Tint`] ?? colors.navyTintStrong,
+          borderColor: isNeutral ? colors.border : colors[`${tone}TintStrong`] ?? colors[`${tone}Tint`] ?? colors.navyTintStrong,
         },
         style,
       ]}
     >
-      <Text style={{ color: colors[tone] ?? colors.navy, fontFamily: fontFamily.bold, fontSize: size * 0.36 }}>{initialsOf(name)}</Text>
+      <Text style={{ color: isNeutral ? colors.inkSecondary : colors[tone] ?? colors.navy, fontFamily: fontFamily.bold, fontSize: size * 0.36 }}>
+        {initialsOf(name)}
+      </Text>
     </View>
   )
 }

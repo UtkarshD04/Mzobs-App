@@ -1,35 +1,20 @@
-import { View, Text, Pressable, Platform } from 'react-native'
+import { View, Text, Pressable } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { openDrawer } from '../../lib/navigation'
 import BrandLogo from '../ui/BrandLogo'
 
 function IconButton({ icon, onPress, accessibilityLabel, children }) {
-  const { colors, isDark } = useTheme()
+  const { colors } = useTheme()
   return (
     <Pressable
       onPress={onPress}
       hitSlop={10}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      style={[
-        {
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: colors.surface,
-          borderWidth: 1,
-          borderColor: colors.border,
-        },
-        Platform.select({
-          ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: isDark ? 0 : 0.05, shadowRadius: 3 },
-          android: { elevation: 0 },
-        }),
-      ]}
+      style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginHorizontal: -10 }}
     >
-      <Feather name={icon} size={18} color={colors.ink} />
+      <Feather name={icon} size={20} color={colors.ink} />
       {children}
     </Pressable>
   )
@@ -42,49 +27,43 @@ export default function HomeTopBar({ navigation, unreadCount }) {
   return (
     <View
       style={{
-        backgroundColor: colors.bgSecondary,
+        backgroundColor: colors.surface,
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
+        minHeight: 56,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: spacing.lg,
       }}
     >
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.sm,
-          paddingBottom: spacing.md,
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          <IconButton icon="menu" onPress={() => openDrawer(navigation)} accessibilityLabel="Open menu" />
-          <BrandLogo height={22} />
-        </View>
-
-        <IconButton icon="bell" onPress={() => navigation.navigate('Notifications')} accessibilityLabel="Notifications">
-          {unreadCount > 0 ? (
-            <View
-              style={{
-                position: 'absolute',
-                top: -4,
-                right: -4,
-                minWidth: 17,
-                height: 17,
-                paddingHorizontal: 3,
-                borderRadius: 9,
-                backgroundColor: colors.red,
-                borderWidth: 1.5,
-                borderColor: colors.bgSecondary,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ color: '#ffffff', fontFamily: fontFamily.bold, fontSize: 9.5, includeFontPadding: false }}>{badgeLabel}</Text>
-            </View>
-          ) : null}
-        </IconButton>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+        <IconButton icon="menu" onPress={() => openDrawer(navigation)} accessibilityLabel="Open menu" />
+        <BrandLogo height={22} />
       </View>
+
+      <IconButton icon="bell" onPress={() => navigation.navigate('Notifications')} accessibilityLabel="Notifications">
+        {unreadCount > 0 ? (
+          <View
+            style={{
+              position: 'absolute',
+              top: 6,
+              right: 6,
+              minWidth: 16,
+              height: 16,
+              paddingHorizontal: 3,
+              borderRadius: 8,
+              backgroundColor: colors.red,
+              borderWidth: 1.5,
+              borderColor: colors.surface,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ color: '#ffffff', fontFamily: fontFamily.bold, fontSize: 9.5, includeFontPadding: false }}>{badgeLabel}</Text>
+          </View>
+        ) : null}
+      </IconButton>
     </View>
   )
 }

@@ -71,11 +71,13 @@ export default function ApplicationsScreen() {
         filtered.map((a) => {
           const stage = STAGE_INDEX[a.status] ?? 1
           return (
-            <Card key={a.id} style={{ marginTop: spacing.lg }}>
+            <Card key={a.id} style={{ marginTop: spacing.md, padding: spacing.md, borderRadius: 10, borderColor: colors.border }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <View style={{ flex: 1, paddingRight: spacing.sm }}>
-                  <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 15 }}>{a.job?.title ?? 'Role'}</Text>
-                  <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, marginTop: 3 }}>
+                  <Text style={{ color: '#111827', fontFamily: fontFamily.semibold, fontSize: 16 }} numberOfLines={2}>
+                    {a.job?.title ?? 'Role'}
+                  </Text>
+                  <Text style={{ color: '#6B7280', fontFamily: fontFamily.regular, fontSize: 13, marginTop: 3 }}>
                     Applied {fmtDate(a.appliedOn)}
                   </Text>
                 </View>
@@ -84,7 +86,7 @@ export default function ApplicationsScreen() {
                 ) : a.status === 'rejected' ? (
                   <Badge label="Not selected" tone="red" />
                 ) : stage >= 4 ? (
-                  <Badge label="With employer" tone="gold" />
+                  <Badge label="With employer" tone="gray" />
                 ) : (
                   <Badge label="With Mzobs" tone="navy" />
                 )}
@@ -95,9 +97,9 @@ export default function ApplicationsScreen() {
               {a.note ? (
                 <Text
                   style={{
-                    color: colors.inkSecondary,
+                    color: '#6B7280',
                     fontFamily: fontFamily.regular,
-                    fontSize: 12.5,
+                    fontSize: 13,
                     marginTop: spacing.md,
                     paddingTop: spacing.md,
                     borderTopWidth: 1,
