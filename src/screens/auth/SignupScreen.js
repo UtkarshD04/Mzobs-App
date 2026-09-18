@@ -14,7 +14,6 @@ import Checkbox from '../../components/ui/Checkbox'
 import GoogleAuthButton, { OrDivider } from '../../components/ui/GoogleAuthButton'
 import ScreenContainer from '../../components/ui/ScreenContainer'
 import BrandLogo from '../../components/ui/BrandLogo'
-import AuthBubbleField from '../../components/decor/AuthBubbleField'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const STEPS = ['Account', 'Mobile number', 'Resume']
@@ -85,13 +84,11 @@ export default function SignupScreen({ navigation }) {
   }
 
   const canContinue = form.name.trim() && form.email.trim() && form.password.length >= 8
-  // Matches the website: phone verification is optional — the backend only
-  // requires name/email/phone/password (Backend/src/controllers/
-  // employeeAuthController.js signup — "Phone OTP verification is optional,
-  // proceed either way, just record whether it was actually verified").
-  // Blocking on phoneToken would make signup impossible whenever SMS isn't
-  // configured (e.g. no MSG91_AUTH_KEY), which the website never does.
-  const canSubmit = form.phone.length === 10 && agreed
+  // The backend rejects signup without a verified phoneToken whenever SMS is
+  // configured (Backend/src/controllers/employeeAuthController.js signup),
+  // so this screen requires it too — "Create account" only shows once OTP
+  // verification succeeds.
+  const canSubmit = form.phone.length === 10 && Boolean(phoneToken) && agreed
 
   function handleContinue() {
     setStepError('')
@@ -199,14 +196,21 @@ export default function SignupScreen({ navigation }) {
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={{ alignItems: 'center', paddingTop: spacing.lg, marginBottom: spacing.xl }}>
-          <View style={{ position: 'relative', height: 44, width: 44 * (5000 / 2725), alignItems: 'center', justifyContent: 'center' }}>
-            <AuthBubbleField />
-            <BrandLogo height={44} />
-          </View>
-          <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 12.5, letterSpacing: 0.2, marginTop: spacing.md, textAlign: 'center' }}>
-            Where verified talent meets real work.
+          <BrandLogo height={44} />
+          <Text
+            style={{
+              color: colors.navy,
+              fontFamily: fontFamily.bold,
+              fontSize: 11,
+              letterSpacing: 1.4,
+              textTransform: 'uppercase',
+              marginTop: spacing.md,
+              textAlign: 'center',
+            }}
+          >
+            MZOBS Careers
           </Text>
-          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, marginTop: spacing.lg, textAlign: 'center' }}>
+          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 22, marginTop: spacing.sm, textAlign: 'center' }}>
             Your next opportunity starts here.
           </Text>
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4, textAlign: 'center' }}>
@@ -348,7 +352,7 @@ export default function SignupScreen({ navigation }) {
                   disabled={form.phone.length !== 10}
                 />
                 <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, marginTop: 6 }}>
-                  Optional — you can verify your number later too.
+                  Verifying your number is required to create an account.
                 </Text>
                 {otpError ? (
                   <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 12, marginTop: 6 }}>{otpError}</Text>
@@ -358,28 +362,32 @@ export default function SignupScreen({ navigation }) {
 
             {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13, marginBottom: spacing.md }}>{error}</Text> : null}
 
-            <Checkbox checked={agreed} onChange={setAgreed}>
-              <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, lineHeight: 17 }}>
-                I agree to Mzobs'{' '}
-                <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => Linking.openURL(TERMS_URL)}>
-                  Terms & Conditions
-                </Text>{' '}
-                and{' '}
-                <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => Linking.openURL(PRIVACY_URL)}>
-                  Privacy Policy
-                </Text>
-                .
-              </Text>
-            </Checkbox>
+            {phoneToken ? (
+              <>
+                <Checkbox checked={agreed} onChange={setAgreed}>
+                  <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, lineHeight: 17 }}>
+                    I agree to Mzobs'{' '}
+                    <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => Linking.openURL(TERMS_URL)}>
+                      Terms & Conditions
+                    </Text>{' '}
+                    and{' '}
+                    <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => Linking.openURL(PRIVACY_URL)}>
+                      Privacy Policy
+                    </Text>
+                    .
+                  </Text>
+                </Checkbox>
 
-            <Button title="Create account" onPress={handleSignup} loading={loading} disabled={!canSubmit} style={{ marginTop: spacing.md }} />
+                <Button title="Create account" onPress={handleSignup} loading={loading} disabled={!canSubmit} style={{ marginTop: spacing.md }} />
 
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: spacing.md }}>
-              <Feather name="shield" size={13} color={colors.teal} style={{ marginTop: 1 }} />
-              <Text style={{ flex: 1, color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, lineHeight: 16 }}>
-                Your profile is private. Employers see it only when you apply or are matched for a relevant role.
-              </Text>
-            </View>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: spacing.md }}>
+                  <Feather name="shield" size={13} color={colors.teal} style={{ marginTop: 1 }} />
+                  <Text style={{ flex: 1, color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, lineHeight: 16 }}>
+                    Your profile is private. Employers see it only when you apply or are matched for a relevant role.
+                  </Text>
+                </View>
+              </>
+            ) : null}
           </>
         ) : (
           <>
