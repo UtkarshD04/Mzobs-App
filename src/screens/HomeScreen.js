@@ -18,7 +18,7 @@ import SectionHeader from '../components/home/SectionHeader'
 import CompaniesHiringSection from '../components/home/CompaniesHiringSection'
 import CategoryGrid from '../components/home/CategoryGrid'
 import HotJobsByCitySection from '../components/home/HotJobsByCitySection'
-import JobOpeningCard from '../components/home/JobOpeningCard'
+import JobCardCarousel from '../components/home/JobCardCarousel'
 import JobsSection from '../components/home/JobsSection'
 import HomeProgressCard from '../components/home/HomeProgressCard'
 import { jobMatchesCategory } from '../components/home/categoryData'
@@ -108,17 +108,11 @@ export default function HomeScreen({ navigation }) {
               />
             </View>
           ) : (
-            <View style={{ paddingHorizontal: spacing.lg }}>
-              {visibleJobs.map((job, i) => (
-                <JobOpeningCard
-                  key={job.id}
-                  job={job}
-                  applied={appliedJobIds?.has(job.id)}
-                  index={i}
-                  onPress={() => navigation.navigate('JobDetail', { id: job.id })}
-                />
-              ))}
-            </View>
+            <JobCardCarousel
+              jobs={visibleJobs}
+              appliedJobIds={appliedJobIds}
+              onPressJob={(job) => navigation.navigate('JobDetail', { id: job.id })}
+            />
           )}
         </Animated.View>
 

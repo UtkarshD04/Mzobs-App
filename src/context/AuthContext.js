@@ -57,27 +57,11 @@ export function AuthProvider({ children }) {
     })()
   }, [])
 
-  const login = useCallback(async (email, password) => {
-    const { token: newToken, employee: summary } = await authService.login(email, password)
-    await tokenStore.set(newToken)
-    setToken(newToken)
-    setEmployee(summary)
-    registerPushToken()
-  }, [])
-
-  const loginWithGoogle = useCallback(async (credential) => {
-    const { token: newToken, employee: summary } = await authService.googleLogin(credential)
-    await tokenStore.set(newToken)
-    setToken(newToken)
-    setEmployee(summary)
-    registerPushToken()
-  }, [])
-
-  // Finishes a signup SignupScreen already ran itself (via authService.signup/
-  // googleSignup, called directly so it can persist the token — tokenStore.set,
-  // not this — before this runs, letting its resume-upload step authenticate
-  // requests while still showing the pre-Home "upload your resume" screen).
-  // This is the equivalent of login/loginWithGoogle's second half: flips
+  // Finishes a login/signup PhoneAuthScreen already ran itself (via
+  // authService.phoneLogin/signup/googleSignup/googleLogin, called directly
+  // so it can persist the token — tokenStore.set, not this — before this
+  // runs, letting its resume-upload step authenticate requests while still
+  // showing the pre-Home "upload your resume" screen). This flips
   // isAuthenticated so RootNavigator swaps to the app tree.
   const completeSession = useCallback((newToken, summary) => {
     setToken(newToken)
@@ -90,8 +74,6 @@ export function AuthProvider({ children }) {
     employee,
     isAuthenticated: !!token,
     isBootstrapping,
-    login,
-    loginWithGoogle,
     completeSession,
     logout,
   }
