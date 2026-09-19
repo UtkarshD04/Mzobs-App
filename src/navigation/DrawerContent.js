@@ -146,6 +146,8 @@ export default function DrawerContent(props) {
 
       <View style={{ marginTop: spacing.lg, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border }}>
         <Row icon="life-buoy" label="Support" active={activeRoute === 'Support'} onPress={() => go({ target: { screen: 'Support' } })} />
+        <Row icon="shield" label="Privacy Policy" active={activeRoute === 'PrivacyPolicy'} onPress={() => go({ target: { screen: 'PrivacyPolicy' } })} />
+        <Row icon="file-text" label="Terms & Conditions" active={activeRoute === 'TermsAndConditions'} onPress={() => go({ target: { screen: 'TermsAndConditions' } })} />
         <Row icon="log-out" label="Log out" onPress={logout} />
       </View>
     </DrawerContentScrollView>

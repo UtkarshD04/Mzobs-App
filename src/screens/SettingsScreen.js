@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Text, View, Switch, Alert } from 'react-native'
+import { Text, View, Switch, Alert, Pressable } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { useNavigation } from '@react-navigation/native'
 import { useTheme } from '../theme'
 import { useAuth } from '../context/AuthContext'
 import { useProfileQuery, useUpdateProfileMutation, useDeleteAccountMutation } from '../hooks/useProfile'
@@ -46,6 +47,7 @@ function ChannelToggle({ label, value, onChange }) {
 export default function SettingsScreen() {
   const { colors, spacing, fontFamily, isDark, toggleTheme } = useTheme()
   const { logout } = useAuth()
+  const navigation = useNavigation()
   const { data: profile, isLoading } = useProfileQuery()
   const { data: preferences } = useNotificationPreferencesQuery()
   const updateMutation = useUpdateProfileMutation()
@@ -201,6 +203,31 @@ export default function SettingsScreen() {
             loading={resetState === 'sending'}
           />
         )}
+      </Card>
+
+      <Card style={{ marginTop: spacing.md, paddingVertical: spacing.sm }}>
+        {[
+          { label: 'Privacy Policy', screen: 'PrivacyPolicy', icon: 'shield' },
+          { label: 'Terms & Conditions', screen: 'TermsAndConditions', icon: 'file-text' },
+        ].map((item, i) => (
+          <Pressable
+            key={item.screen}
+            onPress={() => navigation.navigate(item.screen)}
+            accessibilityRole="button"
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.sm,
+              paddingVertical: spacing.md,
+              borderTopWidth: i === 0 ? 0 : 1,
+              borderTopColor: colors.border,
+            }}
+          >
+            <Feather name={item.icon} size={17} color={colors.navy} />
+            <Text style={{ flex: 1, color: colors.ink, fontFamily: fontFamily.medium, fontSize: 13.5 }}>{item.label}</Text>
+            <Feather name="chevron-right" size={17} color={colors.inkTertiary} />
+          </Pressable>
+        ))}
       </Card>
 
       <Button title="Log out" variant="danger" onPress={logout} style={{ marginTop: spacing.xl }} />

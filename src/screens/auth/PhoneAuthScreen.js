@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { View, Text, KeyboardAvoidingView, Platform, Pressable, Linking } from 'react-native'
+import { View, Text, KeyboardAvoidingView, Platform, Pressable } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
 import * as DocumentPicker from 'expo-document-picker'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
@@ -12,14 +13,40 @@ import { WIDGET_CONFIGURED, WidgetError, sendWidgetOtp, retryWidgetOtp, verifyWi
 import TextField from '../../components/ui/TextField'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
+import Checkbox from '../../components/ui/Checkbox'
 import GoogleAuthButton, { OrDivider } from '../../components/ui/GoogleAuthButton'
 import ScreenContainer from '../../components/ui/ScreenContainer'
 import BrandLogo from '../../components/ui/BrandLogo'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const RESEND_COOLDOWN = 30
-const TERMS_URL = 'https://mzobs.com/terms-of-service'
-const PRIVACY_URL = 'https://mzobs.com/privacy-policy'
+const TERMS_REQUIRED_MESSAGE = 'Please accept the Terms & Conditions and Privacy Policy to continue.'
+
+// Mandatory consent tick, shown only where a NEW account is about to be
+// created (profile step, or the phone step for a new Google user). Existing
+// accounts signing in never see it.
+function TermsConsent({ checked, onChange }) {
+  const { colors, spacing, fontFamily } = useTheme()
+  const navigation = useNavigation()
+  const linkStyle = { color: colors.navy, fontFamily: fontFamily.semibold, textDecorationLine: 'underline' }
+  return (
+    <View style={{ marginBottom: spacing.md }}>
+      <Checkbox checked={checked} onChange={onChange}>
+        <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, lineHeight: 18 }}>
+          I have read and agree to the Mzobs{' '}
+          <Text style={linkStyle} onPress={() => navigation.navigate('TermsAndConditions')}>
+            Terms & Conditions
+          </Text>{' '}
+          and{' '}
+          <Text style={linkStyle} onPress={() => navigation.navigate('PrivacyPolicy')}>
+            Privacy Policy
+          </Text>
+          .
+        </Text>
+      </Checkbox>
+    </View>
+  )
+}
 
 // MSG91 widget failures carry their own readable message; anything else is an
 // axios error, whose backend message (if the request got that far) wins.
@@ -51,6 +78,7 @@ export default function PhoneAuthScreen() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const [googleCredential, setGoogleCredential] = useState(null)
   const [googleLoading, setGoogleLoading] = useState(false)
@@ -227,6 +255,10 @@ export default function PhoneAuthScreen() {
 
   async function finishSignup(token) {
     setError('')
+    if (!acceptedTerms) {
+      setError(TERMS_REQUIRED_MESSAGE)
+      return
+    }
     setCreatingAccount(true)
     try {
       const { token: authToken, employee } = googleCredential
@@ -246,6 +278,7 @@ export default function PhoneAuthScreen() {
     setError('')
     if (!name.trim()) return setError('Please enter your full name.')
     if (!EMAIL_RE.test(email.trim())) return setError('Enter a valid email address.')
+    if (!acceptedTerms) return setError(TERMS_REQUIRED_MESSAGE)
     finishSignup(phoneToken)
   }
 
@@ -278,7 +311,7 @@ export default function PhoneAuthScreen() {
     completeSession(pendingSession.token, pendingSession.employee)
   }
 
-  const canSendOtp = phone.length === 10
+  const canSendOtp = phone.length === 10 && (!googleCredential || acceptedTerms)
   const canVerifyOtp = otp.length === 6
   const verifyBusy = verifyingOtp || checkingAccount
 
@@ -337,6 +370,8 @@ export default function PhoneAuthScreen() {
               </View>
             </View>
 
+            {googleCredential ? <TermsConsent checked={acceptedTerms} onChange={setAcceptedTerms} /> : null}
+
             {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13, marginBottom: spacing.md }}>{error}</Text> : null}
 
             <Button title="Send OTP" onPress={handleSendOtp} loading={sendingOtp} disabled={!canSendOtp} />
@@ -344,17 +379,17 @@ export default function PhoneAuthScreen() {
             <OrDivider label="or continue with Google" />
             <GoogleAuthButton onPress={handleGoogle} loading={googleLoading} disabled={sendingOtp} />
 
-            <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, lineHeight: 16, textAlign: 'center', marginTop: spacing.xl }}>
+            {!googleCredential ? <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, lineHeight: 16, textAlign: 'center', marginTop: spacing.xl }}>
               By continuing, you agree to Mzobs'{' '}
-              <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => Linking.openURL(TERMS_URL)}>
+              <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => navigation.navigate('TermsAndConditions')}>
                 Terms & Conditions
               </Text>{' '}
               and{' '}
-              <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => Linking.openURL(PRIVACY_URL)}>
+              <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => navigation.navigate('PrivacyPolicy')}>
                 Privacy Policy
               </Text>
               .
-            </Text>
+            </Text> : null}
           </>
         ) : step === 'otp' ? (
           <>
@@ -424,13 +459,15 @@ export default function PhoneAuthScreen() {
               placeholder="you@example.com"
             />
 
+            <TermsConsent checked={acceptedTerms} onChange={setAcceptedTerms} />
+
             {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13, marginBottom: spacing.md }}>{error}</Text> : null}
 
             <Button
               title="Continue"
               onPress={handleContinueProfile}
               loading={creatingAccount}
-              disabled={!name.trim() || !email.trim()}
+              disabled={!name.trim() || !email.trim() || !acceptedTerms}
               style={{ marginTop: spacing.sm }}
             />
           </>
