@@ -49,7 +49,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   // Finishes a login/signup PhoneAuthScreen already ran itself (via
-  // authService.phoneLogin/signup/googleSignup/googleLogin, called directly
+  // authService.phoneLogin/signup, called directly
   // so it can persist the token — tokenStore.set, not this — before this
   // runs, letting its resume-upload step authenticate requests while still
   // showing the pre-Home "upload your resume" screen). This flips

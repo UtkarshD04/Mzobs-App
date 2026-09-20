@@ -25,16 +25,8 @@ export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? getDevServerApiUrl() ?
 export const API_BASE = `${API_URL}/api/employee`
 export const FILE_BASE_URL = API_URL
 
-export const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? ''
-
 // MSG91 OTP widget credentials (dashboard -> OTP -> Widget, with "Mobile
 // Integration" enabled). Both unset -> the app falls back to the backend's
 // own send-otp/verify-otp endpoints (see lib/msg91Widget.js).
 export const MSG91_WIDGET_ID = process.env.EXPO_PUBLIC_MSG91_WIDGET_ID ?? ''
 export const MSG91_TOKEN_AUTH = process.env.EXPO_PUBLIC_MSG91_TOKEN_AUTH ?? ''
-
-// Google's OAuth client only accepts https:// redirect URIs, so the browser
-// flow bounces through this backend route (same origin as API_URL — no
-// separate config needed), which forwards into the app via its own
-// "mzobs://" scheme. See Backend/src/controllers/googleBridgeController.js.
-export const GOOGLE_MOBILE_REDIRECT_BRIDGE_URL = `${API_URL}/mobile/google-callback`

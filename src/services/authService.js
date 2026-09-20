@@ -12,14 +12,6 @@ export function signup(input) {
   return apiClient.post('/auth/signup', input).then((r) => r.data)
 }
 
-export function googleLogin(credential) {
-  return apiClient.post('/auth/google-login', { credential }).then((r) => r.data)
-}
-
-export function googleSignup(input) {
-  return apiClient.post('/auth/google-signup', input).then((r) => r.data)
-}
-
 export function sendOtp(phone) {
   return apiClient.post('/auth/send-otp', { phone }).then((r) => r.data)
 }
@@ -40,4 +32,18 @@ export function getMe() {
 
 export function forgotPassword(email) {
   return apiClient.post('/auth/forgot-password', { email }).then((r) => r.data)
+}
+
+// Email sign-in: send a code, verify it (returns a short-lived emailToken), then
+// emailLogin opens the account for that address (404 = none yet -> sign up).
+export function sendEmailOtp(email) {
+  return apiClient.post('/auth/send-email-otp', { email }).then((r) => r.data)
+}
+
+export function verifyEmailOtp(email, otp) {
+  return apiClient.post('/auth/verify-email-otp', { email, otp }).then((r) => r.data)
+}
+
+export function emailLogin(email, emailToken) {
+  return apiClient.post('/auth/email-login', { email, emailToken }).then((r) => r.data)
 }
