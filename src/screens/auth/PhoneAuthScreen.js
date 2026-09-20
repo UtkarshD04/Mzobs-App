@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { useAuth } from '../../context/AuthContext'
 import { tokenStore } from '../../lib/api'
+import { googleSignIn } from '../../lib/googleSignIn'
 import { useUploadResumeMutation } from '../../hooks/useResume'
 import * as authService from '../../services/authService'
 import { WIDGET_CONFIGURED, WidgetError, sendWidgetOtp, retryWidgetOtp, verifyWidgetOtp } from '../../lib/msg91Widget'
@@ -13,6 +14,7 @@ import TextField from '../../components/ui/TextField'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
 import Checkbox from '../../components/ui/Checkbox'
+import GoogleAuthButton from '../../components/ui/GoogleAuthButton'
 import ScreenContainer from '../../components/ui/ScreenContainer'
 import BrandLogo from '../../components/ui/BrandLogo'
 
@@ -21,8 +23,8 @@ const RESEND_COOLDOWN = 30
 const TERMS_REQUIRED_MESSAGE = 'Please accept the Terms & Conditions and Privacy Policy to continue.'
 
 // Mandatory consent tick, shown only where a NEW account is about to be
-// created (the profile step). Existing
-// accounts signing in never see it.
+// created (the profile step, the email path's name + number step, or the phone step for a
+// new Google user). Existing accounts signing in never see it.
 function TermsConsent({ checked, onChange }) {
   const { colors, spacing, fontFamily } = useTheme()
   const navigation = useNavigation()
@@ -64,6 +66,8 @@ function logError(label, err) {
 // Login/Signup screens, no password anywhere). Two ways in:
 //   - mobile number: verify the OTP; an existing account opens straight away, a new
 //     number collects name + email, then a resume.
+//   - Google ("Continue with Google"): an existing account opens straight away; a new Google
+//     account still needs a verified mobile number, then a resume.
 //   - email ("Continue with Email"): verify a code emailed to you; an existing account
 //     opens straight away, a new email collects name + mobile number, the number is
 //     verified with an OTP too, then a resume.
@@ -96,6 +100,11 @@ export default function PhoneAuthScreen() {
   const [resendIn, setResendIn] = useState(0)
 
   const [creatingAccount, setCreatingAccount] = useState(false)
+
+  // Google path: the ID token of a Google account that has no Mzobs account yet. Its name
+  // and email are already known, so only the mobile number is still needed.
+  const [googleCredential, setGoogleCredential] = useState(null)
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   // Email path: proof the address was verified (sent along with signup).
   const [emailToken, setEmailToken] = useState(null)
@@ -203,7 +212,7 @@ export default function PhoneAuthScreen() {
       if (err.response?.status === 404) {
         // Email path already has name + verified email, so the account can be created now;
         // the number path still needs to ask for them.
-        if (emailToken) await finishSignup(token)
+        if (googleCredential || emailToken) await finishSignup(token)
         else setStep('profile')
       } else {
         logError('phoneLogin failed', err)
@@ -242,7 +251,9 @@ export default function PhoneAuthScreen() {
     }
     setCreatingAccount(true)
     try {
-      const { token: authToken, employee } = await authService.signup({ name: name.trim(), email: email.trim(), phone, phoneToken: token, emailToken: emailToken ?? undefined })
+      const { token: authToken, employee } = googleCredential
+        ? await authService.googleSignup({ credential: googleCredential, phone, phoneToken: token })
+        : await authService.signup({ name: name.trim(), email: email.trim(), phone, phoneToken: token, emailToken: emailToken ?? undefined })
       await tokenStore.set(authToken)
       setPendingSession({ token: authToken, employee })
       setStep('resume')
@@ -253,8 +264,48 @@ export default function PhoneAuthScreen() {
     }
   }
 
+  // ── Google path ───────────────────────────────────────────────────────────
+  // Signs an existing account straight in. A 404 means this Google email has no account
+  // yet: keep the Google credential and ask for a mobile number (verified by OTP) to create one.
+  async function handleGoogle() {
+    setError('')
+    setGoogleLoading(true)
+    try {
+      const result = await googleSignIn()
+      if (!result) return // dismissed the browser
+      try {
+        const { token, employee } = await authService.googleLogin(result.idToken)
+        await tokenStore.set(token)
+        completeSession(token, employee)
+        return
+      } catch (err) {
+        if (err.response?.status !== 404) {
+          setError(err.response?.data?.message ?? 'Google sign-in failed. Please try again.')
+          return
+        }
+      }
+      setGoogleCredential(result.idToken)
+      setName(result.name || '')
+      setEmail(result.email || '')
+    } catch (err) {
+      logError('google sign-in failed', err)
+      setError(err.response?.data?.message ?? err.message ?? 'Google sign-in failed. Please try again.')
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
+
+  function cancelGoogleSignup() {
+    setGoogleCredential(null)
+    setName('')
+    setEmail('')
+    setError('')
+    setAcceptedTerms(false)
+  }
+
   // ── Email path ────────────────────────────────────────────────────────────
   function startEmailFlow() {
+    setGoogleCredential(null)
     setError('')
     setEmailError('')
     setEmailOtp('')
@@ -377,7 +428,7 @@ export default function PhoneAuthScreen() {
     completeSession(pendingSession.token, pendingSession.employee)
   }
 
-  const canSendOtp = phone.length === 10
+  const canSendOtp = phone.length === 10 && (!googleCredential || acceptedTerms)
   const canVerifyOtp = otp.length === 6
   const verifyBusy = verifyingOtp || checkingAccount
 
@@ -397,6 +448,18 @@ export default function PhoneAuthScreen() {
             <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4, marginBottom: spacing.lg, textAlign: 'center' }}>
               Enter your mobile number to sign in or create an account.
             </Text>
+
+            {googleCredential ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
+                <Feather name="check-circle" size={14} color={colors.green} />
+                <Text style={{ flex: 1, color: colors.inkSecondary, fontFamily: fontFamily.medium, fontSize: 12.5, marginLeft: 6 }} numberOfLines={1}>
+                  Signing up as {name || email} via Google
+                </Text>
+                <Pressable onPress={cancelGoogleSignup} hitSlop={8} accessibilityRole="button" accessibilityLabel="Cancel Google sign-up">
+                  <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 12.5 }}>Cancel</Text>
+                </Pressable>
+              </View>
+            ) : null}
 
             <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.medium, fontSize: 12.5, marginBottom: 6 }}>Mobile number</Text>
             <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg }}>
@@ -427,15 +490,21 @@ export default function PhoneAuthScreen() {
               </View>
             </View>
 
+            {googleCredential ? <TermsConsent checked={acceptedTerms} onChange={setAcceptedTerms} /> : null}
+
             {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13, marginBottom: spacing.md }}>{error}</Text> : null}
 
             <Button title="Send OTP" onPress={handleSendOtp} loading={sendingOtp} disabled={!canSendOtp} />
 
+            {!googleCredential ? (
+              <>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginVertical: spacing.lg }}>
               <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
               <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.medium, fontSize: 12.5 }}>or</Text>
               <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
             </View>
+            <GoogleAuthButton onPress={handleGoogle} loading={googleLoading} disabled={sendingOtp} />
+            <View style={{ height: spacing.sm }} />
             <Pressable
               onPress={startEmailFlow}
               accessibilityRole="button"
@@ -467,6 +536,8 @@ export default function PhoneAuthScreen() {
               </Text>
               .
             </Text>
+              </>
+            ) : null}
           </>
         ) : step === 'email' ? (
           <>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, Text, Pressable, ScrollView } from 'react-native'
+import { View, Text, Pressable } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
@@ -12,8 +12,7 @@ import EmptyState from '../components/ui/EmptyState'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import NotificationStatusCard from '../components/notifications/NotificationStatusCard'
 
-const TABS = ['All', 'Unread', 'Applications', 'Resume', 'Interviews', 'Training']
-const TAB_CATS = [null, null, 'applications', 'resume', 'interviews', 'training']
+const TABS = ['All', 'Unread']
 
 function Pill({ label, active, onPress }) {
   const { colors, fontFamily } = useTheme()
@@ -88,8 +87,8 @@ export default function NotificationsScreen() {
 
   if (isLoading) return <LoadingSpinner />
 
-  const cat = TAB_CATS[tab]
-  const list = tab === 1 ? notifications.filter((n) => n.unread) : cat ? notifications.filter((n) => n.category === cat) : notifications
+  const unreadCount = notifications.filter((n) => n.unread).length
+  const list = tab === 1 ? notifications.filter((n) => n.unread) : notifications
 
   return (
     <ScreenContainer onRefresh={refetch} refreshing={isRefetching}>
@@ -110,11 +109,11 @@ export default function NotificationsScreen() {
         style={{ marginTop: spacing.md, alignSelf: 'flex-start', paddingHorizontal: spacing.lg }}
       />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: spacing.lg }} contentContainerStyle={{ paddingRight: spacing.lg }}>
+      <View style={{ flexDirection: 'row', marginTop: spacing.lg }}>
         {TABS.map((label, i) => (
-          <Pill key={label} label={label} active={tab === i} onPress={() => setTab(i)} />
+          <Pill key={label} label={i === 1 && unreadCount > 0 ? `${label} (${unreadCount})` : label} active={tab === i} onPress={() => setTab(i)} />
         ))}
-      </ScrollView>
+      </View>
 
       <View style={{ marginTop: spacing.lg }}>
         {list.length === 0 ? (
