@@ -17,7 +17,7 @@ const MAX_VISIBLE_SKILLS = 2
 // deliberately narrower palette than the rest of the app.
 export default function JobOpeningCard({ job, applied, index = 0, onPress, distanceKm = null }) {
   const { colors, spacing, fontFamily } = useTheme()
-  const salary = fmtSalaryRange(job)
+  const salary = fmtSalaryRange(job, 'Not disclosed')
   const skills = job.skills ?? []
   const visibleSkills = skills.slice(0, MAX_VISIBLE_SKILLS)
   const extraSkillCount = Math.max(0, skills.length - MAX_VISIBLE_SKILLS)

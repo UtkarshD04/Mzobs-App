@@ -103,7 +103,7 @@ export default function JobDetailScreen({ route, navigation }) {
   const urgentLocked = !!job.instantHiring && !profile?.isPremium
   const days = daysSince(job.postedOn)
   const isNew = days !== null && days <= 1
-  const salary = fmtSalaryRange(job)
+  const salary = fmtSalaryRange(job, 'Not disclosed')
 
   async function handleApply() {
     if (urgentLocked) return

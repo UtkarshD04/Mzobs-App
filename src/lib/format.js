@@ -1,5 +1,5 @@
-export function fmtSalaryRange(job) {
-  if (!job.salaryMin && !job.salaryMax) return ''
+export function fmtSalaryRange(job, fallback = '') {
+  if (!job.salaryMin && !job.salaryMax) return fallback
   const fmt = (n) => (n >= 100000 ? `₹${(n / 100000).toFixed(n % 100000 === 0 ? 0 : 1)}L` : `₹${n}`)
   return `${fmt(job.salaryMin)} – ${fmt(job.salaryMax)}`
 }

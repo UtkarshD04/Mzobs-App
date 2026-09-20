@@ -152,6 +152,8 @@ const MATCHERS = {
     sel.some((id) => {
       const band = SALARY_OPTIONS.find((o) => o.id === id)
       if (!band) return true
+      // 0-0 means the employer did not disclose pay, so it belongs to no band.
+      if (!job.salaryMax && !job.salaryMin) return false
       return (job.salaryMax ?? Infinity) >= band.min && (job.salaryMin ?? 0) <= band.max
     }),
   experience: (job, years) => years == null || ((job.experienceMin ?? 0) <= years && years <= (job.experienceMax ?? Infinity)),

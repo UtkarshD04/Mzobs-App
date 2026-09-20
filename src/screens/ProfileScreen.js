@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useProfileQuery, useUpdateProfileMutation } from '../hooks/useProfile'
 import { useSubscriptionQuery } from '../hooks/useSubscription'
-import { profileCompletion } from '../lib/dashboard'
+import { profileCompletionDetail } from '../lib/dashboard'
 import ScreenContainer from '../components/ui/ScreenContainer'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
@@ -24,6 +24,8 @@ const PUBLIC_FIELD_GROUPS = [
     fields: [
       { key: 'name', label: 'Full name' },
       { key: 'currentCity', label: 'Current city' },
+      { key: 'state', label: 'State' },
+      { key: 'pincode', label: 'Pincode' },
     ],
   },
   {
@@ -47,7 +49,11 @@ const PUBLIC_FIELD_GROUPS = [
 const PRIVATE_FIELD_GROUP = {
   title: 'Contact details',
   caption: 'Private — only Mzobs sees this, never shown to recruiters',
-  fields: [{ key: 'phone', label: 'Phone' }],
+  fields: [
+    { key: 'phone', label: 'Phone' },
+    { key: 'dob', label: 'Date of birth (YYYY-MM-DD)' },
+    { key: 'gender', label: 'Gender' },
+  ],
 }
 const FIELD_GROUPS = [...PUBLIC_FIELD_GROUPS, PRIVATE_FIELD_GROUP]
 const EDITABLE_FIELDS = FIELD_GROUPS.flatMap((g) => g.fields)
@@ -176,7 +182,7 @@ export default function ProfileScreen() {
 
   if (isLoading || !form) return <ProfileSkeleton />
 
-  const completion = profileCompletion(profile)
+  const { percent: completion, missing: completionMissing } = profileCompletionDetail(profile)
   const isPaid = subscription?.status === 'paid'
 
   const set = (key) => (value) => {
@@ -223,7 +229,7 @@ export default function ProfileScreen() {
         <ProgressBar value={completion} style={{ marginTop: spacing.sm }} />
         {completion < 100 ? (
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12, marginTop: spacing.sm }}>
-            Complete your profile so recruiters see a stronger match.
+            Still to add: {completionMissing.map((m) => m.label.toLowerCase()).join(', ')}.
           </Text>
         ) : null}
       </Card>

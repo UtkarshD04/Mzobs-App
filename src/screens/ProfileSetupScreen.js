@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useAuth } from '../context/AuthContext'
-import { useCompleteProfileMutation } from '../hooks/useProfile'
+import { useCompleteProfileMutation, useProfileQuery } from '../hooks/useProfile'
+import { profileCompletionDetail } from '../lib/dashboard'
 import {
   STEPS,
   EMPTY_FORM,
@@ -93,6 +94,7 @@ export default function ProfileSetupScreen() {
   const { colors, spacing, fontFamily } = useTheme()
   const { logout } = useAuth()
   const complete = useCompleteProfileMutation()
+  const { data: profile } = useProfileQuery()
   const [step, setStep] = useState(0)
   const [form, setForm] = useState(EMPTY_FORM)
   const [error, setError] = useState('')
@@ -100,6 +102,8 @@ export default function ProfileSetupScreen() {
   const toggle = (key) => (item) =>
     setForm((f) => ({ ...f, [key]: f[key].includes(item) ? f[key].filter((x) => x !== item) : [...f[key], item] }))
   const last = step === STEPS.length - 1
+  // Real completion: the saved profile overlaid with everything typed so far.
+  const { percent, missing } = profileCompletionDetail({ ...profile, ...buildPayload(form) })
   const experienced = form.experience === 'experienced'
 
   async function next() {
@@ -122,14 +126,16 @@ export default function ProfileSetupScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={{ padding: spacing.lg, paddingBottom: spacing.sm }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.semibold, fontSize: 12 }}>
-              Step {step + 1} of {STEPS.length} · {STEPS[step]}
-            </Text>
+            <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 15 }}>Profile {percent}% complete</Text>
             <Pressable onPress={logout} hitSlop={8}>
               <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.medium, fontSize: 12 }}>Log out</Text>
             </Pressable>
           </View>
-          <ProgressBar value={((step + 1) / STEPS.length) * 100} style={{ marginTop: spacing.sm }} />
+          <ProgressBar value={percent} tone={percent === 100 ? 'green' : 'navy'} style={{ marginTop: spacing.sm }} />
+          <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, marginTop: 6 }}>
+            Step {step + 1} of {STEPS.length} · {STEPS[step]}
+            {missing.length ? ` · Still to add: ${missing.slice(0, 2).map((m) => m.label.toLowerCase()).join(', ')}${missing.length > 2 ? '…' : ''}` : ''}
+          </Text>
         </View>
 
         <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingTop: spacing.md }} keyboardShouldPersistTaps="handled">
