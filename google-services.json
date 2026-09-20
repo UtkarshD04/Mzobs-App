@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "405018074618",
+    "project_id": "mzobs-2b0cf",
+    "storage_bucket": "mzobs-2b0cf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:405018074618:android:a0c85bb2eeeb87602a5843",
+        "android_client_info": {
+          "package_name": "com.mzobs.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVLD6AprNs5ZvFsZaKfuHAaknj7foRjLw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
