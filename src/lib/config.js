@@ -29,6 +29,12 @@ export const FILE_BASE_URL = API_URL
 // tokens against (GOOGLE_CLIENT_ID) and the website uses.
 export const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? ''
 
+// The mobile number reserved for Google Play's app reviewers ("App access" in Play Console).
+// It skips the MSG91 widget and uses the server's OTP endpoints instead, where the backend
+// (REVIEW_LOGIN_PHONE / REVIEW_LOGIN_OTP) accepts a fixed code. Public on purpose: it is given
+// to Google, and does nothing unless the backend has the review login switched on.
+export const REVIEW_LOGIN_PHONE = '9000000001'
+
 // MSG91 OTP widget credentials (dashboard -> OTP -> Widget, with "Mobile
 // Integration" enabled). Both unset -> the app falls back to the backend's
 // own send-otp/verify-otp endpoints (see lib/msg91Widget.js).

@@ -99,11 +99,14 @@ export default function JobDetailScreen({ route, navigation }) {
   const verified = profile?.resume?.status === 'verified'
   const limitReached = !profile?.isPremium && applications.length >= FREE_APPLICATION_LIMIT
   const eligible = verified && !limitReached
+  // Urgent-hiring roles can be seen by everyone, but applying is a premium perk.
+  const urgentLocked = !!job.instantHiring && !profile?.isPremium
   const days = daysSince(job.postedOn)
   const isNew = days !== null && days <= 1
   const salary = fmtSalaryRange(job)
 
   async function handleApply() {
+    if (urgentLocked) return
     setError('')
     try {
       await applyMutation.mutateAsync(id)
@@ -128,6 +131,20 @@ export default function JobDetailScreen({ route, navigation }) {
           {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 12.5, marginBottom: spacing.sm }}>{error}</Text> : null}
           {applied ? (
             <Badge label="Applied — with Mzobs" tone="green" style={{ alignSelf: 'center' }} />
+          ) : urgentLocked ? (
+            <View>
+              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                <Button title="For premium members" disabled style={{ flex: 1 }} />
+                <IconAction icon="bookmark" active={saved} onPress={handleToggleSaved} accessibilityLabel={saved ? 'Remove from saved' : 'Save job'} />
+                <IconAction icon="share-2" onPress={handleShare} accessibilityLabel="Share job" />
+              </View>
+              <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, textAlign: 'center', marginTop: spacing.sm }}>
+                Urgent hiring jobs open with premium.{' '}
+                <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => navigation.navigate('Subscription')}>
+                  Upgrade for ₹99
+                </Text>
+              </Text>
+            </View>
           ) : limitReached ? (
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <Button title="Upgrade to apply" variant="gold" onPress={() => navigation.navigate('Subscription')} style={{ flex: 1 }} />
@@ -179,6 +196,7 @@ export default function JobDetailScreen({ route, navigation }) {
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
               <Text style={{ flex: 1, color: colors.ink, fontFamily: fontFamily.bold, fontSize: 19 }}>{job.title}</Text>
+              {job.instantHiring ? <Badge label="Urgent" tone="gold" /> : null}
               {isNew ? <Badge label="New" tone="teal" /> : null}
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>

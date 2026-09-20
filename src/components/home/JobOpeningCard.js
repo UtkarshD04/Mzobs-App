@@ -7,6 +7,7 @@ import { useIsJobSaved, toggleJobSaved } from '../../lib/savedJobs'
 import Card from '../ui/Card'
 import Avatar from '../ui/Avatar'
 import Tag from '../ui/Tag'
+import Badge from '../ui/Badge'
 
 const MAX_VISIBLE_SKILLS = 2
 
@@ -78,6 +79,8 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, dista
               <Text style={{ color: '#4B5563', fontFamily: fontFamily.medium, fontSize: 14, marginTop: 2 }} numberOfLines={1}>
                 {job.company}
               </Text>
+
+              {job.instantHiring ? <Badge label="Urgent hiring" tone="gold" style={{ alignSelf: 'flex-start', marginTop: 5 }} /> : null}
 
               {metaLine ? (
                 <Text style={{ color: '#6B7280', fontFamily: fontFamily.regular, fontSize: 13, marginTop: spacing.xs }} numberOfLines={1}>

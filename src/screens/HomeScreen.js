@@ -146,8 +146,8 @@ export default function HomeScreen({ navigation }) {
 
         <Animated.View entering={FadeInDown.delay(260).duration(280)}>
           <JobsSection
-            title="Instant hiring"
-            subtitle="Companies looking to hire right away."
+            title="Urgent hiring"
+            subtitle={profile?.isPremium ? 'Companies looking to hire right away.' : 'Companies hiring right away. Applying is for premium members.'}
             jobs={instantHiringJobs}
             isLoading={isLoadingInstantHiring}
             appliedJobIds={appliedJobIds}

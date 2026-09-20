@@ -9,6 +9,7 @@ import { tokenStore } from '../../lib/api'
 import { googleSignIn } from '../../lib/googleSignIn'
 import { useUploadResumeMutation } from '../../hooks/useResume'
 import * as authService from '../../services/authService'
+import { REVIEW_LOGIN_PHONE } from '../../lib/config'
 import { WIDGET_CONFIGURED, WidgetError, sendWidgetOtp, retryWidgetOtp, verifyWidgetOtp } from '../../lib/msg91Widget'
 import TextField from '../../components/ui/TextField'
 import Button from '../../components/ui/Button'
@@ -88,6 +89,10 @@ export default function PhoneAuthScreen() {
   const [error, setError] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
 
+  // The MSG91 widget verifies numbers on-device, but the reserved app-review number has no SMS, so it
+  // goes through the server's OTP endpoints (which accept its fixed code) instead.
+  const viaWidget = WIDGET_CONFIGURED && phone !== REVIEW_LOGIN_PHONE
+
 
   const [otp, setOtp] = useState('')
   const [sendingOtp, setSendingOtp] = useState(false)
@@ -148,7 +153,7 @@ export default function PhoneAuthScreen() {
     setOtpError('')
     setSendingOtp(true)
     try {
-      if (WIDGET_CONFIGURED) {
+      if (viaWidget) {
         const { reqId: id, accessToken } = await sendWidgetOtp(phone)
         setReqId(id)
         setStep('otp')
@@ -174,7 +179,7 @@ export default function PhoneAuthScreen() {
     setOtpError('')
     setSendingOtp(true)
     try {
-      if (WIDGET_CONFIGURED) await retryWidgetOtp(reqId)
+      if (viaWidget) await retryWidgetOtp(reqId)
       else await authService.sendOtp(phone)
       setOtp('')
       setResendIn(RESEND_COOLDOWN)
@@ -228,7 +233,7 @@ export default function PhoneAuthScreen() {
     setInfoMessage('')
     setVerifyingOtp(true)
     try {
-      if (WIDGET_CONFIGURED) {
+      if (viaWidget) {
         await verifyWithAccessToken(await verifyWidgetOtp(reqId, otp))
       } else {
         const { phoneToken: token } = await authService.verifyOtp(phone, otp)

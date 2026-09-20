@@ -289,7 +289,12 @@ export default function JobFiltersScreen({ navigation, route }) {
       </View>
 
       <View style={{ flex: 1, flexDirection: 'row', borderTopWidth: 1, borderTopColor: colors.border }}>
-        <ScrollView style={{ width: RAIL_WIDTH, backgroundColor: colors.bgSecondary }} contentContainerStyle={{ paddingVertical: spacing.xs }}>
+        {/* ScrollView defaults to flexGrow: 1, which in a row makes it split the free space with the
+            options pane (the rail ended up ~65% wide). flexGrow/flexShrink 0 keeps it at RAIL_WIDTH. */}
+        <ScrollView
+          style={{ width: RAIL_WIDTH, flexGrow: 0, flexShrink: 0, backgroundColor: colors.bgSecondary }}
+          contentContainerStyle={{ paddingVertical: spacing.xs }}
+        >
           {groups.map((g) => {
             const active = g.id === group?.id
             const count = groupSelectionCount(draft, g.id)
@@ -336,7 +341,7 @@ export default function JobFiltersScreen({ navigation, route }) {
           })}
         </ScrollView>
 
-        <ScrollView style={{ flex: 1, backgroundColor: colors.surface }} contentContainerStyle={{ padding: spacing.lg }} keyboardShouldPersistTaps="handled">
+        <ScrollView style={{ flex: 1, minWidth: 0, backgroundColor: colors.surface }} contentContainerStyle={{ padding: spacing.lg }} keyboardShouldPersistTaps="handled">
           {group ? (
             <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 15, marginBottom: spacing.sm }}>{group.label}</Text>
           ) : null}
