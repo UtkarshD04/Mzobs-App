@@ -134,6 +134,20 @@ export default function JobDetailScreen({ route, navigation }) {
               <IconAction icon="bookmark" active={saved} onPress={handleToggleSaved} accessibilityLabel={saved ? 'Remove from saved' : 'Save job'} />
               <IconAction icon="share-2" onPress={handleShare} accessibilityLabel="Share job" />
             </View>
+          ) : !verified ? (
+            // Applying needs a verified resume (verified instantly on upload). Rather than
+            // a greyed-out Apply button with the reason buried further down the page,
+            // say what's missing right here and take them to fix it.
+            <View>
+              <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, marginBottom: spacing.sm }}>
+                Add your resume to apply. It&apos;s verified instantly when you upload it.
+              </Text>
+              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                <Button title="Upload resume to apply" onPress={() => navigation.navigate('Main', { screen: 'Resume' })} style={{ flex: 1 }} />
+                <IconAction icon="bookmark" active={saved} onPress={handleToggleSaved} accessibilityLabel={saved ? 'Remove from saved' : 'Save job'} />
+                <IconAction icon="share-2" onPress={handleShare} accessibilityLabel="Share job" />
+              </View>
+            </View>
           ) : (
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <Button title="Apply through Mzobs" onPress={handleApply} loading={applyMutation.isPending} disabled={!eligible} style={{ flex: 1 }} />

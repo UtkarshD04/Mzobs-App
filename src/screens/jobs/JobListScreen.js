@@ -288,7 +288,7 @@ export default function JobListScreen({ navigation, route }) {
       }
     >
       <View style={{ flex: 1 }}>
-        <EligibilityNote verified={profile?.resume?.status === 'verified'} style={{ marginBottom: spacing.sm }} />
+        <EligibilityNote verified={profile?.resume?.status === 'verified'} navigation={navigation} style={{ marginBottom: spacing.sm }} />
 
         <FlatList
           style={{ flex: 1 }}
