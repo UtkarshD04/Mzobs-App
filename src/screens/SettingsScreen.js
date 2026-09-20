@@ -14,6 +14,7 @@ import Card from '../components/ui/Card'
 import TextField from '../components/ui/TextField'
 import Button from '../components/ui/Button'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import NotificationStatusCard from '../components/notifications/NotificationStatusCard'
 
 const PREFERENCE_CATEGORIES = [
   { key: 'applications', label: 'Applications' },
@@ -141,6 +142,8 @@ export default function SettingsScreen() {
         {saved ? <Text style={{ color: colors.green, fontFamily: fontFamily.regular, fontSize: 12.5, marginBottom: spacing.md }}>Saved.</Text> : null}
         <Button title="Save changes" onPress={handleSave} loading={updateMutation.isPending} />
       </Card>
+
+      <NotificationStatusCard style={{ marginTop: spacing.md }} />
 
       {preferences ? (
         <Card style={{ marginTop: spacing.md }}>

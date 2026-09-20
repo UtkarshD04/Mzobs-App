@@ -38,7 +38,13 @@
     "plugins": [
       "expo-secure-store",
       "expo-font",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "color": "#123B5D",
+          "defaultChannel": "default"
+        }
+      ],
       "expo-web-browser",
       [
         "expo-location",

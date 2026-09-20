@@ -5,6 +5,9 @@ import { useTheme } from '../theme'
 import AuthStack from './AuthStack'
 import AppDrawer from './AppDrawer'
 import BrandLogo from '../components/ui/BrandLogo'
+import { navigationRef } from '../lib/navigation'
+import PushListeners from '../components/notifications/PushListeners'
+import NotificationPermissionPrompt from '../components/notifications/NotificationPermissionPrompt'
 
 export default function RootNavigator() {
   const { isAuthenticated, isBootstrapping } = useAuth()
@@ -30,5 +33,17 @@ export default function RootNavigator() {
       </View>
     )
 
-  return <NavigationContainer theme={navTheme}>{isAuthenticated ? <AppDrawer /> : <AuthStack />}</NavigationContainer>
+  return (
+    <NavigationContainer ref={navigationRef} theme={navTheme}>
+      {isAuthenticated ? (
+        <>
+          <AppDrawer />
+          <PushListeners />
+          <NotificationPermissionPrompt />
+        </>
+      ) : (
+        <AuthStack />
+      )}
+    </NavigationContainer>
+  )
 }

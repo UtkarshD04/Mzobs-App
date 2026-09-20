@@ -1,3 +1,6 @@
+const fs = require('fs')
+const path = require('path')
+
 // app.json remains the source of truth for the rest of the Expo/Android
 // config (permissions, plugins, etc) — this file only layers a build-time
 // safety check on top of it. Expo evaluates this during `expo prebuild`,
@@ -30,6 +33,20 @@ module.exports = ({ config }) => {
   if (profile === 'preview' && isPlainHttp && !isLocalOrLan) {
     console.warn(
       `[app.config.js] WARNING: "preview" build has EXPO_PUBLIC_API_URL ("${apiUrl}") set to a non-local http:// address. Preview builds are installed on real devices over the internet — this should almost always be https://.`
+    )
+  }
+
+  // Android push notifications are delivered through Firebase Cloud Messaging, which needs
+  // this project's google-services.json (Firebase console -> Project settings -> Your apps).
+  // Use a local file next to app.json, or an EAS "file" environment variable named
+  // GOOGLE_SERVICES_JSON so the file never has to be committed. Without it the build still
+  // works, but the phone can never get a push token (in-app notifications keep working).
+  const googleServicesFile = process.env.GOOGLE_SERVICES_JSON ?? (fs.existsSync(path.join(__dirname, 'google-services.json')) ? './google-services.json' : null)
+  if (googleServicesFile) {
+    config.android = { ...config.android, googleServicesFile }
+  } else if (profile === 'production') {
+    console.warn(
+      '[app.config.js] WARNING: no google-services.json (or GOOGLE_SERVICES_JSON) for this "production" build — Android push notifications will NOT work until it is added.'
     )
   }
 

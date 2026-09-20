@@ -1,20 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { tokenStore, setUnauthorizedHandler } from '../lib/api'
 import * as authService from '../services/authService'
-import * as pushService from '../services/pushService'
-import { registerForPushNotificationsAsync } from '../lib/pushNotifications'
+import { syncPushToken, unregisterPushToken } from '../lib/pushNotifications'
 import { setSavedJobsOwner } from '../lib/savedJobs'
-
-// Fire-and-forget: a denied permission or offline device shouldn't block
-// login/signup/bootstrap, so failures here are swallowed.
-async function registerPushToken() {
-  try {
-    const token = await registerForPushNotificationsAsync()
-    if (token) await pushService.registerExpoToken(token)
-  } catch {
-    // ignore — push registration is best-effort
-  }
-}
 
 const AuthContext = createContext(null)
 
@@ -24,6 +12,8 @@ export function AuthProvider({ children }) {
   const [isBootstrapping, setIsBootstrapping] = useState(true)
 
   const logout = useCallback(async () => {
+    // Needs the still-valid session, so it happens before the token is cleared.
+    await unregisterPushToken()
     await tokenStore.clear()
     setToken(null)
     setEmployee(null)
@@ -49,7 +39,7 @@ export function AuthProvider({ children }) {
         const me = await authService.getMe()
         setToken(stored)
         setEmployee(me)
-        registerPushToken()
+        syncPushToken()
       } catch {
         // 401 interceptor already clears the stored token on auth failure.
       } finally {
@@ -67,7 +57,7 @@ export function AuthProvider({ children }) {
   const completeSession = useCallback((newToken, summary) => {
     setToken(newToken)
     setEmployee(summary)
-    registerPushToken()
+    syncPushToken()
   }, [])
 
   // Scope the saved-jobs list to whoever is signed in.

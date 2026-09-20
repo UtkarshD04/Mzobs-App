@@ -1,4 +1,13 @@
-import { QueryClient } from '@tanstack/react-query'
+import { AppState } from 'react-native'
+import { QueryClient, focusManager } from '@tanstack/react-query'
+
+// React Query has no idea what "focus" means in React Native — tell it the app coming
+// back to the foreground is one, so stale data (new notifications, job status) refreshes
+// as soon as the user opens the app.
+focusManager.setEventListener((handleFocus) => {
+  const sub = AppState.addEventListener('change', (state) => handleFocus(state === 'active'))
+  return () => sub.remove()
+})
 
 export const queryClient = new QueryClient({
   defaultOptions: {

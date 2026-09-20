@@ -10,6 +10,7 @@ import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import NotificationStatusCard from '../components/notifications/NotificationStatusCard'
 
 const TABS = ['All', 'Unread', 'Applications', 'Resume', 'Interviews', 'Training']
 const TAB_CATS = [null, null, 'applications', 'resume', 'interviews', 'training']
@@ -98,6 +99,8 @@ export default function NotificationsScreen() {
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 4 }}>Stay updated on your journey.</Text>
         </View>
       </View>
+
+      <NotificationStatusCard variant="banner" style={{ marginTop: spacing.md }} />
 
       <Button
         title="Mark all read"
