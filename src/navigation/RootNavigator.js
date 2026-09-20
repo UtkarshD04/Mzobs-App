@@ -8,6 +8,29 @@ import BrandLogo from '../components/ui/BrandLogo'
 import { navigationRef } from '../lib/navigation'
 import PushListeners from '../components/notifications/PushListeners'
 import NotificationPermissionPrompt from '../components/notifications/NotificationPermissionPrompt'
+import ProfileSetupScreen from '../screens/ProfileSetupScreen'
+import { useProfileQuery } from '../hooks/useProfile'
+
+// Once the one-time fee is paid the backend raises profile.profileSetupPending until the
+// full profile is submitted; until then this replaces the whole app with the wizard.
+function SignedInApp() {
+  const { data: profile, isLoading } = useProfileQuery()
+  const { colors } = useTheme()
+  if (isLoading)
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator size="small" color={colors.navy} />
+      </View>
+    )
+  if (profile?.profileSetupPending) return <ProfileSetupScreen />
+  return (
+    <>
+      <AppDrawer />
+      <PushListeners />
+      <NotificationPermissionPrompt />
+    </>
+  )
+}
 
 export default function RootNavigator() {
   const { isAuthenticated, isBootstrapping } = useAuth()
@@ -36,11 +59,7 @@ export default function RootNavigator() {
   return (
     <NavigationContainer ref={navigationRef} theme={navTheme}>
       {isAuthenticated ? (
-        <>
-          <AppDrawer />
-          <PushListeners />
-          <NotificationPermissionPrompt />
-        </>
+        <SignedInApp />
       ) : (
         <AuthStack />
       )}

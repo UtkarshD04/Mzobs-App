@@ -17,3 +17,11 @@ export function useUpdateProfileMutation() {
 export function useDeleteAccountMutation() {
   return useMutation({ mutationFn: profileService.deleteAccount })
 }
+
+export function useCompleteProfileMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: profileService.completeProfile,
+    onSuccess: (data) => queryClient.setQueryData(queryKeys.profile, data),
+  })
+}

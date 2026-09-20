@@ -31,7 +31,7 @@ export default function PushListeners() {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications })
     })
     const tapped = Notifications.addNotificationResponseReceivedListener(open)
-    const tokenChanged = Notifications.addPushTokenListener(() => syncPushToken())
+    const tokenChanged = Notifications.addPushTokenListener(() => syncPushToken({ fromListener: true }))
 
     // App was closed and opened by tapping a notification.
     Notifications.getLastNotificationResponseAsync()

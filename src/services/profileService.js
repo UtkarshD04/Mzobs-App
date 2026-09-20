@@ -11,3 +11,7 @@ export function updateProfile(input) {
 export function deleteAccount() {
   return apiClient.delete('/profile').then((r) => r.data)
 }
+
+export function completeProfile(input) {
+  return apiClient.post('/profile/complete', input).then((r) => r.data)
+}

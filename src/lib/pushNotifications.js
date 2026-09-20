@@ -49,20 +49,47 @@ export async function getExpoPushToken() {
 // Registers this phone's token with the backend so company/staff notifications
 // reach it. Best-effort: offline, denied permission or missing FCM setup must
 // never get in the way of signing in.
-export async function syncPushToken() {
-  try {
-    const token = await getExpoPushToken()
-    if (token) await pushService.registerExpoToken(token)
-    return token
-  } catch {
-    return null
-  }
+//
+// Fetching the Expo token makes expo-notifications fire its "push token changed"
+// event, and PushListeners re-syncs on that event, which fetches the token again,
+// which fires the event again. Unchecked that is a tight loop hammering
+// /push/expo-token until the rate limiter starts answering 429 to every request from
+// the phone's IP, sign-in included. So the listener path (`fromListener`) is skipped
+// while a sync is running or finished less than LISTENER_COOLDOWN_MS ago, and it never
+// re-posts a token the backend already has. Explicit calls (sign-in, permission granted)
+// always go through.
+const LISTENER_COOLDOWN_MS = 60 * 1000
+let inFlight = null
+let lastFinishedAt = 0
+let lastRegistered = null
+
+export async function syncPushToken({ fromListener = false } = {}) {
+  if (fromListener && (inFlight || Date.now() - lastFinishedAt < LISTENER_COOLDOWN_MS)) return null
+  if (inFlight) return inFlight
+
+  inFlight = (async () => {
+    try {
+      const token = await getExpoPushToken()
+      if (token && !(fromListener && token === lastRegistered)) {
+        await pushService.registerExpoToken(token)
+        lastRegistered = token
+      }
+      return token
+    } catch {
+      return null
+    } finally {
+      lastFinishedAt = Date.now()
+      inFlight = null
+    }
+  })()
+  return inFlight
 }
 
 // Sign-out: stop this phone receiving the account's notifications. Bounded so a
 // bad connection can't hold up logging out.
 export async function unregisterPushToken() {
   try {
+    lastRegistered = null
     const token = await getExpoPushToken()
     if (!token) return
     await Promise.race([pushService.unregisterExpoToken(token), new Promise((resolve) => setTimeout(resolve, 3000))])
