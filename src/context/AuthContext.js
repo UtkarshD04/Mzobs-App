@@ -3,6 +3,7 @@ import { tokenStore, setUnauthorizedHandler } from '../lib/api'
 import * as authService from '../services/authService'
 import * as pushService from '../services/pushService'
 import { registerForPushNotificationsAsync } from '../lib/pushNotifications'
+import { setSavedJobsOwner } from '../lib/savedJobs'
 
 // Fire-and-forget: a denied permission or offline device shouldn't block
 // login/signup/bootstrap, so failures here are swallowed.
@@ -68,6 +69,11 @@ export function AuthProvider({ children }) {
     setEmployee(summary)
     registerPushToken()
   }, [])
+
+  // Scope the saved-jobs list to whoever is signed in.
+  useEffect(() => {
+    setSavedJobsOwner(token ? (employee?.id ?? employee?._id ?? 'me') : null)
+  }, [token, employee])
 
   const value = {
     token,

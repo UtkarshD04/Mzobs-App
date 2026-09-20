@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { View, Text, Pressable, Share } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
@@ -6,7 +6,7 @@ import { useJobQuery } from '../../hooks/useJobs'
 import { useApplicationsQuery, useApplyToJobMutation } from '../../hooks/useApplications'
 import { useProfileQuery } from '../../hooks/useProfile'
 import { fmtSalaryRange, fmtExperience, fmtDate } from '../../lib/format'
-import { isJobSaved, toggleJobSaved } from '../../lib/savedJobs'
+import { useIsJobSaved, toggleJobSaved } from '../../lib/savedJobs'
 import ScreenContainer from '../../components/ui/ScreenContainer'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -89,19 +89,9 @@ export default function JobDetailScreen({ route, navigation }) {
   const { data: profile, isLoading: profileLoading } = useProfileQuery()
   const applyMutation = useApplyToJobMutation()
   const [error, setError] = useState('')
-  const [saved, setSaved] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
 
-  useEffect(() => {
-    if (!job) return
-    let active = true
-    isJobSaved(job).then((value) => {
-      if (active) setSaved(value)
-    })
-    return () => {
-      active = false
-    }
-  }, [job])
+  const saved = useIsJobSaved(job ?? {})
 
   if (isLoading || profileLoading || !job) return <JobDetailSkeleton />
 
@@ -122,8 +112,8 @@ export default function JobDetailScreen({ route, navigation }) {
     }
   }
 
-  async function handleToggleSaved() {
-    setSaved(await toggleJobSaved(job))
+  function handleToggleSaved() {
+    toggleJobSaved(job)
   }
 
   function handleShare() {

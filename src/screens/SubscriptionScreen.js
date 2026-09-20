@@ -37,7 +37,7 @@ export default function SubscriptionScreen() {
 
   if (l1 || l2) return <LoadingSpinner />
 
-  const fee = subscription.amount ?? 299
+  const fee = subscription.status === 'paid' ? (subscription.amount ?? 99) : 99
   const isPaid = subscription.status === 'paid'
 
   // Same order -> checkout -> signature-verify flow as the web account page
@@ -136,7 +136,7 @@ export default function SubscriptionScreen() {
           <View style={{ flex: 1 }}>
             <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 13.5 }}>This is placement support, not a job guarantee</Text>
             <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, marginTop: 4, lineHeight: 18 }}>
-              The ₹{fee} fee covers verification, a mock interview, training and getting your resume in front of hiring companies. Whether you're
+              The ₹{fee} fee covers verification, training and getting your resume in front of hiring companies. Whether you're
               selected is the employer's call — we never charge you again.
             </Text>
           </View>

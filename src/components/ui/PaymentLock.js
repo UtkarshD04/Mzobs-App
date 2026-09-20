@@ -4,10 +4,10 @@ import { useTheme } from '../../theme'
 import Card from './Card'
 import Button from './Button'
 
-// Shown in place of a page gated behind the one-time ₹299 placement-support
-// payment — Resume Center and Mock Interview both route here instead of
+// Shown in place of a page gated behind the one-time ₹99 placement-support
+// payment — Resume Center routes here instead of
 // duplicating the same lock screen. Mirrors Website/Frontend's PaymentLock.
-export default function PaymentLock({ title, body, fee = 299, navigation }) {
+export default function PaymentLock({ title, body, fee = 99, navigation }) {
   const { colors, spacing, fontFamily, radius } = useTheme()
   return (
     <Card style={{ alignItems: 'center', paddingVertical: spacing.xxl, marginTop: spacing.lg }}>

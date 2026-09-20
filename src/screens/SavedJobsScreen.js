@@ -1,9 +1,7 @@
-import { useCallback, useState } from 'react'
 import { FlatList } from 'react-native'
-import { useFocusEffect } from '@react-navigation/native'
 import { useJobsQuery } from '../hooks/useJobs'
 import { useApplicationsQuery } from '../hooks/useApplications'
-import { getSavedJobIds, jobSaveKey } from '../lib/savedJobs'
+import { useSavedJobIds, jobSaveKey } from '../lib/savedJobs'
 import JobOpeningCard from '../components/home/JobOpeningCard'
 import ScreenContainer from '../components/ui/ScreenContainer'
 import EmptyState from '../components/ui/EmptyState'
@@ -12,24 +10,10 @@ import JobRowSkeleton from '../components/ui/skeletons/JobRowSkeleton'
 export default function SavedJobsScreen({ navigation }) {
   const { data: jobs = [], isLoading, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
-  const [savedIds, setSavedIds] = useState(null)
+  const savedIds = useSavedJobIds()
 
-  // Reload the saved-id list every time this screen regains focus — jobs
-  // are saved/unsaved from a JobOpeningCard's own bookmark icon (here, on
-  // Home, or in search results), so there's no shared in-memory state to
-  // subscribe to, only the SecureStore-backed list in lib/savedJobs.js.
-  useFocusEffect(
-    useCallback(() => {
-      let active = true
-      getSavedJobIds().then((ids) => {
-        if (active) setSavedIds(ids)
-      })
-      return () => {
-        active = false
-      }
-    }, [])
-  )
-
+  // The saved-id list is a shared live store (lib/savedJobs.js), so a job
+  // saved or unsaved anywhere appears here / drops off this list immediately.
   if (isLoading || savedIds === null) return <JobRowSkeleton />
 
   const savedIdSet = new Set(savedIds)

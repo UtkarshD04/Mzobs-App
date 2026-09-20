@@ -104,6 +104,15 @@ export const TERMS_SECTIONS = [
     ],
   },
   {
+    title: 'Candidate plans and applications',
+    blocks: [
+      { p: 'Candidate accounts start on a free plan. A free account can apply to up to 5 jobs in total. Withdrawing an application does not restore that application to your free limit.' },
+      { p: 'To apply to more than 5 jobs, you can activate your account with a one-time payment of ₹99. After this one-time payment, you can apply to as many jobs as you like, with no further application limit and no recurring charge for this plan. Applicable taxes, if any, and any discount codes will be shown before you pay.' },
+      { p: 'Mzobs shows you jobs that are relevant to your profile, such as your skills, experience, and location, and tries to keep applied jobs out of your recommendations. Relevance is based on the information in your profile, so keeping it accurate and complete helps you see better matches. Recommendations are suggestions only and do not guarantee any interview or offer.' },
+      { p: 'Applying to jobs also requires your resume to be verified by Mzobs. Mzobs may change its plans, pricing, or limits in the future in accordance with applicable law, and will show the applicable details before any payment.' },
+    ],
+  },
+  {
     title: 'Employer terms',
     blocks: [
       { p: 'Employers and recruiters may use Mzobs to:' },

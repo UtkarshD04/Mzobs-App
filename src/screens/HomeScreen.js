@@ -1,16 +1,13 @@
 import { useMemo, useState } from 'react'
-import { View, Text, Pressable, ScrollView, RefreshControl } from 'react-native'
+import { View, Text, ScrollView, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Animated, { FadeInDown } from 'react-native-reanimated'
-import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useJobsQuery, useRecommendedJobsQuery, useAppliedBasedJobsQuery, useInstantHiringJobsQuery } from '../hooks/useJobs'
 import { useApplicationsQuery } from '../hooks/useApplications'
 import { useProfileQuery } from '../hooks/useProfile'
 import { useNotificationsQuery } from '../hooks/useNotifications'
-import { useInterviewsQuery } from '../hooks/useInterviews'
 import EmptyState from '../components/ui/EmptyState'
-import Card from '../components/ui/Card'
 import JobRowSkeleton from '../components/ui/skeletons/JobRowSkeleton'
 import HomeTopBar from '../components/home/HomeTopBar'
 import JobSearchSection from '../components/home/JobSearchSection'
@@ -31,7 +28,6 @@ export default function HomeScreen({ navigation }) {
   const { data: jobs = [], isLoading, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
   const { data: notifications = [] } = useNotificationsQuery()
-  const { data: interviews = [] } = useInterviewsQuery()
   const { data: recommendedJobs = [], isLoading: isLoadingRecommended } = useRecommendedJobsQuery()
   const { data: appliedBasedJobs = [], isLoading: isLoadingAppliedBased } = useAppliedBasedJobsQuery()
   const { data: instantHiringJobs = [], isLoading: isLoadingInstantHiring } = useInstantHiringJobsQuery()
@@ -62,10 +58,6 @@ export default function HomeScreen({ navigation }) {
 
   let progressVariant = 'progress'
   if (resumeStatus === 'none') progressVariant = 'resume'
-
-  const upcomingInterview = interviews
-    .filter((i) => ['Confirmed', 'Awaiting confirmation'].includes(i.status))
-    .sort((a, b) => new Date(a.when) - new Date(b.when))[0]
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'left', 'right']}>
@@ -163,33 +155,6 @@ export default function HomeScreen({ navigation }) {
             onPressJob={(job) => navigation.navigate('JobDetail', { id: job.id })}
           />
         </Animated.View>
-
-        {upcomingInterview ? (
-          <Animated.View entering={FadeInDown.delay(270).duration(280)} style={{ paddingHorizontal: spacing.lg, marginTop: spacing.lg }}>
-            <Pressable
-              onPress={() => navigation.navigate('InterviewCenter')}
-              accessibilityRole="button"
-              accessibilityLabel={`Upcoming interview with ${upcomingInterview.company}`}
-            >
-              <Card style={{ borderColor: colors.navyTintStrong }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.navyTint, alignItems: 'center', justifyContent: 'center' }}>
-                    <Feather name="calendar" size={15} color={colors.navy} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 13.5 }}>
-                      Interview scheduled — {upcomingInterview.company}
-                    </Text>
-                    <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12, marginTop: 2 }}>
-                      {upcomingInterview.when ? new Date(upcomingInterview.when).toLocaleString('en-IN') : upcomingInterview.role}
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={16} color={colors.inkTertiary} />
-                </View>
-              </Card>
-            </Pressable>
-          </Animated.View>
-        ) : null}
 
         <Animated.View entering={FadeInDown.delay(280).duration(280)} style={{ marginTop: spacing.xl }}>
           <HomeProgressCard variant={progressVariant} applicationsCount={applications.length} onNavigate={goTo} />

@@ -19,12 +19,9 @@ export const queryKeys = {
   instantHiringJobs: ['jobs', 'instant-hiring'],
   hotCities: ['hotCities'],
   applications: ['applications'],
-  mockInterview: ['mockInterview'],
-  interviews: ['interviews'],
   subscription: ['subscription'],
   notifications: ['notifications'],
   messageThreads: ['messageThreads'],
-  threadMessages: (id) => ['messageThreads', id, 'messages'],
   supportTickets: ['supportTickets'],
   notificationPreferences: ['notificationPreferences'],
 }

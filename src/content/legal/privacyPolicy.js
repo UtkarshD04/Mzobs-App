@@ -483,7 +483,6 @@ export const PRIVACY_SECTIONS = [
           'Account/profile records and resume files',
           'Saved jobs and application-related user records',
           'Notifications, push notification tokens and user preferences',
-          'Mock interview information and user support records where applicable',
           'Conversations and messages where applicable',
           'Other account-associated information that is not required to be retained',
         ],

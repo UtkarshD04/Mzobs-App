@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react'
 import { View, Text, Pressable, Platform } from 'react-native'
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, useReducedMotion, withTiming } from 'react-native-reanimated'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { fmtSalaryRange, fmtExperience } from '../../lib/format'
-import { isJobSaved, toggleJobSaved } from '../../lib/savedJobs'
+import { useIsJobSaved, toggleJobSaved } from '../../lib/savedJobs'
 import Card from '../ui/Card'
 import Avatar from '../ui/Avatar'
 import Tag from '../ui/Tag'
@@ -25,20 +24,10 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, dista
     .filter(Boolean)
     .join('  ·  ')
 
-  const [saved, setSaved] = useState(false)
-  useEffect(() => {
-    let active = true
-    isJobSaved(job).then((value) => {
-      if (active) setSaved(value)
-    })
-    return () => {
-      active = false
-    }
-  }, [job.id])
+  const saved = useIsJobSaved(job)
 
-  async function handleToggleSaved() {
-    const next = await toggleJobSaved(job)
-    setSaved(next)
+  function handleToggleSaved() {
+    toggleJobSaved(job)
   }
 
   const reduceMotion = useReducedMotion()

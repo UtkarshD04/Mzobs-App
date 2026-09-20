@@ -20,7 +20,7 @@ export function useVerifySubscriptionPaymentMutation() {
     mutationFn: subscriptionService.verifySubscriptionPayment,
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.subscription, data)
-      // ResumeScreen/MockInterviewScreen/JobListScreen/JobDetailScreen gate
+      // ResumeScreen/JobListScreen/JobDetailScreen gate
       // on profile.subscription.status, not this query — without this they'd
       // keep showing the paywall until the profile query happens to refetch.
       queryClient.invalidateQueries({ queryKey: queryKeys.profile })

@@ -15,7 +15,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 
 // Mirrors Website/Frontend's CustomerSupport.jsx — a ticket form plus a
 // "Your Queries" history, not just a one-way contact form.
-const CATEGORIES = ['General', 'Resume Verification', 'Mock Interview', 'Application Status', 'Payment', 'Technical Issue']
+const CATEGORIES = ['General', 'Resume Verification', 'Application Status', 'Payment', 'Technical Issue']
 const STATUS_TONE = { Open: 'navy', 'In Progress': 'gold', Resolved: 'green' }
 
 export default function SupportScreen({ route }) {
