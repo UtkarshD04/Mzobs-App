@@ -3,7 +3,7 @@ import * as jobsService from '../services/jobsService'
 import { queryKeys } from '../lib/queryClient'
 
 export function useJobsQuery(filters = {}) {
-  return useQuery({ queryKey: queryKeys.jobs(filters), queryFn: () => jobsService.listJobs(filters) })
+  return useQuery({ queryKey: queryKeys.jobs(filters), queryFn: () => jobsService.listAllJobs(filters) })
 }
 
 export function useJobQuery(id) {

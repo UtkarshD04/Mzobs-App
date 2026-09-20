@@ -8,6 +8,19 @@ export function useDeviceLocation() {
   const [coords, setCoords] = useState(null)
   const [status, setStatus] = useState('idle') // idle | requesting | granted | denied | error
 
+  // Current OS permission WITHOUT prompting — lets a caller show its own
+  // explanation first, and only when the system dialog is actually still to come.
+  // Returns 'granted' | 'blocked' (denied and the OS won't ask again) | 'undetermined'.
+  async function getPermissionState() {
+    try {
+      const { status: permission, canAskAgain } = await Location.getForegroundPermissionsAsync()
+      if (permission === 'granted') return 'granted'
+      return canAskAgain === false ? 'blocked' : 'undetermined'
+    } catch {
+      return 'undetermined'
+    }
+  }
+
   // Returns { coords, status } directly (not just via the hook's own state)
   // since a caller awaiting this needs the outcome of THIS call — reading
   // the hook's `status` right after would see a stale, pre-update value.
@@ -30,5 +43,5 @@ export function useDeviceLocation() {
     }
   }
 
-  return { coords, status, requestLocation }
+  return { coords, status, requestLocation, getPermissionState }
 }
