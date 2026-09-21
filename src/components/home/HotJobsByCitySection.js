@@ -265,7 +265,7 @@ export default function HotJobsByCitySection({ onOpenSearch }) {
               meta={meta}
               stats={stats}
               isTopCity={meta.city === topCityName}
-              onPress={() => onOpenSearch(meta.city)}
+              onPress={() => onOpenSearch({ location: meta.city })}
             />
           ))}
         </ScrollView>

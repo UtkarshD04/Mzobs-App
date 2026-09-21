@@ -19,6 +19,7 @@ import JobCardCarousel from '../components/home/JobCardCarousel'
 import JobsSection from '../components/home/JobsSection'
 import HomeProgressCard from '../components/home/HomeProgressCard'
 import { jobMatchesCategory } from '../components/home/categoryData'
+import { locationKey, locationOptions } from '../lib/jobFilters'
 
 const MAX_VISIBLE_JOBS = 5
 
@@ -49,11 +50,21 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate(screen)
   }
 
-  // The hero search box is a button, not a live filter: it opens the Jobs
-  // tab's dedicated Search & Filters page (keyword field + every filter
-  // group), then lands on the job list with both applied.
-  function openSearch(term) {
-    navigation.navigate('Jobs', { screen: 'JobFilters', params: { query: term, jobs } })
+  // Hero search: keyword, location and experience go to the Jobs tab's
+  // Search & Filters page, which lists the matching openings. A location that
+  // matches a known city becomes a location filter; anything else is folded
+  // into the keyword search (which also matches job locations).
+  function openSearch({ query = '', location = '', experience = null } = {}) {
+    const filters = {}
+    let keyword = query
+    if (location) {
+      const wanted = locationKey(location)
+      const city = locationOptions(jobs).find((o) => o.id === wanted || o.id.includes(wanted))
+      if (city) filters.location = [city.id]
+      else if (!keyword) keyword = location
+    }
+    if (experience !== null && experience !== undefined) filters.experience = experience
+    navigation.navigate('Jobs', { screen: 'JobFilters', params: { query: keyword, filters, jobs } })
   }
 
   let progressVariant = 'progress'
