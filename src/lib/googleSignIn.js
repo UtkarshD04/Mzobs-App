@@ -74,13 +74,44 @@ function decodeJwtPayload(token) {
   return JSON.parse(base64UrlDecodeToUtf8(base64Url))
 }
 
-// Returns the ID token plus the profile fields decoded from it (so screens
-// can prefill name/email without a round trip) — or null if the user
-// dismissed the browser before finishing. The ID token is only trusted once
-// the backend verifies its signature — the client-side decode here is for
-// prefill display purposes only, same trust level the native picker's own
-// profile fields had before.
+// Native Google sign-in: the Android account picker sheet, no browser involved, so it can't
+// get stuck in Chrome's account chooser. The ID token is issued for the Web client ID, so the
+// backend verifies it exactly like the browser flow's token. It needs an Android OAuth client
+// (this app's package + signing SHA-1) in Google Cloud; until that exists, or if Play Services
+// is missing, this throws and googleSignIn() falls back to the browser flow below.
+async function nativeGoogleSignIn() {
+  // Loaded lazily so a build/runtime without the native module (Expo Go) just falls back.
+  const { GoogleSignin } = require('@react-native-google-signin/google-signin')
+  if (!nativeConfigured) {
+    GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, scopes: ['profile', 'email'] })
+    nativeConfigured = true
+  }
+  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true })
+  // Forget the last account so the picker always shows, like the browser flow's select_account.
+  await GoogleSignin.signOut().catch(() => {})
+  const response = await GoogleSignin.signIn()
+  if (response.type !== 'success') return { cancelled: true }
+  const { idToken, user } = response.data
+  if (!idToken) throw new Error('Google did not return an ID token.')
+  return { idToken, name: user?.name ?? '', email: user?.email ?? '' }
+}
+let nativeConfigured = false
+
+// Returns the ID token plus the profile fields (so screens can prefill name/email without a
+// round trip) or null if the user dismissed the sign-in. The ID token is only trusted once the
+// backend verifies its signature.
 export async function googleSignIn() {
+  try {
+    const result = await nativeGoogleSignIn()
+    return result.cancelled ? null : result
+  } catch (err) {
+    if (__DEV__) console.warn('Native Google sign-in unavailable, using the browser flow:', err?.code ?? err?.message)
+    return browserGoogleSignIn()
+  }
+}
+
+// Browser-based fallback: opens Google's OAuth page in a Custom Tab and returns via the backend bridge.
+async function browserGoogleSignIn() {
   const returnUrl = getAppReturnUrl()
   const state = Crypto.randomUUID()
   const nonce = Crypto.randomUUID()

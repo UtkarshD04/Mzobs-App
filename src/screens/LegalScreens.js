@@ -12,6 +12,7 @@ import { TERMS_SECTIONS } from '../content/legal/termsAndConditions'
 
 const SUPPORT_EMAIL = 'support@mzobs.com'
 const LAST_UPDATED = '19 September 2026'
+const TERMS_LAST_UPDATED = '21 September 2026'
 
 const DOCS = {
   privacy: {
@@ -29,7 +30,7 @@ const DOCS = {
     sections: TERMS_SECTIONS,
     title: 'Terms & Conditions',
     heading: 'The rules of using Mzobs',
-    dates: `Effective: ${LAST_UPDATED} · Last updated: ${LAST_UPDATED}`,
+    dates: `Effective: ${LAST_UPDATED} · Last updated: ${TERMS_LAST_UPDATED}`,
     intro: [
       'These Terms & Conditions (“Terms”, “Terms of Use”, or “Agreement”) govern your access to and use of the Mzobs website, mobile application, candidate portal, employer portal, APIs, and related services (collectively, the “Services”). Mzobs is operated by Mesho Solutions (“Mzobs”, “we”, “us”, or “our”).',
       'By creating an account, accessing, or using Mzobs, you agree to be bound by these Terms and our Privacy Policy. If you do not agree with these Terms, you must not access or use the Services.',
