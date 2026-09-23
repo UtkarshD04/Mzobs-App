@@ -83,7 +83,7 @@ function GroupLabel({ children }) {
 }
 
 export default function DrawerContent(props) {
-  const { colors, spacing, fontFamily } = useTheme()
+  const { colors, spacing, fontFamily, isDark, toggleTheme } = useTheme()
   const { logout, employee } = useAuth()
   const { data: profile } = useProfileQuery()
   const { data: notifications = [] } = useNotificationsQuery()
@@ -93,15 +93,34 @@ export default function DrawerContent(props) {
   const badges = { notifications: unreadCount > 0 ? unreadCount : null }
 
   function go(item) {
-    props.navigation.closeDrawer()
     if (item.target.params) props.navigation.navigate(item.target.screen, item.target.params)
     else props.navigation.navigate(item.target.screen)
+    // Navigate first, then close — closing before the nested nav action is
+    // dispatched can race with the drawer's own state update and drop it,
+    // which is why "Profile" / "My Applications" sometimes did nothing.
+    requestAnimationFrame(() => props.navigation.closeDrawer())
   }
 
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: spacing.lg, paddingHorizontal: spacing.sm, paddingBottom: spacing.lg }}>
-      <View style={{ paddingHorizontal: spacing.md, marginBottom: spacing.md }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, marginBottom: spacing.md }}>
         <BrandLogo height={28} />
+        <Pressable
+          onPress={toggleTheme}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 17,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.surfaceSunken,
+          }}
+        >
+          <Feather name={isDark ? 'sun' : 'moon'} size={16} color={colors.ink} />
+        </Pressable>
       </View>
 
       <View

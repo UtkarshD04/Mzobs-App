@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { View, Text, TextInput, ScrollView, Pressable, Platform } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { View, Text, TextInput, ScrollView, Pressable, Platform, ActivityIndicator } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useTheme } from '../../theme'
+import { getJobSuggestions } from '../../services/jobsService'
 import HeroPattern from './HeroPattern'
 import PressableScale from '../ui/PressableScale'
 
@@ -32,9 +34,158 @@ const EXPERIENCE_OPTIONS = [
 
 const HERO_GRADIENT = ['#3b6df0', '#6c5cf0']
 const HERO_ACCENT = '#5a62ee'
+const SUGGEST_DEBOUNCE_MS = 300
+const SUGGEST_LIMIT = 8
+
+function countLabel(count) {
+  if (!count) return null
+  return `${count} job${count === 1 ? '' : 's'}`
+}
+
+// Live autocomplete dropdown for one hero field — same live-ranked
+// suggestions endpoint the website's Autocomplete.jsx uses (see
+// jobsService.getJobSuggestions), scaled down to a single-select field
+// (tap a row to fill the input) rather than the website's multi-tag box —
+// a better fit for a small mobile keyboard-constrained search bar.
+function SuggestRow({ icon, type, value, onChangeValue, placeholder, accessibilityLabel, onSubmit, rowStyle, inputStyle, divider }) {
+  const { colors, radius, spacing, fontFamily } = useTheme()
+  const [open, setOpen] = useState(false)
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(false)
+  const debounceRef = useRef(null)
+  const abortRef = useRef(null)
+  const seqRef = useRef(0)
+
+  function runFetch(q) {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    const requestId = ++seqRef.current
+    setLoading(true)
+    getJobSuggestions({ type, q, limit: SUGGEST_LIMIT }, { signal: controller.signal })
+      .then((result) => {
+        if (requestId !== seqRef.current) return
+        setItems(result)
+      })
+      .catch((err) => {
+        if (err?.name === 'CanceledError' || err?.name === 'AbortError') return
+        if (requestId !== seqRef.current) return
+        setItems([])
+      })
+      .finally(() => {
+        if (requestId === seqRef.current) setLoading(false)
+      })
+  }
+
+  function scheduleFetch(q) {
+    clearTimeout(debounceRef.current)
+    if (!q.trim()) {
+      runFetch(q)
+      return
+    }
+    debounceRef.current = setTimeout(() => runFetch(q), SUGGEST_DEBOUNCE_MS)
+  }
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(debounceRef.current)
+      abortRef.current?.abort()
+    }
+  }, [])
+
+  function pick(item) {
+    onChangeValue(item.value)
+    setOpen(false)
+  }
+
+  return (
+    <View>
+      <View style={rowStyle}>
+        <Feather name={icon} size={19} color={colors.inkSecondary} />
+        <TextInput
+          value={value}
+          onChangeText={(v) => {
+            onChangeValue(v)
+            scheduleFetch(v)
+          }}
+          onFocus={() => {
+            setOpen(true)
+            scheduleFetch(value)
+          }}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder={placeholder}
+          placeholderTextColor={colors.inkTertiary}
+          returnKeyType="search"
+          onSubmitEditing={() => {
+            setOpen(false)
+            onSubmit()
+          }}
+          style={inputStyle}
+          accessibilityLabel={accessibilityLabel}
+        />
+        {loading ? <ActivityIndicator size="small" color={colors.inkTertiary} /> : null}
+      </View>
+      {divider}
+
+      {open && (items.length > 0 || loading) ? (
+        <View
+          style={{
+            position: 'absolute',
+            left: spacing.md,
+            right: spacing.md,
+            top: '100%',
+            zIndex: 20,
+            elevation: 8,
+            backgroundColor: colors.surface,
+            borderRadius: radius.md,
+            borderWidth: 1,
+            borderColor: colors.border,
+            maxHeight: 240,
+            paddingVertical: 4,
+            shadowColor: '#101828',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.12,
+            shadowRadius: 16,
+          }}
+        >
+          <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+            {items.map((item) => (
+              <Pressable
+                key={item.value}
+                onPress={() => pick(item)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: spacing.sm,
+                  paddingVertical: 10,
+                  paddingHorizontal: spacing.md,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                  <Feather name={item.isRemote ? 'globe' : icon} size={13} color={colors.inkTertiary} />
+                  <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 13.5, flexShrink: 1 }} numberOfLines={1}>
+                    {item.value}
+                  </Text>
+                </View>
+                {countLabel(item.count) ? (
+                  <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.medium, fontSize: 11.5 }}>{countLabel(item.count)}</Text>
+                ) : null}
+              </Pressable>
+            ))}
+            {!items.length && loading ? (
+              <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12.5, padding: spacing.md }}>Loading…</Text>
+            ) : null}
+          </ScrollView>
+        </View>
+      ) : null}
+    </View>
+  )
+}
 
 export default function JobSearchSection({ onOpenSearch }) {
   const { colors, radius, spacing, fontFamily, isDark } = useTheme()
+  const insets = useSafeAreaInsets()
   const [query, setQuery] = useState('')
   const [location, setLocation] = useState('')
   const [experience, setExperience] = useState(EXPERIENCE_OPTIONS[0])
@@ -53,14 +204,18 @@ export default function JobSearchSection({ onOpenSearch }) {
     paddingHorizontal: spacing.md,
   }
   const inputStyle = { flex: 1, color: colors.ink, fontFamily: fontFamily.regular, fontSize: 15, paddingVertical: 12 }
-  const divider = { height: 1, backgroundColor: colors.border, marginHorizontal: spacing.md }
+  const divider = <View style={{ height: 1, backgroundColor: colors.border, marginHorizontal: spacing.md }} />
 
   function search() {
     onOpenSearch({ query: query.trim(), location: location.trim(), experience: experience.years })
   }
 
+  // Reserves room for HomeFloatingNav (see HomeScreen.js), which now floats
+  // as a position:absolute overlay fixed over the scroll content — same as
+  // the website's `position: fixed` navbar plus its hero's pt-28 — rather
+  // than living inline in this scrollable content the way it briefly did.
   const content = (
-    <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.xl, paddingBottom: spacing.xl }}>
+    <View style={{ paddingHorizontal: spacing.lg, paddingTop: insets.top + 90, paddingBottom: spacing.xl }}>
       <Text
         style={{
           color: colors.ink,
@@ -112,34 +267,30 @@ export default function JobSearchSection({ onOpenSearch }) {
           cardShadow,
         ]}
       >
-        <View style={rowStyle}>
-          <Feather name="search" size={19} color={colors.inkSecondary} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search jobs, skills or company"
-            placeholderTextColor={colors.inkTertiary}
-            returnKeyType="search"
-            onSubmitEditing={search}
-            style={inputStyle}
-            accessibilityLabel="Search jobs, skills or company"
-          />
-        </View>
-        <View style={divider} />
-        <View style={rowStyle}>
-          <Feather name="map-pin" size={19} color={colors.inkSecondary} />
-          <TextInput
-            value={location}
-            onChangeText={setLocation}
-            placeholder={'City, state or “Remote”'}
-            placeholderTextColor={colors.inkTertiary}
-            returnKeyType="search"
-            onSubmitEditing={search}
-            style={inputStyle}
-            accessibilityLabel="City, state or Remote"
-          />
-        </View>
-        <View style={divider} />
+        <SuggestRow
+          icon="search"
+          type="title"
+          value={query}
+          onChangeValue={setQuery}
+          placeholder="Search jobs, skills or company"
+          accessibilityLabel="Search jobs, skills or company"
+          onSubmit={search}
+          rowStyle={rowStyle}
+          inputStyle={inputStyle}
+          divider={divider}
+        />
+        <SuggestRow
+          icon="map-pin"
+          type="location"
+          value={location}
+          onChangeValue={setLocation}
+          placeholder={'City, state or “Remote”'}
+          accessibilityLabel="City, state or Remote"
+          onSubmit={search}
+          rowStyle={rowStyle}
+          inputStyle={inputStyle}
+          divider={divider}
+        />
         <Pressable
           onPress={() => setExperienceOpen((v) => !v)}
           accessibilityRole="button"

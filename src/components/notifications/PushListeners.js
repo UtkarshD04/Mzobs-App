@@ -14,6 +14,14 @@ function screenFor(category) {
   return category === 'applications' ? ['Main', { screen: 'Applications' }] : ['Notifications', undefined]
 }
 
+// getLastNotificationResponseAsync() keeps returning the same response on
+// every cold start (not just the launch that was actually a notification
+// tap) until clearLastNotificationResponseAsync() has run to completion —
+// if the app gets killed before that clear finishes, a stale tap replays
+// and force-navigates to Notifications on a perfectly normal app open. A
+// response older than this is never treated as "this launch was a tap."
+const STALE_RESPONSE_MS = 15_000
+
 function open(response) {
   const id = response?.notification?.request?.identifier
   if (id && handled.has(id)) return
@@ -25,6 +33,14 @@ function open(response) {
   Notifications.clearLastNotificationResponseAsync?.().catch(() => {})
 }
 
+function isFreshLaunchTap(response) {
+  const date = response?.notification?.date
+  if (!date) return false
+  // expo-notifications reports `date` in seconds on Android, ms on iOS.
+  const ms = date > 1e12 ? date : date * 1000
+  return Date.now() - ms < STALE_RESPONSE_MS
+}
+
 export default function PushListeners() {
   useEffect(() => {
     const received = Notifications.addNotificationReceivedListener(() => {
@@ -33,9 +49,13 @@ export default function PushListeners() {
     const tapped = Notifications.addNotificationResponseReceivedListener(open)
     const tokenChanged = Notifications.addPushTokenListener(() => syncPushToken({ fromListener: true }))
 
-    // App was closed and opened by tapping a notification.
+    // App was closed and opened by tapping a notification — but only if that
+    // tap actually happened just now, not a stale one left over from before.
     Notifications.getLastNotificationResponseAsync()
-      .then((response) => response && open(response))
+      .then((response) => {
+        if (response && isFreshLaunchTap(response)) open(response)
+        else Notifications.clearLastNotificationResponseAsync?.().catch(() => {})
+      })
       .catch(() => {})
 
     return () => {

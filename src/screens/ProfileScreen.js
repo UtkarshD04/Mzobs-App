@@ -10,7 +10,9 @@ import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import ProgressBar from '../components/ui/ProgressBar'
 import TextField from '../components/ui/TextField'
+import CityField from '../components/ui/CityField'
 import Button from '../components/ui/Button'
+import { stateForCity } from '../lib/indianCities'
 import Avatar from '../components/ui/Avatar'
 import Tag from '../components/ui/Tag'
 import FilterChip from '../components/ui/FilterChip'
@@ -238,9 +240,35 @@ export default function ProfileScreen() {
         {PUBLIC_FIELD_GROUPS.map((group, i) => (
           <View key={group.title}>
             <SectionLabel style={i === 0 ? { marginTop: 0 } : undefined}>{group.title}</SectionLabel>
-            {group.fields.map(({ key, label }) => (
-              <TextField key={key} label={label} value={form[key]} onChangeText={set(key)} />
-            ))}
+            {group.fields.map(({ key, label }) => {
+              if (key === 'currentCity') {
+                return (
+                  <CityField
+                    key={key}
+                    label={label}
+                    value={form[key]}
+                    onSelectCity={(city) => {
+                      set('currentCity')(city)
+                      const state = stateForCity(city)
+                      if (state) set('state')(state === 'Remote' ? '' : state)
+                    }}
+                  />
+                )
+              }
+              if (key === 'pincode') {
+                return (
+                  <TextField
+                    key={key}
+                    label={label}
+                    value={form[key]}
+                    onChangeText={(v) => set('pincode')(v.replace(/\D/g, '').slice(0, 6))}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                  />
+                )
+              }
+              return <TextField key={key} label={label} value={form[key]} onChangeText={set(key)} />
+            })}
           </View>
         ))}
 

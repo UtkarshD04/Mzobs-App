@@ -47,3 +47,11 @@ export function listAppliedBasedJobs() {
 export function listInstantHiringJobs() {
   return apiClient.get('/jobs/instant-hiring').then((r) => r.data)
 }
+
+// Live, ranked autocomplete for the hero/list search boxes — same endpoint
+// and ranking (see Backend's utils/jobSuggestions.js) the website's
+// Autocomplete.jsx calls. `type` is 'title' or 'location'; `signal` cancels
+// a stale in-flight request when the caller fires a newer one.
+export function getJobSuggestions({ type, q = '', limit } = {}, { signal } = {}) {
+  return apiClient.get('/jobs/suggestions', { params: { type, q, limit }, signal }).then((r) => r.data.items ?? [])
+}

@@ -268,10 +268,15 @@ export default function JobListScreen({ navigation, route }) {
             </ScrollView>
           ) : null}
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md }}>
-            <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.medium, fontSize: 12.5 }}>
-              {filtered.length} {filtered.length === 1 ? 'job' : 'jobs'} found
-            </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: spacing.md }}>
+            <View>
+              <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.bold, fontSize: 10.5, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                Total jobs
+              </Text>
+              <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, marginTop: 1 }}>
+                {filtered.length} <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.semibold, fontSize: 13 }}>{filtered.length === 1 ? 'opportunity' : 'opportunities'}</Text>
+              </Text>
+            </View>
             <Pressable
               onPress={() => openFilters('sort')}
               accessibilityRole="button"

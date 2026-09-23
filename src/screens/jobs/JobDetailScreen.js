@@ -15,6 +15,7 @@ import Tag from '../../components/ui/Tag'
 import Avatar from '../../components/ui/Avatar'
 import EligibilityNote, { FREE_APPLICATION_LIMIT } from '../../components/ui/EligibilityNote'
 import JobDetailSkeleton from '../../components/ui/skeletons/JobDetailSkeleton'
+import Toast from '../../components/ui/Toast'
 
 function daysSince(dateValue) {
   if (!dateValue) return null
@@ -90,6 +91,7 @@ export default function JobDetailScreen({ route, navigation }) {
   const applyMutation = useApplyToJobMutation()
   const [error, setError] = useState('')
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
+  const [toast, setToast] = useState('')
 
   const saved = useIsJobSaved(job ?? {})
 
@@ -110,13 +112,15 @@ export default function JobDetailScreen({ route, navigation }) {
     setError('')
     try {
       await applyMutation.mutateAsync(id)
+      setToast("Applied! We'll review it before it reaches the employer.")
     } catch (err) {
       setError(err.response?.data?.message ?? 'Could not submit your application. Please try again.')
     }
   }
 
-  function handleToggleSaved() {
-    toggleJobSaved(job)
+  async function handleToggleSaved() {
+    const nowSaved = await toggleJobSaved(job)
+    setToast(nowSaved ? 'Job saved' : 'Removed from saved jobs')
   }
 
   function handleShare() {
@@ -124,6 +128,7 @@ export default function JobDetailScreen({ route, navigation }) {
   }
 
   return (
+    <View style={{ flex: 1 }}>
     <ScreenContainer
       style={{ paddingBottom: spacing.lg }}
       footer={
@@ -269,5 +274,7 @@ export default function JobDetailScreen({ route, navigation }) {
         <EligibilityNote verified={verified} limitReached={limitReached} navigation={navigation} style={{ marginTop: spacing.lg }} />
       ) : null}
     </ScreenContainer>
+    <Toast message={toast} onDone={() => setToast('')} bottomOffset={110} />
+    </View>
   )
 }

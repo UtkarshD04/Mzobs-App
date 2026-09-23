@@ -59,8 +59,56 @@ export default function SettingsScreen() {
   const [phone, setPhone] = useState(null)
   const [saved, setSaved] = useState(false)
   const [resetState, setResetState] = useState('idle')
+  const [phoneOtpState, setPhoneOtpState] = useState('idle') // idle | sending | sent | verifying | verified | error
+  const [phoneOtp, setPhoneOtp] = useState('')
+  const [phoneOtpError, setPhoneOtpError] = useState('')
+  const [verifiedPhone, setVerifiedPhone] = useState(null)
+  const [phoneToken, setPhoneToken] = useState(null)
 
   if (isLoading) return <LoadingSpinner />
+
+  const phoneValue = phone ?? profile.phone ?? ''
+  const phoneChanged = phone !== null && phone !== profile.phone
+  const phoneValid = /^[6-9]\d{9}$/.test(phoneValue)
+  const phoneReadyToSave = !phoneChanged || (verifiedPhone === phoneValue && !!phoneToken)
+
+  function handlePhoneChange(v) {
+    const digits = v.replace(/\D/g, '').slice(0, 10)
+    setPhone(digits)
+    setSaved(false)
+    // Any edit invalidates a prior OTP verification for a different number.
+    setPhoneOtpState('idle')
+    setPhoneOtp('')
+    setPhoneOtpError('')
+    setVerifiedPhone(null)
+    setPhoneToken(null)
+  }
+
+  async function handleSendPhoneOtp() {
+    setPhoneOtpError('')
+    setPhoneOtpState('sending')
+    try {
+      await authService.sendOtp(phoneValue)
+      setPhoneOtpState('sent')
+    } catch (err) {
+      setPhoneOtpError(err.response?.data?.message ?? 'Could not send OTP. Please try again.')
+      setPhoneOtpState('error')
+    }
+  }
+
+  async function handleVerifyPhoneOtp() {
+    setPhoneOtpError('')
+    setPhoneOtpState('verifying')
+    try {
+      const { phoneToken: token } = await authService.verifyOtp(phoneValue, phoneOtp.trim())
+      setPhoneToken(token)
+      setVerifiedPhone(phoneValue)
+      setPhoneOtpState('verified')
+    } catch (err) {
+      setPhoneOtpError(err.response?.data?.message ?? 'Incorrect or expired OTP.')
+      setPhoneOtpState('sent')
+    }
+  }
 
   function handleToggleChannel(category, channel, value) {
     updatePreferencesMutation.mutate({ [category]: { [channel]: value } })
@@ -68,7 +116,11 @@ export default function SettingsScreen() {
 
   async function handleSave() {
     setSaved(false)
-    await updateMutation.mutateAsync({ name: name ?? profile.name, phone: phone ?? profile.phone })
+    await updateMutation.mutateAsync({
+      name: name ?? profile.name,
+      phone: phoneValue,
+      ...(phoneChanged ? { phoneToken } : {}),
+    })
     setSaved(true)
   }
 
@@ -135,12 +187,65 @@ export default function SettingsScreen() {
         <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14, marginBottom: spacing.md }}>Account details</Text>
         <TextField label="Full name" value={name ?? profile.name ?? ''} onChangeText={setName} />
         <TextField label="Email" value={profile.email} editable={false} style={{ opacity: 0.6 }} />
-        <TextField label="Phone" value={phone ?? profile.phone ?? ''} onChangeText={setPhone} />
+        <TextField
+          label="Phone"
+          value={phoneValue}
+          onChangeText={handlePhoneChange}
+          keyboardType="number-pad"
+          maxLength={10}
+        />
+
+        {phoneChanged ? (
+          phoneOtpState === 'verified' && verifiedPhone === phoneValue ? (
+            <Text style={{ color: colors.green, fontFamily: fontFamily.regular, fontSize: 12.5, marginTop: -4, marginBottom: spacing.md }}>
+              Number verified — tap "Save changes" to update it.
+            </Text>
+          ) : (
+            <View style={{ marginTop: -4, marginBottom: spacing.md }}>
+              {!phoneValid ? (
+                <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12 }}>
+                  Enter a valid 10-digit mobile number to verify it.
+                </Text>
+              ) : phoneOtpState === 'sent' || phoneOtpState === 'verifying' ? (
+                <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
+                  <View style={{ flex: 1 }}>
+                    <TextField
+                      value={phoneOtp}
+                      onChangeText={(v) => setPhoneOtp(v.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="6-digit OTP"
+                      keyboardType="number-pad"
+                      maxLength={6}
+                      style={{ marginBottom: 0 }}
+                    />
+                  </View>
+                  <Button
+                    title="Verify"
+                    onPress={handleVerifyPhoneOtp}
+                    loading={phoneOtpState === 'verifying'}
+                    disabled={phoneOtp.trim().length !== 6}
+                    style={{ minHeight: 48 }}
+                  />
+                </View>
+              ) : (
+                <Button
+                  title="Send OTP to verify new number"
+                  variant="secondary"
+                  onPress={handleSendPhoneOtp}
+                  loading={phoneOtpState === 'sending'}
+                />
+              )}
+              {phoneOtpError ? (
+                <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 12, marginTop: 6 }}>{phoneOtpError}</Text>
+              ) : null}
+            </View>
+          )
+        ) : null}
+
         <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, marginBottom: spacing.md }}>
           Member since {fmtDate(profile.createdAt)}
         </Text>
         {saved ? <Text style={{ color: colors.green, fontFamily: fontFamily.regular, fontSize: 12.5, marginBottom: spacing.md }}>Saved.</Text> : null}
-        <Button title="Save changes" onPress={handleSave} loading={updateMutation.isPending} />
+        <Button title="Save changes" onPress={handleSave} loading={updateMutation.isPending} disabled={!phoneReadyToSave} />
       </Card>
 
       <NotificationStatusCard style={{ marginTop: spacing.md }} />
@@ -194,13 +299,17 @@ export default function SettingsScreen() {
       <Card style={{ marginTop: spacing.md }}>
         <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14, marginBottom: 6 }}>Password</Text>
         <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, marginBottom: spacing.md }}>
-          We'll email you a link to reset your password.
+          {profile.hasPassword
+            ? "We'll email you a link to reset your password."
+            : "You signed in without a password (phone or Google). Set one if you'd also like to log in with your email and a password."}
         </Text>
         {resetState === 'sent' ? (
-          <Text style={{ color: colors.green, fontFamily: fontFamily.regular, fontSize: 12.5 }}>Reset link sent — check your email.</Text>
+          <Text style={{ color: colors.green, fontFamily: fontFamily.regular, fontSize: 12.5 }}>
+            {profile.hasPassword ? 'Reset link sent — check your email.' : 'Set-password link sent — check your email.'}
+          </Text>
         ) : (
           <Button
-            title="Send password reset email"
+            title={profile.hasPassword ? 'Send password reset email' : 'Set a password'}
             variant="secondary"
             onPress={handleResetPassword}
             loading={resetState === 'sending'}

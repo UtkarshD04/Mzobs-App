@@ -14,7 +14,15 @@ import BrandLogo from './src/components/ui/BrandLogo'
 // Expo Go on Android has no remote-push capability since SDK 53 — expo-notifications
 // logs this on import to warn about it. registerPushToken() in AuthContext already
 // swallows the resulting failure, so this is a known no-op in Expo Go, not a bug.
-LogBox.ignoreLogs(['expo-notifications: Android Push notifications'])
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  // @msg91comm/sendotp-react-native bundles an unrelated native biometric-auth
+  // module that isn't linked in Expo Go (third-party native modules never are —
+  // only in a custom dev client). It logs this at import time regardless of
+  // whether biometrics are used; our OTP flow (sendOTP/verifyOTP/retryOTP)
+  // never touches that bridge, so it's just noise, not a real failure.
+  'BiometricAuth is undefined',
+])
 
 // Show notifications while the app is open, not just when backgrounded.
 Notifications.setNotificationHandler({

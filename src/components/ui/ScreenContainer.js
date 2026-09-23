@@ -7,6 +7,7 @@ export default function ScreenContainer({ children, scroll = true, onRefresh, re
   const content = scroll ? (
     <ScrollView
       contentContainerStyle={[{ padding: spacing.lg, paddingBottom: spacing.xxl }, style]}
+      keyboardShouldPersistTaps="handled"
       refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.navy} /> : undefined}
     >
       {children}

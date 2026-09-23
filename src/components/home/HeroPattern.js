@@ -27,11 +27,15 @@ const BUBBLE_TONES = {
   orange: '237, 137, 54',
 }
 
+// Edge-hugging only — mostly clipped off-screen by the container's
+// overflow:hidden, so they never sit on top of the centered headline/
+// subtitle/toggle text between them (a wider spread used to drift a bubble
+// straight over the subtitle copy).
 const BUBBLES = [
-  { size: 56, top: -18, left: -14, tone: 'blue', opacity: 0.10, dur: 5200, delay: 0 },
-  { size: 30, top: -8, left: '70%', tone: 'purple', opacity: 0.10, dur: 4600, delay: 300 },
-  { size: 22, top: 80, left: '6%', tone: 'teal', opacity: 0.09, dur: 4200, delay: 500 },
-  { size: 18, top: 92, left: '90%', tone: 'gold', opacity: 0.10, dur: 4800, delay: 200 },
+  { size: 70, top: -22, left: -22, tone: 'blue', opacity: 0.22, dur: 5200, delay: 0 },
+  { size: 40, top: -10, left: '82%', tone: 'purple', opacity: 0.2, dur: 4600, delay: 300 },
+  { size: 22, top: 60, left: -10, tone: 'teal', opacity: 0.18, dur: 4200, delay: 500 },
+  { size: 18, top: 76, left: '92%', tone: 'gold', opacity: 0.2, dur: 4800, delay: 200 },
 ]
 
 function Bubble({ size, top, left, tone, opacity, dur, delay, reduceMotion }) {
@@ -82,7 +86,7 @@ export default function HeroPattern() {
   if (isDark) return null
 
   return (
-    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 130, overflow: 'hidden' }} pointerEvents="none">
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 110, overflow: 'hidden' }} pointerEvents="none">
       {BUBBLES.map((b, i) => (
         <Bubble key={i} {...b} reduceMotion={reduceMotion} />
       ))}

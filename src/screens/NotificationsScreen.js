@@ -7,7 +7,6 @@ import { useNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotif
 import { CATEGORY_META } from '../lib/notificationMeta'
 import ScreenContainer from '../components/ui/ScreenContainer'
 import Card from '../components/ui/Card'
-import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import NotificationStatusCard from '../components/notifications/NotificationStatusCard'
@@ -97,17 +96,32 @@ export default function NotificationsScreen() {
           <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20 }}>Notifications</Text>
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 4 }}>Stay updated on your journey.</Text>
         </View>
+        {unreadCount > 0 ? (
+          <Pressable
+            onPress={() => markAllRead.mutate()}
+            disabled={markAllRead.isPending}
+            hitSlop={8}
+            accessibilityRole="button"
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              paddingVertical: 6,
+              paddingHorizontal: 10,
+              borderRadius: 999,
+              backgroundColor: colors.navyTint,
+              opacity: markAllRead.isPending ? 0.6 : 1,
+            }}
+          >
+            <Feather name="check-circle" size={13} color={colors.navy} />
+            <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 12 }}>
+              {markAllRead.isPending ? 'Marking…' : 'Mark all read'}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <NotificationStatusCard variant="banner" style={{ marginTop: spacing.md }} />
-
-      <Button
-        title="Mark all read"
-        variant="secondary"
-        onPress={() => markAllRead.mutate()}
-        loading={markAllRead.isPending}
-        style={{ marginTop: spacing.md, alignSelf: 'flex-start', paddingHorizontal: spacing.lg }}
-      />
 
       <View style={{ flexDirection: 'row', marginTop: spacing.lg }}>
         {TABS.map((label, i) => (

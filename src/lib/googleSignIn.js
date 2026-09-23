@@ -1,9 +1,18 @@
 import * as AuthSession from 'expo-auth-session'
 import * as WebBrowser from 'expo-web-browser'
 import * as Crypto from 'expo-crypto'
+import * as Linking from 'expo-linking'
+import * as SecureStore from 'expo-secure-store'
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_MOBILE_REDIRECT_BRIDGE_URL } from './config'
 
 const AUTHORIZATION_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth'
+const PENDING_KEY = 'mzobs-pending-google-auth'
+// If Android kills the app while the Custom Tab is open (common under memory
+// pressure, or whenever the user swipes the app away mid sign-in), the
+// redirect relaunches a brand-new process — the original in-memory Promise
+// from openAuthSessionAsync is gone with it. A stash this old is assumed
+// abandoned rather than replayed into an unrelated later launch.
+const PENDING_TTL_MS = 5 * 60 * 1000
 
 // Google only accepts an https:// redirect_uri on a Web-application OAuth
 // client (no custom app scheme), so the request sends users through the
@@ -110,6 +119,18 @@ export async function googleSignIn() {
   }
 }
 
+function fromRedirectUrl(url, expectedState) {
+  const params = parseFragmentParams(url)
+  if (params.error) throw new Error(params.error_description || params.error)
+  if (params.state !== expectedState) throw new Error('Google sign-in response did not match the request. Please try again.')
+
+  const idToken = params.id_token
+  if (!idToken) throw new Error('Google did not return an ID token. Please try again.')
+
+  const payload = decodeJwtPayload(idToken)
+  return { idToken, name: payload.name ?? '', email: payload.email ?? '' }
+}
+
 // Browser-based fallback: opens Google's OAuth page in a Custom Tab and returns via the backend bridge.
 async function browserGoogleSignIn() {
   const returnUrl = getAppReturnUrl()
@@ -128,16 +149,35 @@ async function browserGoogleSignIn() {
       nonce,
     }).toString()
 
+  // Stashed so a killed-and-relaunched app can still finish the sign-in on
+  // its next mount — see checkPendingGoogleRedirect().
+  await SecureStore.setItemAsync(PENDING_KEY, JSON.stringify({ state, at: Date.now() })).catch(() => {})
+
   const result = await WebBrowser.openAuthSessionAsync(authUrl, returnUrl)
   if (result.type !== 'success') return null
 
-  const params = parseFragmentParams(result.url)
-  if (params.error) throw new Error(params.error_description || params.error)
-  if (params.state !== state) throw new Error('Google sign-in response did not match the request. Please try again.')
+  SecureStore.deleteItemAsync(PENDING_KEY).catch(() => {})
+  return fromRedirectUrl(result.url, state)
+}
 
-  const idToken = params.id_token
-  if (!idToken) throw new Error('Google did not return an ID token. Please try again.')
+// Called once on app launch (see PhoneAuthScreen). If the app was killed
+// while the Google OAuth browser was open, the redirect back into
+// `mzobs://redirect` relaunches the app cold — this recovers that instead of
+// leaving the user stuck looking at a browser that already closed itself.
+export async function checkPendingGoogleRedirect() {
+  try {
+    const raw = await SecureStore.getItemAsync(PENDING_KEY)
+    if (!raw) return null
+    await SecureStore.deleteItemAsync(PENDING_KEY).catch(() => {})
 
-  const payload = decodeJwtPayload(idToken)
-  return { idToken, name: payload.name ?? '', email: payload.email ?? '' }
+    const { state, at } = JSON.parse(raw)
+    if (!state || Date.now() - at > PENDING_TTL_MS) return null
+
+    const initialUrl = await Linking.getInitialURL()
+    if (!initialUrl || !initialUrl.includes('redirect')) return null
+
+    return fromRedirectUrl(initialUrl, state)
+  } catch {
+    return null
+  }
 }

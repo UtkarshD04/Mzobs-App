@@ -6,7 +6,7 @@ import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import { useAuth } from '../../context/AuthContext'
 import { tokenStore } from '../../lib/api'
-import { googleSignIn } from '../../lib/googleSignIn'
+import { googleSignIn, checkPendingGoogleRedirect } from '../../lib/googleSignIn'
 import { useUploadResumeMutation } from '../../hooks/useResume'
 import * as authService from '../../services/authService'
 import { REVIEW_LOGIN_PHONE } from '../../lib/config'
@@ -272,26 +272,32 @@ export default function PhoneAuthScreen() {
   // ── Google path ───────────────────────────────────────────────────────────
   // Signs an existing account straight in. A 404 means this Google email has no account
   // yet: keep the Google credential and ask for a mobile number (verified by OTP) to create one.
+  // Shared by the button (result already in hand) and the cold-start recovery
+  // below (the app was killed mid sign-in and just relaunched via the redirect).
+  async function completeGoogleAuth(result) {
+    try {
+      const { token, employee } = await authService.googleLogin(result.idToken)
+      await tokenStore.set(token)
+      completeSession(token, employee)
+      return
+    } catch (err) {
+      if (err.response?.status !== 404) {
+        setError(err.response?.data?.message ?? 'Google sign-in failed. Please try again.')
+        return
+      }
+    }
+    setGoogleCredential(result.idToken)
+    setName(result.name || '')
+    setEmail(result.email || '')
+  }
+
   async function handleGoogle() {
     setError('')
     setGoogleLoading(true)
     try {
       const result = await googleSignIn()
       if (!result) return // dismissed the browser
-      try {
-        const { token, employee } = await authService.googleLogin(result.idToken)
-        await tokenStore.set(token)
-        completeSession(token, employee)
-        return
-      } catch (err) {
-        if (err.response?.status !== 404) {
-          setError(err.response?.data?.message ?? 'Google sign-in failed. Please try again.')
-          return
-        }
-      }
-      setGoogleCredential(result.idToken)
-      setName(result.name || '')
-      setEmail(result.email || '')
+      await completeGoogleAuth(result)
     } catch (err) {
       logError('google sign-in failed', err)
       setError(err.response?.data?.message ?? err.message ?? 'Google sign-in failed. Please try again.')
@@ -299,6 +305,29 @@ export default function PhoneAuthScreen() {
       setGoogleLoading(false)
     }
   }
+
+  // The app can get killed while the Google OAuth browser is open (Android,
+  // under memory pressure, or a user swiping it away) — the redirect back
+  // into mzobs://redirect then relaunches the app cold, with no in-memory
+  // Promise left to resolve. Without this, the browser just closes and the
+  // user is left back at the login screen looking "stuck". Runs once, only
+  // while this screen (i.e. signed out) is what a cold launch lands on.
+  useEffect(() => {
+    let cancelled = false
+    checkPendingGoogleRedirect().then((result) => {
+      if (!result || cancelled) return
+      setGoogleLoading(true)
+      completeGoogleAuth(result)
+        .catch((err) => {
+          logError('google sign-in redirect recovery failed', err)
+          setError(err.response?.data?.message ?? err.message ?? 'Google sign-in failed. Please try again.')
+        })
+        .finally(() => !cancelled && setGoogleLoading(false))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   function cancelGoogleSignup() {
     setGoogleCredential(null)

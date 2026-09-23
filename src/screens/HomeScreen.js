@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { View, Text, ScrollView, RefreshControl } from 'react-native'
+import { View, Text, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Animated, { FadeInDown } from 'react-native-reanimated'
+import Animated, { FadeInDown, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated'
 import { useTheme } from '../theme'
 import { useJobsQuery, useRecommendedJobsQuery, useAppliedBasedJobsQuery, useInstantHiringJobsQuery } from '../hooks/useJobs'
 import { useApplicationsQuery } from '../hooks/useApplications'
@@ -9,15 +9,16 @@ import { useProfileQuery } from '../hooks/useProfile'
 import { useNotificationsQuery } from '../hooks/useNotifications'
 import EmptyState from '../components/ui/EmptyState'
 import JobRowSkeleton from '../components/ui/skeletons/JobRowSkeleton'
-import HomeTopBar from '../components/home/HomeTopBar'
 import JobSearchSection from '../components/home/JobSearchSection'
+import HomeFloatingNav from '../components/home/HomeFloatingNav'
+import QuickDiscoveryStrip from '../components/home/QuickDiscoveryStrip'
 import SectionHeader from '../components/home/SectionHeader'
 import CompaniesHiringSection from '../components/home/CompaniesHiringSection'
 import CategoryGrid from '../components/home/CategoryGrid'
 import HotJobsByCitySection from '../components/home/HotJobsByCitySection'
 import JobCardCarousel from '../components/home/JobCardCarousel'
 import JobsSection from '../components/home/JobsSection'
-import HomeProgressCard from '../components/home/HomeProgressCard'
+import MatchedForYouSection from '../components/home/MatchedForYouSection'
 import { jobMatchesCategory } from '../components/home/categoryData'
 import { locationKey, locationOptions } from '../lib/jobFilters'
 
@@ -34,9 +35,12 @@ export default function HomeScreen({ navigation }) {
   const { data: instantHiringJobs = [], isLoading: isLoadingInstantHiring } = useInstantHiringJobsQuery()
 
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const scrollY = useSharedValue(0)
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y
+  })
 
   const unreadCount = notifications.filter((n) => n.unread).length
-  const resumeStatus = profile?.resume?.status ?? 'none'
 
   const filtered = useMemo(() => jobs.filter((job) => jobMatchesCategory(job, selectedCategory)), [jobs, selectedCategory])
 
@@ -67,13 +71,12 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate('Jobs', { screen: 'JobFilters', params: { query: keyword, filters, jobs } })
   }
 
-  let progressVariant = 'progress'
-  if (resumeStatus === 'none') progressVariant = 'resume'
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'left', 'right']}>
-      <HomeTopBar navigation={navigation} unreadCount={unreadCount} />
-
+    // No 'top' edge here on purpose — the hero's gradient/bubbles now bleed
+    // behind the status bar, with HomeFloatingNav (a position:absolute
+    // overlay, like the website's `position: fixed` navbar) handling its own
+    // safe-area inset instead of a flat opaque bar sitting above everything.
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['left', 'right']}>
       {/* A plain vertical ScrollView (not a FlatList) is the outer container on
           purpose: RN's VirtualizedList wraps ListHeaderComponent/ListFooterComponent
           in cell views that can swallow touch-move gestures meant for a nested
@@ -81,13 +84,20 @@ export default function HomeScreen({ navigation }) {
           Job cards are a handful at most (MAX_VISIBLE_JOBS), so plain views cost
           nothing — horizontal FlatLists/ScrollViews below are a different scroll
           axis than this container, so no same-direction nesting either. */}
-      <ScrollView
+      <Animated.ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: spacing.xxl }}
+        keyboardShouldPersistTaps="handled"
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.teal} />}
       >
         <Animated.View entering={FadeInDown.duration(280)}>
           <JobSearchSection onOpenSearch={openSearch} />
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(100).duration(280)}>
+          <QuickDiscoveryStrip onOpenSearch={openSearch} />
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(120).duration(280)} style={{ marginTop: spacing.xl }}>
@@ -128,22 +138,16 @@ export default function HomeScreen({ navigation }) {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(220).duration(280)}>
-          <CompaniesHiringSection onSeeAll={() => goTo('Jobs')} />
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(240).duration(280)}>
-          <JobsSection
-            title="Jobs based on your profile"
-            subtitle="Matched to your skills, track, and location."
+          <MatchedForYouSection
             jobs={recommendedJobs}
             isLoading={isLoadingRecommended}
-            appliedJobIds={appliedJobIds}
             onSeeAll={() => goTo('Jobs')}
             onPressJob={(job) => navigation.navigate('JobDetail', { id: job.id })}
+            onCompleteProfile={() => navigation.navigate('Main', { screen: 'Profile' })}
           />
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(250).duration(280)}>
+        <Animated.View entering={FadeInDown.delay(240).duration(280)}>
           <JobsSection
             title="Jobs based on your applies"
             subtitle="Like the roles you've already applied to."
@@ -167,10 +171,12 @@ export default function HomeScreen({ navigation }) {
           />
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(280).duration(280)} style={{ marginTop: spacing.xl }}>
-          <HomeProgressCard variant={progressVariant} applicationsCount={applications.length} onNavigate={goTo} />
+        <Animated.View entering={FadeInDown.delay(280).duration(280)}>
+          <CompaniesHiringSection onSeeAll={() => goTo('Jobs')} />
         </Animated.View>
-      </ScrollView>
+      </Animated.ScrollView>
+
+      <HomeFloatingNav navigation={navigation} unreadCount={unreadCount} scrollY={scrollY} />
     </SafeAreaView>
   )
 }

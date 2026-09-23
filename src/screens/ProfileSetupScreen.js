@@ -23,6 +23,8 @@ import {
 } from '../lib/profileSetup'
 import TextField from '../components/ui/TextField'
 import SelectField from '../components/ui/SelectField'
+import CityField from '../components/ui/CityField'
+import { stateForCity } from '../lib/indianCities'
 import FilterChip from '../components/ui/FilterChip'
 import Button from '../components/ui/Button'
 import ProgressBar from '../components/ui/ProgressBar'
@@ -185,8 +187,15 @@ export default function ProfileSetupScreen() {
             <>
               <Text style={heading}>Where are you based?</Text>
               <Text style={sub}>Helps us match on-site and hybrid roles near you.</Text>
-              <TextField label="Current city" value={form.currentCity} onChangeText={set('currentCity')} placeholder="e.g. Lucknow" />
-              <TextField label="State" value={form.state} onChangeText={set('state')} placeholder="e.g. Uttar Pradesh" />
+              <CityField
+                value={form.currentCity}
+                onSelectCity={(city) => {
+                  set('currentCity')(city)
+                  const state = stateForCity(city)
+                  if (state) set('state')(state === 'Remote' ? '' : state)
+                }}
+              />
+              <TextField label="State" value={form.state} onChangeText={set('state')} placeholder="Auto-filled from city, or type your own" />
               <TextField label="Pincode" value={form.pincode} onChangeText={(v) => set('pincode')(v.replace(/\D/g, ''))} placeholder="6 digits" keyboardType="number-pad" maxLength={6} />
               <Label>Willing to relocate?</Label>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>

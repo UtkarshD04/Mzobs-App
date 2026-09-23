@@ -11,12 +11,20 @@ import Badge from '../ui/Badge'
 
 const MAX_VISIBLE_SKILLS = 2
 
-// Neutral, recruiter-grade job card — one flat white treatment used
-// everywhere (Home, search results, saved jobs, applications), no per-card
-// tint. Text colours below are fixed hex, not theme tokens, since this is a
-// deliberately narrower palette than the rest of the app.
+// Same soft pastel cycle as the website's job cards (Website/Landing-Frontend's
+// JobMarketplace.jsx CARD_TONES) — fixed light values, not theme tokens, since
+// the website's version doesn't adapt to dark mode either.
+const CARD_TONES = [
+  { bg: '#EAF2FE', border: '#D3E4FC' }, // soft blue
+  { bg: '#E8F7F1', border: '#CBEADD' }, // soft mint
+  { bg: '#FDF0E6', border: '#F6DDC3' }, // warm peach
+  { bg: '#F1EEFC', border: '#DDD2F7' }, // muted lavender
+  { bg: '#FBF7EF', border: '#EEE2C9' }, // soft cream
+]
+
 export default function JobOpeningCard({ job, applied, index = 0, onPress, distanceKm = null }) {
-  const { colors, spacing, fontFamily } = useTheme()
+  const { colors, spacing, fontFamily, isDark } = useTheme()
+  const tone = CARD_TONES[index % CARD_TONES.length]
   const salary = fmtSalaryRange(job, 'Not disclosed')
   const skills = job.skills ?? []
   const visibleSkills = skills.slice(0, MAX_VISIBLE_SKILLS)
@@ -50,7 +58,13 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, dista
       >
         <Card
           style={[
-            { marginBottom: spacing.md, padding: spacing.md, borderRadius: 10, borderColor: colors.border },
+            {
+              marginBottom: spacing.md,
+              padding: spacing.md,
+              borderRadius: 16,
+              backgroundColor: isDark ? colors.surface : tone.bg,
+              borderColor: isDark ? colors.border : tone.border,
+            },
             Platform.select({
               ios: { shadowColor: '#101828', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
               android: { elevation: 1 },
@@ -58,7 +72,17 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, dista
           ]}
         >
           <View style={{ flexDirection: 'row' }}>
-            <Avatar name={job.company} size={44} tone="gray" style={{ borderRadius: 8, marginRight: spacing.md }} />
+            <Avatar
+              name={job.company}
+              size={44}
+              tone="gray"
+              style={{
+                borderRadius: 8,
+                marginRight: spacing.md,
+                backgroundColor: isDark ? colors.grayTint : 'rgba(255,255,255,0.85)',
+                borderColor: isDark ? colors.border : 'rgba(255,255,255,0.9)',
+              }}
+            />
 
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}>
