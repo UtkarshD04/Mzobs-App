@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { View, Text, Pressable, FlatList, Alert, Linking, ScrollView } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
@@ -22,6 +22,7 @@ import {
 import { sortJobsByDistance, distanceToJob } from '../../lib/jobDistance'
 import JobOpeningCard from '../../components/home/JobOpeningCard'
 import ScreenContainer from '../../components/ui/ScreenContainer'
+import ErrorState from '../../components/ui/ErrorState'
 import EmptyState from '../../components/ui/EmptyState'
 import SearchBar from '../../components/ui/SearchBar'
 import FilterChip from '../../components/ui/FilterChip'
@@ -31,7 +32,7 @@ import JobRowSkeleton from '../../components/ui/skeletons/JobRowSkeleton'
 
 export default function JobListScreen({ navigation, route }) {
   const { colors, spacing, radius, fontFamily } = useTheme()
-  const { data: jobs = [], isLoading, refetch, isRefetching } = useJobsQuery()
+  const { data: jobs = [], isLoading, isError, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
   const { data: profile } = useProfileQuery()
   const [query, setQuery] = useState('')
@@ -52,6 +53,9 @@ export default function JobListScreen({ navigation, route }) {
     }
   }, [route.params?.appliedFilters, route.params?.appliedQuery])
 
+  // Typing stays instant; the (potentially large) list filter catches up a frame later.
+  const deferredQuery = useDeferredValue(query)
+
   const suggestions = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return []
@@ -70,10 +74,10 @@ export default function JobListScreen({ navigation, route }) {
   }, [jobs, query])
 
   const filtered = useMemo(() => {
-    const base = jobs.filter((job) => matchesFilters(job, filters) && matchesQuery(job, query))
+    const base = jobs.filter((job) => matchesFilters(job, filters) && matchesQuery(job, deferredQuery))
     // "Near me" is an explicit, opt-in ordering, so it wins over the chosen sort.
-    return nearMe && coords ? sortJobsByDistance(base, coords) : sortJobs(base, filters.sort, query)
-  }, [jobs, query, filters, nearMe, coords])
+    return nearMe && coords ? sortJobsByDistance(base, coords) : sortJobs(base, filters.sort, deferredQuery)
+  }, [jobs, deferredQuery, filters, nearMe, coords])
 
   if (isLoading) return <JobRowSkeleton />
 
@@ -298,6 +302,11 @@ export default function JobListScreen({ navigation, route }) {
         <FlatList
           style={{ flex: 1 }}
           data={filtered}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          initialNumToRender={8}
+          maxToRenderPerBatch={8}
+          windowSize={9}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => (
             <JobOpeningCard
@@ -311,11 +320,15 @@ export default function JobListScreen({ navigation, route }) {
           refreshing={isRefetching}
           onRefresh={refetch}
           ListEmptyComponent={
+            isError ? (
+              <ErrorState title="Couldn't load jobs" onRetry={refetch} retrying={isRefetching} />
+            ) : (
             <EmptyState
               icon="briefcase"
               title={query || activeFilterCount > 0 ? 'No matching openings' : 'No live openings right now'}
               message={query || activeFilterCount > 0 ? 'Try a different search term or filter.' : 'Check back soon for new requirements.'}
             />
+            )
           }
         />
       </View>

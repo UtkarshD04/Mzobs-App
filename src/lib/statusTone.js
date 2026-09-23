@@ -24,6 +24,12 @@ export const interviewStatusTone = {
   Rescheduled: 'navy',
 }
 
+// Resumes are accepted the moment they're uploaded, so the app says "Uploaded"
+// rather than "Verified" (the backend status value stays 'verified').
+export function resumeStatusLabel(status = '') {
+  return status === 'verified' ? 'Uploaded' : titleCase(status)
+}
+
 export function titleCase(value = '') {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }

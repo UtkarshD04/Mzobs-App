@@ -1,8 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { tokenStore, setUnauthorizedHandler } from '../lib/api'
 import * as authService from '../services/authService'
 import { syncPushToken, unregisterPushToken } from '../lib/pushNotifications'
 import { setSavedJobsOwner } from '../lib/savedJobs'
+import { queryClient } from '../lib/queryClient'
 
 const AuthContext = createContext(null)
 
@@ -11,12 +12,22 @@ export function AuthProvider({ children }) {
   const [employee, setEmployee] = useState(null)
   const [isBootstrapping, setIsBootstrapping] = useState(true)
 
+  const loggingOut = useRef(false)
   const logout = useCallback(async () => {
-    // Needs the still-valid session, so it happens before the token is cleared.
-    await unregisterPushToken()
-    await tokenStore.clear()
-    setToken(null)
-    setEmployee(null)
+    if (loggingOut.current) return
+    loggingOut.current = true
+    try {
+      // Needs the still-valid session, so it happens before the token is cleared.
+      await unregisterPushToken()
+      await tokenStore.clear()
+      setToken(null)
+      setEmployee(null)
+      // Drop the previous account's cached profile/applications/notifications so the next
+      // sign-in on this phone never briefly shows them.
+      queryClient.clear()
+    } finally {
+      loggingOut.current = false
+    }
   }, [])
 
   useEffect(() => {

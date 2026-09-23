@@ -8,7 +8,8 @@ import { useApplicationsQuery } from '../hooks/useApplications'
 import { useProfileQuery } from '../hooks/useProfile'
 import { useNotificationsQuery } from '../hooks/useNotifications'
 import EmptyState from '../components/ui/EmptyState'
-import JobRowSkeleton from '../components/ui/skeletons/JobRowSkeleton'
+import HomeSkeleton from '../components/ui/skeletons/HomeSkeleton'
+import ErrorState from '../components/ui/ErrorState'
 import JobSearchSection from '../components/home/JobSearchSection'
 import HomeFloatingNav from '../components/home/HomeFloatingNav'
 import QuickDiscoveryStrip from '../components/home/QuickDiscoveryStrip'
@@ -27,7 +28,7 @@ const MAX_VISIBLE_JOBS = 5
 export default function HomeScreen({ navigation }) {
   const { colors, spacing, fontFamily } = useTheme()
   const { data: profile } = useProfileQuery()
-  const { data: jobs = [], isLoading, refetch, isRefetching } = useJobsQuery()
+  const { data: jobs = [], isLoading, isError, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
   const { data: notifications = [] } = useNotificationsQuery()
   const { data: recommendedJobs = [], isLoading: isLoadingRecommended } = useRecommendedJobsQuery()
@@ -44,7 +45,13 @@ export default function HomeScreen({ navigation }) {
 
   const filtered = useMemo(() => jobs.filter((job) => jobMatchesCategory(job, selectedCategory)), [jobs, selectedCategory])
 
-  if (isLoading) return <JobRowSkeleton />
+  if (isLoading) return <HomeSkeleton />
+  if (isError && jobs.length === 0)
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg, justifyContent: 'center' }}>
+        <ErrorState title="Couldn't load openings" onRetry={refetch} retrying={isRefetching} />
+      </SafeAreaView>
+    )
 
   const appliedJobIds = new Set(applications.map((a) => a.jobId ?? a.job?.id))
   const visibleJobs = filtered.slice(0, MAX_VISIBLE_JOBS)

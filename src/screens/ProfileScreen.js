@@ -16,6 +16,8 @@ import { stateForCity } from '../lib/indianCities'
 import Avatar from '../components/ui/Avatar'
 import Tag from '../components/ui/Tag'
 import FilterChip from '../components/ui/FilterChip'
+import ErrorState from '../components/ui/ErrorState'
+import { notifySuccess, notifyError } from '../lib/haptics'
 import ProfileSkeleton from '../components/ui/skeletons/ProfileSkeleton'
 
 // Public fields are what recruiters see when Mzobs shares this profile.
@@ -159,7 +161,7 @@ function MultiSelectChips({ label, options, values, onChange }) {
 
 export default function ProfileScreen() {
   const { colors, spacing, fontFamily } = useTheme()
-  const { data: profile, isLoading } = useProfileQuery()
+  const { data: profile, isLoading, isError, refetch, isRefetching } = useProfileQuery()
   const { data: subscription } = useSubscriptionQuery()
   const updateMutation = useUpdateProfileMutation()
   const [form, setForm] = useState(null)
@@ -182,6 +184,12 @@ export default function ProfileScreen() {
     }
   }, [profile])
 
+  if (isError && !profile)
+    return (
+      <ScreenContainer>
+        <ErrorState title="Couldn't load your profile" onRetry={refetch} retrying={isRefetching} />
+      </ScreenContainer>
+    )
   if (isLoading || !form) return <ProfileSkeleton />
 
   const { percent: completion, missing: completionMissing } = profileCompletionDetail(profile)
@@ -201,7 +209,9 @@ export default function ProfileScreen() {
         expectedSalaryMax: form.expectedSalaryMax ? Number(form.expectedSalaryMax) : null,
       })
       setSaved(true)
+      notifySuccess()
     } catch (err) {
+      notifyError()
       setError(err.response?.data?.message ?? 'Could not save your changes. Please try again.')
     }
   }

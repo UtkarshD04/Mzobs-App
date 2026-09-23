@@ -28,7 +28,7 @@ export default function EligibilityNote({ verified, limitReached, navigation, st
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12, marginTop: 3, lineHeight: 17 }}>
             {limitReached
               ? 'Free accounts can apply to up to 5 jobs. Upgrade to premium for unlimited applications.'
-              : 'Upload your resume in Resume Center to unlock applications. It is verified instantly.'}
+              : 'Upload your resume in Resume Center to unlock applications. You can apply as soon as it is uploaded.'}
           </Text>
           {limitReached && navigation ? (
             <Button title="Upgrade to premium" variant="gold" onPress={() => navigation.navigate('Subscription')} style={{ marginTop: spacing.sm }} />

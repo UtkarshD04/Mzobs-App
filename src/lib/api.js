@@ -30,7 +30,10 @@ export function setUnauthorizedHandler(handler) {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    // Only a request that actually carried a session means "session expired". Without this
+    // check, logout's own cleanup calls (made after the token is cleared) would 401 again,
+    // re-trigger logout, and loop forever.
+    if (error.response?.status === 401 && error.config?.headers?.Authorization) {
       await tokenStore.clear()
       onUnauthorized?.()
     }

@@ -14,7 +14,9 @@ import Badge from '../../components/ui/Badge'
 import Tag from '../../components/ui/Tag'
 import Avatar from '../../components/ui/Avatar'
 import EligibilityNote, { FREE_APPLICATION_LIMIT } from '../../components/ui/EligibilityNote'
+import ErrorState from '../../components/ui/ErrorState'
 import JobDetailSkeleton from '../../components/ui/skeletons/JobDetailSkeleton'
+import { notifySuccess, notifyError, tapLight } from '../../lib/haptics'
 import Toast from '../../components/ui/Toast'
 
 function daysSince(dateValue) {
@@ -85,7 +87,7 @@ const DESCRIPTION_CLAMP = 5
 export default function JobDetailScreen({ route, navigation }) {
   const { colors, spacing, radius, fontFamily } = useTheme()
   const { id } = route.params
-  const { data: job, isLoading } = useJobQuery(id)
+  const { data: job, isLoading, isError, refetch, isRefetching } = useJobQuery(id)
   const { data: applications = [] } = useApplicationsQuery()
   const { data: profile, isLoading: profileLoading } = useProfileQuery()
   const applyMutation = useApplyToJobMutation()
@@ -95,6 +97,12 @@ export default function JobDetailScreen({ route, navigation }) {
 
   const saved = useIsJobSaved(job ?? {})
 
+  if (isError && !job)
+    return (
+      <ScreenContainer>
+        <ErrorState title="Couldn't load this job" onRetry={refetch} retrying={isRefetching} />
+      </ScreenContainer>
+    )
   if (isLoading || profileLoading || !job) return <JobDetailSkeleton />
 
   const applied = applications.some((a) => (a.jobId ?? a.job?.id) === id)
@@ -112,13 +120,16 @@ export default function JobDetailScreen({ route, navigation }) {
     setError('')
     try {
       await applyMutation.mutateAsync(id)
+      notifySuccess()
       setToast("Applied! We'll review it before it reaches the employer.")
     } catch (err) {
+      notifyError()
       setError(err.response?.data?.message ?? 'Could not submit your application. Please try again.')
     }
   }
 
   async function handleToggleSaved() {
+    tapLight()
     const nowSaved = await toggleJobSaved(job)
     setToast(nowSaved ? 'Job saved' : 'Removed from saved jobs')
   }
@@ -157,12 +168,12 @@ export default function JobDetailScreen({ route, navigation }) {
               <IconAction icon="share-2" onPress={handleShare} accessibilityLabel="Share job" />
             </View>
           ) : !verified ? (
-            // Applying needs a verified resume (verified instantly on upload). Rather than
+            // Applying needs an uploaded resume. Rather than
             // a greyed-out Apply button with the reason buried further down the page,
             // say what's missing right here and take them to fix it.
             <View>
               <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, marginBottom: spacing.sm }}>
-                Add your resume to apply. It&apos;s verified instantly when you upload it.
+                Add your resume to apply. You can apply as soon as it&apos;s uploaded.
               </Text>
               <View style={{ flexDirection: 'row', gap: spacing.sm }}>
                 <Button title="Upload resume to apply" onPress={() => navigation.navigate('Main', { screen: 'Resume' })} style={{ flex: 1 }} />

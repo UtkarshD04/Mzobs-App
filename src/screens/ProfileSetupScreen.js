@@ -92,7 +92,7 @@ function TagListEditor({ label, values, onChange, placeholder, suggestions }) {
   )
 }
 
-export default function ProfileSetupScreen() {
+export default function ProfileSetupScreen({ onSkip }) {
   const { colors, spacing, fontFamily } = useTheme()
   const { logout } = useAuth()
   const complete = useCompleteProfileMutation()
@@ -144,7 +144,7 @@ export default function ProfileSetupScreen() {
           {step === 0 ? (
             <>
               <Text style={heading}>Payment successful. Complete your profile</Text>
-              <Text style={sub}>Your placement support is active. Fill in your details once so recruiters can match you. Every step is required.</Text>
+              <Text style={sub}>Your placement support is active. Fill in your details once so recruiters can match you. You can skip for now and finish it later from your Profile.</Text>
               <Label>Are you currently working?</Label>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg }}>
                 <FilterChip label="Fresher / Student" active={!experienced} onPress={() => set('experience')('fresher')} />
@@ -249,6 +249,19 @@ export default function ProfileSetupScreen() {
           ) : null}
           <Button title={last ? 'Finish profile' : 'Continue'} loading={complete.isPending} onPress={next} style={{ flex: 2 }} />
         </View>
+        {onSkip ? (
+          <Pressable
+            onPress={onSkip}
+            disabled={complete.isPending}
+            accessibilityRole="button"
+            accessibilityLabel="Skip profile setup for now"
+            style={{ alignItems: 'center', paddingBottom: spacing.md, paddingTop: 2, backgroundColor: colors.surface }}
+          >
+            <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.semibold, fontSize: 13.5, paddingVertical: spacing.sm }}>
+              Skip for now
+            </Text>
+          </Pressable>
+        ) : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   )

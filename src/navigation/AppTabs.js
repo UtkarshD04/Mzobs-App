@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { openDrawer } from '../lib/navigation'
+import { selectionTick } from '../lib/haptics'
 import HomeStack from './HomeStack'
 import JobsStack from './JobsStack'
 import ApplicationsScreen from '../screens/ApplicationsScreen'
@@ -37,6 +38,7 @@ export default function AppTabs() {
   return (
     <Tab.Navigator
       initialRouteName="Home"
+      screenListeners={{ tabPress: selectionTick }}
       screenOptions={({ route, navigation }) => ({
         headerShown: route.name !== 'Home' && route.name !== 'Jobs',
         headerStyle: { backgroundColor: colors.surface },

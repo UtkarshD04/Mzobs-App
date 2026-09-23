@@ -5,11 +5,13 @@ import { useApplicationsQuery, useWithdrawApplicationMutation } from '../hooks/u
 import { fmtDate } from '../lib/format'
 import ScreenContainer from '../components/ui/ScreenContainer'
 import Card from '../components/ui/Card'
+import Avatar from '../components/ui/Avatar'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
+import ErrorState from '../components/ui/ErrorState'
+import { notifyError } from '../lib/haptics'
 import EmptyState from '../components/ui/EmptyState'
 import FilterChip from '../components/ui/FilterChip'
-import StatusTimeline from '../components/ui/StatusTimeline'
 import ApplicationsSkeleton from '../components/ui/skeletons/ApplicationsSkeleton'
 
 const STAGE_INDEX = { new: 1, screening: 2, shortlisted: 3, shared: 4, interview: 5, selected: 6, rejected: 6 }
@@ -18,16 +20,29 @@ const WITHDRAWABLE_STATUSES = ['new', 'screening', 'shortlisted']
 
 export default function ApplicationsScreen() {
   const { colors, spacing, fontFamily } = useTheme()
-  const { data: applications = [], isLoading, refetch, isRefetching } = useApplicationsQuery()
+  const { data: applications = [], isLoading, isError, refetch, isRefetching } = useApplicationsQuery()
   const withdrawMutation = useWithdrawApplicationMutation()
   const [filter, setFilter] = useState('All')
 
   if (isLoading) return <ApplicationsSkeleton />
+  if (isError && applications.length === 0)
+    return (
+      <ScreenContainer>
+        <ErrorState title="Couldn't load applications" onRetry={refetch} retrying={isRefetching} />
+      </ScreenContainer>
+    )
 
   function handleWithdraw(application) {
     Alert.alert('Withdraw application?', `You'll no longer be considered for ${application.job?.title ?? 'this role'}.`, [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Withdraw', style: 'destructive', onPress: () => withdrawMutation.mutate(application.id) },
+      { text: 'Withdraw', style: 'destructive', onPress: () =>
+          withdrawMutation.mutate(application.id, {
+            onError: () => {
+              notifyError()
+              Alert.alert('Could not withdraw', 'Something went wrong. Please try again.')
+            },
+          }),
+      },
     ])
   }
 
@@ -70,16 +85,31 @@ export default function ApplicationsScreen() {
       ) : (
         filtered.map((a) => {
           const stage = STAGE_INDEX[a.status] ?? 1
+          const company = typeof a.job?.company === 'string' ? a.job.company : a.job?.company?.name
+          const meta = [a.job?.location, a.job?.workMode].filter(Boolean).join(' · ')
           return (
             <Card key={a.id} style={{ marginTop: spacing.md, padding: spacing.md, borderRadius: 10, borderColor: colors.border }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <View style={{ flex: 1, paddingRight: spacing.sm }}>
-                  <Text style={{ color: '#111827', fontFamily: fontFamily.semibold, fontSize: 16 }} numberOfLines={2}>
-                    {a.job?.title ?? 'Role'}
-                  </Text>
-                  <Text style={{ color: '#6B7280', fontFamily: fontFamily.regular, fontSize: 13, marginTop: 3 }}>
-                    Applied {fmtDate(a.appliedOn)}
-                  </Text>
+                <View style={{ flex: 1, flexDirection: 'row', gap: spacing.sm, paddingRight: spacing.sm }}>
+                  <Avatar name={company || a.job?.title} size={44} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 16 }} numberOfLines={2}>
+                      {a.job?.title ?? 'Role'}
+                    </Text>
+                    {company ? (
+                      <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.semibold, fontSize: 13.5, marginTop: 2 }} numberOfLines={1}>
+                        {company}
+                      </Text>
+                    ) : null}
+                    {meta ? (
+                      <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12.5, marginTop: 2 }} numberOfLines={1}>
+                        {meta}
+                      </Text>
+                    ) : null}
+                    <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 3 }}>
+                      Applied {fmtDate(a.appliedOn)}
+                    </Text>
+                  </View>
                 </View>
                 {a.status === 'selected' ? (
                   <Badge label="Selected" tone="green" />
@@ -92,12 +122,10 @@ export default function ApplicationsScreen() {
                 )}
               </View>
 
-              <StatusTimeline stage={stage} rejected={a.status === 'rejected'} />
-
               {a.note ? (
                 <Text
                   style={{
-                    color: '#6B7280',
+                    color: colors.inkSecondary,
                     fontFamily: fontFamily.regular,
                     fontSize: 13,
                     marginTop: spacing.md,

@@ -1,13 +1,17 @@
 import { Pressable, Text } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
+import { selectionTick } from '../../lib/haptics'
 
 export default function FilterChip({ label, active, onPress, icon }) {
   const { colors, radius, fontFamily } = useTheme()
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={(e) => {
+        selectionTick()
+        onPress?.(e)
+      }}
       hitSlop={6}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}

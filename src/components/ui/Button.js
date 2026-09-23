@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { useTheme } from '../../theme'
+import { tapLight } from '../../lib/haptics'
 
 export default function Button({ title, onPress, variant = 'primary', disabled = false, loading = false, style }) {
   const { colors, radius, spacing, fontFamily } = useTheme()
@@ -39,6 +40,7 @@ export default function Button({ title, onPress, variant = 'primary', disabled =
         accessibilityLabel={title}
         accessibilityState={{ disabled: isDisabled, busy: loading }}
         onPressIn={() => {
+          if (!isDisabled) tapLight()
           scale.value = withSpring(reduceMotion ? 1 : 0.96, { damping: 15, stiffness: 400 })
           if (variant === 'primary' && !reduceMotion) {
             sheen.value = -1

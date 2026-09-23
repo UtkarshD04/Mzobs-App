@@ -4,10 +4,12 @@ import Animated, { FadeInDown } from 'react-native-reanimated'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation } from '../hooks/useNotifications'
+import { selectionTick } from '../lib/haptics'
 import { CATEGORY_META } from '../lib/notificationMeta'
 import ScreenContainer from '../components/ui/ScreenContainer'
 import Card from '../components/ui/Card'
 import EmptyState from '../components/ui/EmptyState'
+import ErrorState from '../components/ui/ErrorState'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import NotificationStatusCard from '../components/notifications/NotificationStatusCard'
 
@@ -39,7 +41,7 @@ function NotifRow({ n, onOpen, isLast, index }) {
 
   return (
     <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(220)}>
-    <Pressable onPress={() => n.unread && onOpen(n.id)}>
+    <Pressable onPress={() => { if (n.unread) { selectionTick(); onOpen(n.id) } }}>
       <View
         style={{
           flexDirection: 'row',
@@ -80,11 +82,17 @@ function NotifRow({ n, onOpen, isLast, index }) {
 export default function NotificationsScreen() {
   const { colors, spacing, fontFamily } = useTheme()
   const [tab, setTab] = useState(0)
-  const { data: notifications = [], isLoading, refetch, isRefetching } = useNotificationsQuery()
+  const { data: notifications = [], isLoading, isError, refetch, isRefetching } = useNotificationsQuery()
   const markRead = useMarkNotificationReadMutation()
   const markAllRead = useMarkAllNotificationsReadMutation()
 
   if (isLoading) return <LoadingSpinner />
+  if (isError && notifications.length === 0)
+    return (
+      <ScreenContainer>
+        <ErrorState title="Couldn't load notifications" onRetry={refetch} retrying={isRefetching} />
+      </ScreenContainer>
+    )
 
   const unreadCount = notifications.filter((n) => n.unread).length
   const list = tab === 1 ? notifications.filter((n) => n.unread) : notifications

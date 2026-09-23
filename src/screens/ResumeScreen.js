@@ -5,23 +5,31 @@ import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useResumeQuery, useUploadResumeMutation } from '../hooks/useResume'
 import { useProfileQuery } from '../hooks/useProfile'
-import { resumeStatusTone, titleCase } from '../lib/statusTone'
+import { resumeStatusTone, resumeStatusLabel } from '../lib/statusTone'
 import { fmtDate } from '../lib/format'
 import ScreenContainer from '../components/ui/ScreenContainer'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
+import ErrorState from '../components/ui/ErrorState'
+import { notifySuccess, notifyError } from '../lib/haptics'
 import ResumeSkeleton from '../components/ui/skeletons/ResumeSkeleton'
 
 export default function ResumeScreen() {
   const { colors, spacing, fontFamily } = useTheme()
-  const { data, isLoading, refetch, isRefetching } = useResumeQuery()
+  const { data, isLoading, isError, refetch, isRefetching } = useResumeQuery()
   const { isLoading: profileLoading } = useProfileQuery()
   const uploadMutation = useUploadResumeMutation()
   const [error, setError] = useState('')
   const [isPicking, setIsPicking] = useState(false)
 
   if (isLoading || profileLoading) return <ResumeSkeleton />
+  if (isError && !data)
+    return (
+      <ScreenContainer>
+        <ErrorState title="Couldn't load your resume" onRetry={refetch} retrying={isRefetching} />
+      </ScreenContainer>
+    )
 
   const resume = data?.resume
   const history = data?.resumeHistory ?? []
@@ -45,7 +53,9 @@ export default function ResumeScreen() {
       })
       if (result.canceled) return
       await uploadMutation.mutateAsync(result.assets[0])
+      notifySuccess()
     } catch (err) {
+      notifyError()
       setError(err.response?.data?.message ?? 'Could not open the file picker. Please try again.')
     } finally {
       setIsPicking(false)
@@ -56,7 +66,7 @@ export default function ResumeScreen() {
     <ScreenContainer onRefresh={refetch} refreshing={isRefetching}>
       <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20 }}>Resume Center</Text>
       <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5, marginTop: 4 }}>
-        Your resume is verified instantly on upload, so you can start applying right away.
+        Once your resume is uploaded, you can start applying right away.
       </Text>
 
       <Card style={{ marginTop: spacing.lg }}>
@@ -76,7 +86,7 @@ export default function ResumeScreen() {
               ) : null}
             </View>
           </View>
-          <Badge label={titleCase(status)} tone={resumeStatusTone[status] ?? 'gray'} />
+          <Badge label={resumeStatusLabel(status)} tone={resumeStatusTone[status] ?? 'gray'} />
         </View>
 
         {resume?.score != null ? (
@@ -119,7 +129,7 @@ export default function ResumeScreen() {
                   <Text style={{ color: colors.ink, fontFamily: fontFamily.medium, fontSize: 13.5 }}>Version {h.version}</Text>
                   <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12, marginTop: 2 }}>{fmtDate(h.uploadedOn)}</Text>
                 </View>
-                <Badge label={titleCase(h.status)} tone={resumeStatusTone[h.status] ?? 'gray'} />
+                <Badge label={resumeStatusLabel(h.status)} tone={resumeStatusTone[h.status] ?? 'gray'} />
               </View>
             ))}
           </Card>
