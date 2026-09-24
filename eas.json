@@ -23,9 +23,26 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.mzobs.com"
       }
+    },
+    "ios-production": {
+      "extends": "production",
+      "autoIncrement": true,
+      "ios": {
+        "resourceClass": "m-medium"
+      }
+    },
+    "ios-preview": {
+      "extends": "preview",
+      "ios": {
+        "simulator": false
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "REPLACE_WITH_APP_STORE_CONNECT_APP_ID"
+      }
+    }
   }
 }

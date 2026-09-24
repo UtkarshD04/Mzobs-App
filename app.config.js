@@ -13,7 +13,9 @@ module.exports = ({ config }) => {
   // ("development" | "preview" | "production"); undefined for a local
   // `expo start`/`expo prebuild`, which this check intentionally leaves
   // alone — local dev against localhost/a LAN IP over http is expected.
-  const profile = process.env.EAS_BUILD_PROFILE
+  const rawProfile = process.env.EAS_BUILD_PROFILE
+  // "ios-production" / "ios-preview" are iOS-only variants of the same profiles.
+  const profile = rawProfile ? rawProfile.replace(/^ios-/, '') : rawProfile
   const isPlainHttp = apiUrl.startsWith('http://')
   const isLocalOrLan = /^http:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:|\/|$)/.test(apiUrl)
 
