@@ -10,6 +10,7 @@ import { AuthProvider } from './src/context/AuthContext'
 import { ThemeProvider, useTheme } from './src/theme'
 import RootNavigator from './src/navigation/RootNavigator'
 import BrandLogo from './src/components/ui/BrandLogo'
+import UpdateGate from './src/components/UpdateGate'
 
 // Expo Go on Android has no remote-push capability since SDK 53 — expo-notifications
 // logs this on import to warn about it. registerPushToken() in AuthContext already
@@ -47,12 +48,14 @@ function AppContent({ fontsLoaded }) {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RootNavigator />
-        <StatusBar style={isDark ? 'light' : 'dark'} />
-      </AuthProvider>
-    </QueryClientProvider>
+    <UpdateGate>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <RootNavigator />
+          <StatusBar style={isDark ? 'light' : 'dark'} />
+        </AuthProvider>
+      </QueryClientProvider>
+    </UpdateGate>
   )
 }
 
