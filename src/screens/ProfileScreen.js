@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { View, Text, Pressable, Switch } from 'react-native'
+import { View, Text, Pressable, Switch, Platform } from 'react-native'
+import DateTimePicker from '@react-native-community/datetimepicker'
+import { sendOtp, verifyOtp } from '../services/authService'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
 import { useProfileQuery, useUpdateProfileMutation } from '../hooks/useProfile'
@@ -55,13 +57,14 @@ const PRIVATE_FIELD_GROUP = {
   caption: 'Private — only Mzobs sees this, never shown to recruiters',
   fields: [
     { key: 'phone', label: 'Phone' },
-    { key: 'dob', label: 'Date of birth (YYYY-MM-DD)' },
+    { key: 'dob', label: 'Date of birth' },
     { key: 'gender', label: 'Gender' },
   ],
 }
 const FIELD_GROUPS = [...PUBLIC_FIELD_GROUPS, PRIVATE_FIELD_GROUP]
 const EDITABLE_FIELDS = FIELD_GROUPS.flatMap((g) => g.fields)
 
+const GENDERS = ['Male', 'Female', 'Other']
 const WORK_MODES = ['On-site', 'Hybrid', 'Remote']
 const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship']
 
@@ -159,6 +162,159 @@ function MultiSelectChips({ label, options, values, onChange }) {
   )
 }
 
+function toYmd(d) {
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
+function DobField({ label, value, onChange }) {
+  const { colors, radius, spacing, fontFamily } = useTheme()
+  const [open, setOpen] = useState(false)
+  const parsed = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00`) : null
+  const date = parsed && !Number.isNaN(parsed.getTime()) ? parsed : new Date(2000, 0, 1)
+
+  return (
+    <View style={{ marginBottom: spacing.md }}>
+      <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.medium, fontSize: 12.5, marginBottom: 6 }}>{label}</Text>
+      <Pressable
+        onPress={() => setOpen(true)}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: radius.sm,
+          paddingVertical: 12,
+          paddingHorizontal: spacing.md,
+        }}
+      >
+        <Text style={{ color: value ? colors.ink : colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 15 }}>
+          {parsed ? date.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Select date of birth'}
+        </Text>
+        <Feather name="calendar" size={18} color={colors.inkTertiary} />
+      </Pressable>
+      {open ? (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'inline' : 'default'}
+          maximumDate={new Date()}
+          minimumDate={new Date(1940, 0, 1)}
+          onChange={(event, picked) => {
+            if (Platform.OS !== 'ios') setOpen(false)
+            if (event.type === 'set' && picked) onChange(toYmd(picked))
+          }}
+        />
+      ) : null}
+      {open && Platform.OS === 'ios' ? (
+        <Pressable onPress={() => setOpen(false)} style={{ alignSelf: 'flex-end', padding: spacing.sm }}>
+          <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 14 }}>Done</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  )
+}
+
+// Changing the phone number needs an OTP sent to the *new* number; on success
+// the backend hands back a phoneToken that the save request must carry.
+function PhoneField({ label, value, originalPhone, verified, onChange, onVerified }) {
+  const { colors, radius, spacing, fontFamily } = useTheme()
+  const [otpSent, setOtpSent] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [err, setErr] = useState('')
+
+  const digits = value.replace(/\D/g, '').slice(-10)
+  const changed = value.trim() !== originalPhone
+  const validNumber = /^[6-9]\d{9}$/.test(digits)
+
+  function handleChange(v) {
+    onChange(v.replace(/[^\d+]/g, '').slice(0, 13))
+    onVerified('')
+    setOtpSent(false)
+    setOtp('')
+    setMsg('')
+    setErr('')
+  }
+
+  async function handleSend() {
+    setErr('')
+    setMsg('')
+    setBusy(true)
+    try {
+      await sendOtp(value.trim())
+      setOtpSent(true)
+      setMsg(`OTP sent to ${value.trim()}.`)
+    } catch (e) {
+      setErr(e.response?.data?.message ?? 'Could not send the OTP. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleVerify() {
+    setErr('')
+    setBusy(true)
+    try {
+      const { phoneToken } = await verifyOtp(value.trim(), otp.trim())
+      onVerified(phoneToken)
+      setOtpSent(false)
+      setMsg('')
+    } catch (e) {
+      setErr(e.response?.data?.message ?? 'Incorrect or expired OTP.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const small = { fontFamily: fontFamily.regular, fontSize: 12, marginTop: 4 }
+  return (
+    <View>
+      <TextField label={label} value={value} onChangeText={handleChange} keyboardType="phone-pad" style={{ marginBottom: spacing.xs }} />
+      {changed && verified ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.md }}>
+          <Feather name="check-circle" size={14} color={colors.green} />
+          <Text style={{ color: colors.green, fontFamily: fontFamily.medium, fontSize: 12.5 }}>New number verified</Text>
+        </View>
+      ) : null}
+      {changed && !verified ? (
+        <View style={{ marginBottom: spacing.md }}>
+          {!otpSent ? (
+            <Button
+              title="Send OTP to verify"
+              onPress={handleSend}
+              loading={busy}
+              disabled={!validNumber}
+              style={{ alignSelf: 'flex-start' }}
+            />
+          ) : (
+            <View>
+              <TextField
+                label="Enter OTP"
+                value={otp}
+                onChangeText={(v) => setOtp(v.replace(/\D/g, '').slice(0, 6))}
+                keyboardType="number-pad"
+                maxLength={6}
+                style={{ marginBottom: spacing.sm }}
+              />
+              <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
+                <Button title="Verify" onPress={handleVerify} loading={busy} disabled={otp.length < 4} />
+                <Pressable onPress={handleSend} disabled={busy} hitSlop={8}>
+                  <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 13 }}>Resend OTP</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+          {msg ? <Text style={[small, { color: colors.inkSecondary }]}>{msg}</Text> : null}
+          {err ? <Text style={[small, { color: colors.red }]}>{err}</Text> : null}
+        </View>
+      ) : null}
+    </View>
+  )
+}
+
 export default function ProfileScreen() {
   const { colors, spacing, fontFamily } = useTheme()
   const { data: profile, isLoading, isError, refetch, isRefetching } = useProfileQuery()
@@ -167,6 +323,7 @@ export default function ProfileScreen() {
   const [form, setForm] = useState(null)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [phoneToken, setPhoneToken] = useState('')
 
   useEffect(() => {
     if (profile && !form) {
@@ -202,9 +359,15 @@ export default function ProfileScreen() {
 
   async function handleSave() {
     setError('')
+    if (form.phone.trim() !== profile.phone && !phoneToken) {
+      notifyError()
+      setError('Verify your new mobile number with the OTP before saving.')
+      return
+    }
     try {
       await updateMutation.mutateAsync({
         ...form,
+        phoneToken: form.phone.trim() !== profile.phone ? phoneToken : undefined,
         expectedSalaryMin: form.expectedSalaryMin ? Number(form.expectedSalaryMin) : null,
         expectedSalaryMax: form.expectedSalaryMax ? Number(form.expectedSalaryMax) : null,
       })
@@ -295,9 +458,21 @@ export default function ProfileScreen() {
           <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11.5, marginTop: 2, marginBottom: spacing.sm }}>
             {PRIVATE_FIELD_GROUP.caption}
           </Text>
-          {PRIVATE_FIELD_GROUP.fields.map(({ key, label }) => (
-            <TextField key={key} label={label} value={form[key]} onChangeText={set(key)} />
-          ))}
+          <PhoneField
+            label="Phone"
+            value={form.phone}
+            originalPhone={profile.phone}
+            verified={!!phoneToken}
+            onChange={set('phone')}
+            onVerified={setPhoneToken}
+          />
+          <DobField label="Date of birth" value={form.dob} onChange={set('dob')} />
+          <MultiSelectChips
+            label="Gender"
+            options={GENDERS}
+            values={form.gender ? [form.gender] : []}
+            onChange={(v) => set('gender')(v[v.length - 1] ?? '')}
+          />
         </View>
       </Card>
 

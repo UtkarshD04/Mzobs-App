@@ -7,6 +7,7 @@
     "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.3",
     "@msg91comm/sendotp-react-native": "^3.0.0",
+    "@react-native-community/datetimepicker": "8.4.4",
     "@react-native-google-signin/google-signin": "^16.1.5",
     "@react-navigation/bottom-tabs": "^7.18.16",
     "@react-navigation/drawer": "^7.13.8",
