@@ -20,6 +20,6 @@ export function openRazorpayCheckout(order) {
     name: order.name,
     description: order.description,
     prefill: order.prefill,
-    theme: { color: '#2563EB' },
+    theme: { color: '#5b5fef' },
   })
 }

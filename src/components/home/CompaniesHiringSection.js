@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { View, Text, Image, Pressable } from 'react-native'
+import { View, Text, Image } from 'react-native'
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated'
 import { useTheme } from '../../theme'
+import PressableScale from '../ui/PressableScale'
 import { COMPANIES_HIRING_DATA } from './companiesHiringData'
 
 // Mirrors the website's CompaniesHiring.jsx: round logo badges gliding
@@ -25,8 +26,9 @@ function initialsOf(name) {
 function CompanyCircle({ company, onPress }) {
   const { colors, fontFamily } = useTheme()
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
+      scaleTo={0.94}
       accessibilityRole="button"
       accessibilityLabel={`${company.name}, view company jobs`}
       style={{
@@ -51,7 +53,7 @@ function CompanyCircle({ company, onPress }) {
       ) : (
         <Text style={{ color: colors.teal, fontFamily: fontFamily.bold, fontSize: 16 }}>{initialsOf(company.name)}</Text>
       )}
-    </Pressable>
+    </PressableScale>
   )
 }
 
@@ -75,7 +77,7 @@ export default function CompaniesHiringSection({ onSeeAll }) {
     <View style={{ marginTop: spacing.xl }}>
       <View style={{ alignItems: 'center', paddingHorizontal: spacing.lg }}>
         <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, letterSpacing: -0.3, textAlign: 'center' }}>
-          Companies hiring through MZOBS
+          Companies hiring through Mzobs
         </Text>
         <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 4, textAlign: 'center' }}>
           {COMPANIES_HIRING_DATA.length} verified partners across {industryCount} industries.

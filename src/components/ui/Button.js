@@ -1,4 +1,4 @@
-import { Pressable, Text, ActivityIndicator } from 'react-native'
+import { Pressable, Text, ActivityIndicator, Platform } from 'react-native'
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -31,8 +31,26 @@ export default function Button({ title, onPress, variant = 'primary', disabled =
   }
   const v = variants[variant] ?? variants.primary
 
+  // Colored glow under the primary CTA — mobile echo of the website's
+  // --shadow-mz-cta (0 10px 24px -8px rgba(91,95,239,.55)). Lives on the
+  // outer wrapper, not the Pressable, since the Pressable needs
+  // overflow: hidden to clip the sheen highlight, which would also clip
+  // an iOS shadow if placed there.
+  const glowStyle =
+    variant === 'primary' && !isDisabled
+      ? Platform.select({
+          ios: {
+            shadowColor: colors.navy,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.4,
+            shadowRadius: 12,
+          },
+          android: { elevation: 5 },
+        })
+      : null
+
   return (
-    <Animated.View style={[wrapperStyle, style]}>
+    <Animated.View style={[wrapperStyle, glowStyle, style]}>
       <Pressable
         onPress={onPress}
         disabled={isDisabled}

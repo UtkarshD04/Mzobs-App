@@ -8,18 +8,21 @@ import { getJobSuggestions } from '../../services/jobsService'
 import HeroPattern from './HeroPattern'
 import PressableScale from '../ui/PressableScale'
 
-// Mirrors the website's mobile hero (Website/Landing-Frontend's
-// JobSearchHero.jsx): centered headline with the accent second line, the two
-// subtitle lines, and one search card with keyword, location and experience
-// plus a gradient CTA. (The site's "hiring talent" toggle is left out — the
-// app is for candidates only.)
+// Mirrors the website's CURRENT hero (Website/Landing-Frontend's
+// components/mz/home/Hero.jsx + SearchBar.jsx): eyebrow line, centered
+// headline with the gradient accent second line, one subtitle paragraph, and
+// one search card with keyword, location and experience plus a primary CTA.
+// (The site's "Post a Job" button is left out — the app is for candidates
+// only, per the site's own Hero.jsx; HeroVisual's desktop illustration has
+// no mobile-appropriate equivalent and is skipped, same reasoning as
+// CampusSection's photography further down Home.)
 // Searching hands the three values to the Search & Filters page, which shows
 // the matching list (see HomeScreen.openSearch).
-const HEADLINE_1 = 'Where\nVerified Talent'
-const HEADLINE_2 = 'Meets Real Work.'
-const SUBTITLE_1 = 'Get discovered, build your skills, and grow through real opportunities.'
-const SUBTITLE_2 = 'One platform connecting candidates, employers, verification, feedback and growth.'
-const POPULAR_SEARCHES = ['Software Developer', 'Sales Executive', 'HR Executive', 'Data Analyst', 'Fresher Jobs']
+const EYEBROW = 'Talent × Opportunity × Smarter Hiring'
+const HEADLINE_1 = 'Where Talent Meets'
+const HEADLINE_2 = 'Real Opportunity.'
+const SUBTITLE = 'Discover meaningful opportunities, connect with the right employers, and move forward with confidence.'
+const POPULAR_SEARCHES = ['Software Engineer', 'Data Analyst', 'Frontend Developer', 'Marketing', 'Sales', 'AI/ML']
 
 // `years` is the value the filter page's "my experience is N years" filter
 // takes — a representative point inside each band.
@@ -32,8 +35,9 @@ const EXPERIENCE_OPTIONS = [
   { label: '10+ years', years: 10 },
 ]
 
-const HERO_GRADIENT = ['#3b6df0', '#6c5cf0']
-const HERO_ACCENT = '#5a62ee'
+// Same stops as the website's --mz-gradient (135deg, #5b5fef -> #7c6cff).
+const HERO_GRADIENT = ['#5b5fef', '#7c6cff']
+const HERO_ACCENT = '#5b5fef'
 const SUGGEST_DEBOUNCE_MS = 300
 const SUGGEST_LIMIT = 8
 
@@ -183,7 +187,7 @@ function SuggestRow({ icon, type, value, onChangeValue, placeholder, accessibili
   )
 }
 
-export default function JobSearchSection({ onOpenSearch }) {
+export default function JobSearchSection({ onOpenSearch, onExploreJobs, onPostJob }) {
   const { colors, radius, spacing, fontFamily, isDark } = useTheme()
   const insets = useSafeAreaInsets()
   const [query, setQuery] = useState('')
@@ -192,7 +196,7 @@ export default function JobSearchSection({ onOpenSearch }) {
   const [experienceOpen, setExperienceOpen] = useState(false)
 
   const cardShadow = Platform.select({
-    ios: { shadowColor: '#1e2a78', shadowOffset: { width: 0, height: 10 }, shadowOpacity: isDark ? 0 : 0.1, shadowRadius: 22 },
+    ios: { shadowColor: '#4a4ed8', shadowOffset: { width: 0, height: 10 }, shadowOpacity: isDark ? 0 : 0.14, shadowRadius: 22 },
     android: { elevation: isDark ? 0 : 4 },
   })
 
@@ -216,6 +220,13 @@ export default function JobSearchSection({ onOpenSearch }) {
   // than living inline in this scrollable content the way it briefly did.
   const content = (
     <View style={{ paddingHorizontal: spacing.lg, paddingTop: insets.top + 90, paddingBottom: spacing.xl }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <View style={{ width: 20, height: 1, backgroundColor: HERO_ACCENT }} />
+        <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.semibold, fontSize: 10.5, letterSpacing: 1, textTransform: 'uppercase' }}>
+          {EYEBROW}
+        </Text>
+      </View>
+
       <Text
         style={{
           color: colors.ink,
@@ -224,6 +235,7 @@ export default function JobSearchSection({ onOpenSearch }) {
           lineHeight: 37,
           letterSpacing: -0.6,
           textAlign: 'center',
+          marginTop: spacing.sm,
         }}
       >
         {HEADLINE_1}
@@ -242,15 +254,50 @@ export default function JobSearchSection({ onOpenSearch }) {
       </Text>
 
       <Text
-        style={{ color: colors.ink, opacity: 0.8, fontFamily: fontFamily.medium, fontSize: 15, lineHeight: 22, textAlign: 'center', marginTop: spacing.md }}
+        style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14.5, lineHeight: 21, textAlign: 'center', marginTop: spacing.md }}
       >
-        {SUBTITLE_1}
+        {SUBTITLE}
       </Text>
-      <Text
-        style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5, lineHeight: 20, textAlign: 'center', marginTop: spacing.xs }}
-      >
-        {SUBTITLE_2}
-      </Text>
+
+      {/* Explore Jobs / Post a Job — mirrors the website's Hero button pair
+          (bg-mz-ink black pill + white outlined pill). "Post a Job" opens the
+          employer signup on the website since this app is candidate-only. */}
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.lg }}>
+        <PressableScale
+          onPress={onExploreJobs}
+          accessibilityRole="button"
+          scaleTo={0.97}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            height: 48,
+            paddingHorizontal: 22,
+            borderRadius: 999,
+            backgroundColor: colors.ink,
+          }}
+        >
+          <Text style={{ color: '#ffffff', fontFamily: fontFamily.bold, fontSize: 15 }}>Explore Jobs</Text>
+          <Feather name="arrow-right" size={17} color="#ffffff" />
+        </PressableScale>
+        <PressableScale
+          onPress={onPostJob}
+          accessibilityRole="button"
+          scaleTo={0.97}
+          style={{
+            height: 48,
+            paddingHorizontal: 22,
+            borderRadius: 999,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
+        >
+          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 15 }}>Post a Job</Text>
+        </PressableScale>
+      </View>
 
       {/* Search card */}
       <View
@@ -272,8 +319,8 @@ export default function JobSearchSection({ onOpenSearch }) {
           type="title"
           value={query}
           onChangeValue={setQuery}
-          placeholder="Search jobs, skills or company"
-          accessibilityLabel="Search jobs, skills or company"
+          placeholder="What role are you looking for?"
+          accessibilityLabel="Job title, skills or company"
           onSubmit={search}
           rowStyle={rowStyle}
           inputStyle={inputStyle}
@@ -284,8 +331,8 @@ export default function JobSearchSection({ onOpenSearch }) {
           type="location"
           value={location}
           onChangeValue={setLocation}
-          placeholder={'City, state or “Remote”'}
-          accessibilityLabel="City, state or Remote"
+          placeholder="Location"
+          accessibilityLabel="Location"
           onSubmit={search}
           rowStyle={rowStyle}
           inputStyle={inputStyle}
@@ -346,7 +393,7 @@ export default function JobSearchSection({ onOpenSearch }) {
             style={{ height: 54, borderRadius: 999, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
           >
             <Text style={{ color: '#fff', fontFamily: fontFamily.bold, fontSize: 16 }}>Search Jobs</Text>
-            <Feather name="arrow-right" size={18} color="#fff" />
+            <Feather name="search" size={16} color="#fff" />
           </LinearGradient>
         </PressableScale>
       </View>
@@ -377,7 +424,8 @@ export default function JobSearchSection({ onOpenSearch }) {
   }
 
   return (
-    <LinearGradient colors={['#eef2fd', '#f4f2fb', '#fbf4ef']} style={shell}>
+    // Same stops as the website's .hero-atmosphere base gradient.
+    <LinearGradient colors={['#f3f6fd', '#f6f4fb', '#fbf5f0']} style={shell}>
       <HeroPattern />
       {content}
     </LinearGradient>

@@ -85,7 +85,11 @@ export default function CategoryGrid({ jobs, onSelectCategory }) {
 
   return (
     <View style={{ marginTop: spacing.xl }}>
-      <SectionHeader title="Explore jobs by category" subtitle={`${totalOpenings} live opening${totalOpenings === 1 ? '' : 's'} across all categories.`} />
+      <SectionHeader
+        statusLabel="Explore by category"
+        title="Find your field."
+        subtitle={`${tileIds.length} areas where companies are hiring on Mzobs — counts are live.`}
+      />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

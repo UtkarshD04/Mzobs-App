@@ -2,8 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import * as SecureStore from 'expo-secure-store'
 import { light, dark } from './colors'
 
-// Matches Website/Landing-Frontend's --radius-* tokens exactly (sm/md/lg/xl).
-export const radius = { sm: 8, md: 12, lg: 16, xl: 20 }
+// Matches Website/Landing-Frontend's v2 --radius-mz-* tokens exactly (sm/md/lg/xl).
+export const radius = { sm: 10, md: 14, lg: 20, xl: 28 }
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 18, xl: 26, xxl: 34 }
 

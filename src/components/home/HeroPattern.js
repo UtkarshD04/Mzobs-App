@@ -1,94 +1,63 @@
-import { useEffect } from 'react'
 import { View } from 'react-native'
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  useReducedMotion,
-  withDelay,
-  withRepeat,
-  withSequence,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated'
 import { useTheme } from '../../theme'
 
-// Same signature "floating bubble" identity as the website's hero
-// (HeroBubbleField.jsx's --bubble-*-rgb tones), scaled down to a small set
-// that fits the compact mobile hero card without competing with the search
-// UI on top of it. Each bubble is a soft tinted circle with a small
-// off-center highlight, echoing the site's glass radial-gradient look
-// without needing an SVG/blur dependency.
-const BUBBLE_TONES = {
-  blue: '37, 99, 235',
-  teal: '11, 122, 109',
-  gold: '198, 138, 31',
-  purple: '124, 92, 232',
-  pink: '236, 97, 163',
-  orange: '237, 137, 54',
-}
-
-// Edge-hugging only — mostly clipped off-screen by the container's
-// overflow:hidden, so they never sit on top of the centered headline/
-// subtitle/toggle text between them (a wider spread used to drift a bubble
-// straight over the subtitle copy).
-const BUBBLES = [
-  { size: 70, top: -22, left: -22, tone: 'blue', opacity: 0.22, dur: 5200, delay: 0 },
-  { size: 40, top: -10, left: '82%', tone: 'purple', opacity: 0.2, dur: 4600, delay: 300 },
-  { size: 22, top: 60, left: -10, tone: 'teal', opacity: 0.18, dur: 4200, delay: 500 },
-  { size: 18, top: 76, left: '92%', tone: 'gold', opacity: 0.2, dur: 4800, delay: 200 },
+// Mirrors the website's CURRENT hero background (Hero.jsx's ambient wash):
+// three large, softly-tinted glow blobs over the flat --color-mz-bg base —
+// NOT the older "explorer" HeroBubbleField glass-bubble look this file used
+// to render (small bordered circles with a highlight, confined to a thin
+// strip at the very top). RN has no CSS blur filter without an extra native
+// dependency, so each glow is faked with concentric rings of the same tint
+// at falling opacity (center densest, edge near-invisible) instead of an
+// actual blurred circle — same visual effect at a glance, no new native
+// module to rebuild for.
+const GLOWS = [
+  { color: '124, 108, 255', top: -80, left: -110, size: 340, peak: 0.05 }, // --color-mz-secondary
+  { color: '91, 141, 239', top: 0, left: '56%', size: 360, peak: 0.05 }, // website's #5b8def
+  { color: '32, 201, 151', top: 440, left: '14%', size: 300, peak: 0.045 }, // --color-mz-accent
 ]
 
-function Bubble({ size, top, left, tone, opacity, dur, delay, reduceMotion }) {
-  const rgb = BUBBLE_TONES[tone]
-  const float = useSharedValue(0)
+// 8 concentric rings, opacity easing in with the square of distance from the
+// edge (not linear) — linear falloff still reads as a visible ring at the
+// outermost step; squaring keeps every step past the center imperceptibly
+// faint, closer to an actual Gaussian blur's fast-decaying edge.
+const RING_COUNT = 16
+const RINGS = Array.from({ length: RING_COUNT }, (_, i) => 1 - i / RING_COUNT)
 
-  useEffect(() => {
-    if (reduceMotion) return
-    float.value = withDelay(
-      delay,
-      withRepeat(withSequence(withTiming(1, { duration: dur, easing: Easing.inOut(Easing.sin) }), withTiming(0, { duration: dur, easing: Easing.inOut(Easing.sin) })), -1, false)
-    )
-  }, [reduceMotion])
-
-  const style = useAnimatedStyle(() => ({ transform: [{ translateY: float.value * -8 }] }))
-
+function Glow({ color, top, left, size, peak }) {
   return (
-    <Animated.View style={[{ position: 'absolute', top, left, width: size, height: size }, style]} pointerEvents="none">
-      <View
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: `rgba(${rgb}, ${opacity})`,
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.35)',
-        }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          top: size * 0.16,
-          left: size * 0.18,
-          width: size * 0.34,
-          height: size * 0.34,
-          borderRadius: size,
-          backgroundColor: 'rgba(255,255,255,0.55)',
-        }}
-      />
-    </Animated.View>
+    <View style={{ position: 'absolute', top, left, width: size, height: size }}>
+      {RINGS.map((factor, i) => {
+        const ringSize = size * factor
+        const t = 1 - factor
+        const alpha = peak * (1 - t * t)
+        return (
+          <View
+            key={i}
+            style={{
+              position: 'absolute',
+              top: (size - ringSize) / 2,
+              left: (size - ringSize) / 2,
+              width: ringSize,
+              height: ringSize,
+              borderRadius: ringSize / 2,
+              backgroundColor: `rgba(${color}, ${alpha})`,
+            }}
+          />
+        )
+      })}
+    </View>
   )
 }
 
 export default function HeroPattern() {
   const { isDark } = useTheme()
-  const reduceMotion = useReducedMotion()
 
   if (isDark) return null
 
   return (
-    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 110, overflow: 'hidden' }} pointerEvents="none">
-      {BUBBLES.map((b, i) => (
-        <Bubble key={i} {...b} reduceMotion={reduceMotion} />
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 760, overflow: 'hidden' }} pointerEvents="none">
+      {GLOWS.map((g, i) => (
+        <Glow key={i} {...g} />
       ))}
     </View>
   )

@@ -3,6 +3,7 @@ import { View, Text, Pressable } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import Animated, { FadeIn } from 'react-native-reanimated'
 import { useTheme } from '../../theme'
+import PressableScale from '../ui/PressableScale'
 
 // Mirrors the website's RecommendedForYou.jsx "match deck" — real
 // matchReasons/matchScore from the same endpoint (Backend's
@@ -10,10 +11,12 @@ import { useTheme } from '../../theme'
 // tap-through Prev/Next deck instead of GSAP drag physics (the app is
 // always signed-in, so there's no sample-preview/"sign in" branch to build —
 // this is the equivalent of that component's signed-in state only).
+// mz-primary, mz-secondary, mz-accent — same three-theme rotation as before,
+// re-tinted to the current indigo/violet/teal-green brand family.
 const THEMES = [
-  { bg: '#EAF2FE', border: 'rgba(37,99,235,0.22)', accent: '#2563EB', markInk: '#1D4ED8' },
-  { bg: '#F1EEFC', border: 'rgba(124,92,232,0.24)', accent: '#7C5CE8', markInk: '#5B3FC4' },
-  { bg: '#EAF6F1', border: 'rgba(22,138,114,0.24)', accent: '#168A72', markInk: '#0F6B58' },
+  { bg: '#eeefff', border: 'rgba(91,95,239,0.22)', accent: '#5b5fef', markInk: '#4a4ed8' },
+  { bg: '#f1eefc', border: 'rgba(124,108,255,0.24)', accent: '#7c6cff', markInk: '#5b4fd1' },
+  { bg: '#e4f8f1', border: 'rgba(11,138,103,0.24)', accent: '#0b8a67', markInk: '#086f52' },
 ]
 const MATCH_LEVEL_LABEL = (n) => (n >= 3 ? 'Strong match' : n === 2 ? 'Good match' : 'Relevant match')
 const pad = (n) => String(n).padStart(2, '0')
@@ -25,6 +28,7 @@ function initialsOf(name) {
 }
 
 function DeckPeek({ theme, depth }) {
+  const { radius } = useTheme()
   return (
     <View
       pointerEvents="none"
@@ -34,7 +38,7 @@ function DeckPeek({ theme, depth }) {
         right: -10 - depth * 4,
         top: 8 + depth * 8,
         bottom: -8 - depth * 4,
-        borderRadius: 22,
+        borderRadius: radius.lg,
         backgroundColor: theme.bg,
         borderWidth: 1,
         borderColor: theme.border,
@@ -45,7 +49,7 @@ function DeckPeek({ theme, depth }) {
 }
 
 function DeckCard({ job, theme, index, total, onPress }) {
-  const { colors, spacing, fontFamily } = useTheme()
+  const { colors, radius, spacing, fontFamily } = useTheme()
   const reasons = job.matchReasons ?? []
   const skills = (job.skills ?? []).slice(0, 4)
   const meta = [job.company, job.location, job.employmentType ?? job.workMode].filter(Boolean).join(' · ')
@@ -54,7 +58,7 @@ function DeckCard({ job, theme, index, total, onPress }) {
     <Animated.View entering={FadeIn.duration(220)}>
       <View
         style={{
-          borderRadius: 22,
+          borderRadius: radius.lg,
           borderWidth: 1,
           borderColor: theme.border,
           backgroundColor: theme.bg,
@@ -79,24 +83,24 @@ function DeckCard({ job, theme, index, total, onPress }) {
               <Text style={{ color: theme.markInk, fontFamily: fontFamily.bold, fontSize: 20 }}>{initialsOf(job.company || job.title)}</Text>
             </View>
             <View style={{ alignItems: 'flex-end', gap: 6 }}>
-              <Text style={{ color: '#64748B', fontFamily: fontFamily.bold, fontSize: 10.5, letterSpacing: 1 }}>
+              <Text style={{ color: '#667085', fontFamily: fontFamily.bold, fontSize: 10.5, letterSpacing: 1 }}>
                 {pad(index + 1)} / {pad(total)}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: theme.accent }} />
-                <Text style={{ color: '#16324f', fontFamily: fontFamily.bold, fontSize: 10.5, letterSpacing: 0.6, textTransform: 'uppercase' }}>
+                <Text style={{ color: '#111827', fontFamily: fontFamily.bold, fontSize: 10.5, letterSpacing: 0.6, textTransform: 'uppercase' }}>
                   {MATCH_LEVEL_LABEL(reasons.length)}
                 </Text>
               </View>
             </View>
           </View>
 
-          <Text style={{ color: '#16324f', fontFamily: fontFamily.bold, fontSize: 21, marginTop: spacing.md }} numberOfLines={2}>
+          <Text style={{ color: '#111827', fontFamily: fontFamily.bold, fontSize: 21, marginTop: spacing.md }} numberOfLines={2}>
             {job.title}
           </Text>
-          {meta ? <Text style={{ color: '#64748B', fontFamily: fontFamily.regular, fontSize: 13.5, marginTop: 3 }}>{meta}</Text> : null}
+          {meta ? <Text style={{ color: '#667085', fontFamily: fontFamily.regular, fontSize: 13.5, marginTop: 3 }}>{meta}</Text> : null}
           {skills.length > 0 ? (
-            <Text style={{ color: '#16324f', fontFamily: fontFamily.semibold, fontSize: 14, marginTop: spacing.sm }}>{skills.join(' · ')}</Text>
+            <Text style={{ color: '#111827', fontFamily: fontFamily.semibold, fontSize: 14, marginTop: spacing.sm }}>{skills.join(' · ')}</Text>
           ) : null}
 
           <View
@@ -109,7 +113,7 @@ function DeckCard({ job, theme, index, total, onPress }) {
               marginTop: spacing.md,
               paddingTop: spacing.md,
               borderTopWidth: 1,
-              borderTopColor: 'rgba(22,43,58,0.12)',
+              borderTopColor: 'rgba(17,24,39,0.1)',
             }}
           >
             {reasons.length > 0 ? (
@@ -117,7 +121,7 @@ function DeckCard({ job, theme, index, total, onPress }) {
                 {reasons.map((reason) => (
                   <View key={reason} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                     <Feather name="check" size={13} color={theme.accent} />
-                    <Text style={{ color: '#16324f', fontFamily: fontFamily.semibold, fontSize: 12.5 }}>{reason}</Text>
+                    <Text style={{ color: '#111827', fontFamily: fontFamily.semibold, fontSize: 12.5 }}>{reason}</Text>
                   </View>
                 ))}
               </View>
@@ -125,10 +129,10 @@ function DeckCard({ job, theme, index, total, onPress }) {
               <View />
             )}
             <Pressable onPress={onPress} hitSlop={6} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={{ color: '#2563EB', fontFamily: fontFamily.bold, fontSize: 11.5, letterSpacing: 0.4, textTransform: 'uppercase' }}>
+              <Text style={{ color: '#5b5fef', fontFamily: fontFamily.bold, fontSize: 11.5, letterSpacing: 0.4, textTransform: 'uppercase' }}>
                 View opportunity
               </Text>
-              <Feather name="arrow-right" size={13} color="#2563EB" />
+              <Feather name="arrow-right" size={13} color="#5b5fef" />
             </Pressable>
           </View>
         </View>
@@ -142,7 +146,7 @@ function DeckCard({ job, theme, index, total, onPress }) {
 // match reasons the backend already computes but the plain card list threw
 // away.
 export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob, onSeeAll, onCompleteProfile }) {
-  const { colors, spacing, fontFamily } = useTheme()
+  const { colors, radius, spacing, fontFamily } = useTheme()
   const [active, setActive] = useState(0)
 
   if (isLoading) return null
@@ -156,7 +160,7 @@ export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob,
     <View style={{ marginTop: spacing.xl, paddingHorizontal: spacing.lg }}>
       <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 22, lineHeight: 27 }}>
         The right job{'\n'}
-        is <Text style={{ color: '#2563EB' }}>closer than you think.</Text>
+        is <Text style={{ color: '#5b5fef' }}>closer than you think.</Text>
       </Text>
       <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5, lineHeight: 19, marginTop: spacing.sm }}>
         {n === 0
@@ -165,12 +169,13 @@ export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob,
       </Text>
 
       {n === 0 ? (
-        <Pressable
+        <PressableScale
           onPress={onCompleteProfile}
+          scaleTo={0.98}
           accessibilityRole="button"
           style={{
             marginTop: spacing.lg,
-            borderRadius: 22,
+            borderRadius: radius.lg,
             borderWidth: 1,
             borderColor: THEMES[0].border,
             backgroundColor: THEMES[0].bg,
@@ -188,7 +193,7 @@ export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob,
             </Text>
           </View>
           <Feather name="arrow-right" size={16} color={THEMES[0].accent} />
-        </Pressable>
+        </PressableScale>
       ) : (
         <>
           <View style={{ marginTop: spacing.lg, paddingTop: 22 }}>
@@ -228,15 +233,15 @@ export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob,
 
           <View style={{ marginTop: spacing.lg, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border }}>
             <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 11, letterSpacing: 0.6 }}>
-              <Text style={{ color: '#2563EB' }}>01</Text> / MATCHED FOR YOU
+              <Text style={{ color: '#5b5fef' }}>01</Text> / MATCHED FOR YOU
             </Text>
             <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 4 }}>
               {n} {n === 1 ? 'opportunity' : 'opportunities'} selected from your profile.
             </Text>
             {onSeeAll ? (
               <Pressable onPress={onSeeAll} hitSlop={6} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm }}>
-                <Text style={{ color: '#2563EB', fontFamily: fontFamily.bold, fontSize: 13 }}>View all matches</Text>
-                <Feather name="arrow-right" size={13} color="#2563EB" />
+                <Text style={{ color: '#5b5fef', fontFamily: fontFamily.bold, fontSize: 13 }}>View all matches</Text>
+                <Feather name="arrow-right" size={13} color="#5b5fef" />
               </Pressable>
             ) : null}
           </View>
@@ -259,7 +264,7 @@ export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob,
             }}
           >
             The right job{'\n'}
-            <Text style={{ color: '#2563EB' }}>should find you too.</Text>
+            <Text style={{ color: '#5b5fef' }}>should find you too.</Text>
           </Text>
           <Pressable
             onPress={onSeeAll}
@@ -273,7 +278,7 @@ export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob,
               paddingHorizontal: 20,
               minHeight: 50,
               borderRadius: 999,
-              backgroundColor: '#2563EB',
+              backgroundColor: '#5b5fef',
             }}
           >
             <Text style={{ color: '#fff', fontFamily: fontFamily.bold, fontSize: 14 }}>
