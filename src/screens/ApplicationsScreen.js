@@ -115,8 +115,12 @@ export default function ApplicationsScreen() {
                   <Badge label="Selected" tone="green" />
                 ) : a.status === 'rejected' ? (
                   <Badge label="Not selected" tone="red" />
+                ) : a.status === 'interview' ? (
+                  <Badge label="Interview" tone="navy" />
+                ) : a.status === 'shortlisted' ? (
+                  <Badge label="Shortlisted" tone="green" />
                 ) : stage >= 4 ? (
-                  <Badge label="With employer" tone="gray" />
+                  <Badge label={a.employerViewedOn ? 'Viewed by employer' : 'With employer'} tone="gray" />
                 ) : (
                   <Badge label="With Mzobs" tone="navy" />
                 )}
