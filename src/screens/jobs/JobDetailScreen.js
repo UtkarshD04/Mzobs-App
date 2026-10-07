@@ -157,7 +157,7 @@ export default function JobDetailScreen({ route, navigation }) {
               <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, textAlign: 'center', marginTop: spacing.sm }}>
                 Urgent hiring jobs open with premium.{' '}
                 <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => navigation.navigate('Subscription')}>
-                  Upgrade for ₹99
+                  Upgrade for ₹499
                 </Text>
               </Text>
             </View>
