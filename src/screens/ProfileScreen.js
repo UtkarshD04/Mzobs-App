@@ -32,6 +32,7 @@ const PUBLIC_FIELD_GROUPS = [
       { key: 'currentCity', label: 'Current city' },
       { key: 'state', label: 'State' },
       { key: 'pincode', label: 'Pincode' },
+      { key: 'college', label: 'College / University' },
     ],
   },
   {
