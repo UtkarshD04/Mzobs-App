@@ -207,7 +207,7 @@ export default function JobSearchSection({ onOpenSearch, onExploreJobs, onPostJo
     minHeight: 50,
     paddingHorizontal: spacing.md,
   }
-  const inputStyle = { flex: 1, color: colors.ink, fontFamily: fontFamily.regular, fontSize: 15, paddingVertical: 12 }
+  const inputStyle = { flex: 1, color: colors.ink, fontFamily: fontFamily.regular, fontSize: 15, paddingVertical: 12, letterSpacing: 0, textAlign: 'left' }
   const divider = <View style={{ height: 1, backgroundColor: colors.border, marginHorizontal: spacing.md }} />
 
   function search() {
@@ -346,7 +346,7 @@ export default function JobSearchSection({ onOpenSearch, onExploreJobs, onPostJo
           style={rowStyle}
         >
           <Feather name="briefcase" size={19} color={colors.inkSecondary} />
-          <Text style={{ flex: 1, color: colors.ink, fontFamily: fontFamily.regular, fontSize: 15, paddingVertical: 12 }}>{experience.label}</Text>
+          <Text style={{ flex: 1, color: colors.ink, fontFamily: fontFamily.regular, fontSize: 15, paddingVertical: 12, letterSpacing: 0, textAlign: 'left' }}>{experience.label}</Text>
           <Feather name={experienceOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.inkSecondary} />
         </Pressable>
 

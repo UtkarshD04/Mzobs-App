@@ -21,7 +21,14 @@ function getDevServerApiUrl() {
 
 const FALLBACK_API_URL = 'http://localhost:4000'
 
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? getDevServerApiUrl() ?? FALLBACK_API_URL
+const configuredApiUrl = process.env.EXPO_PUBLIC_API_URL
+// 10.0.2.2 is the Android emulator's alias for the host Mac and is unreachable
+// from the iOS simulator (requests just time out), so the one shared .env.local
+// value is translated to localhost there.
+const platformApiUrl =
+  Platform.OS === 'ios' ? configuredApiUrl?.replace('//10.0.2.2:', '//localhost:') : configuredApiUrl
+
+export const API_URL = platformApiUrl ?? getDevServerApiUrl() ?? FALLBACK_API_URL
 export const API_BASE = `${API_URL}/api/employee`
 export const FILE_BASE_URL = API_URL
 
