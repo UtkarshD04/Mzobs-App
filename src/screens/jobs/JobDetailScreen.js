@@ -5,6 +5,7 @@ import { useTheme } from '../../theme'
 import { useJobQuery } from '../../hooks/useJobs'
 import { useApplicationsQuery, useApplyToJobMutation } from '../../hooks/useApplications'
 import { useProfileQuery } from '../../hooks/useProfile'
+import { usePlanQuery } from '../../hooks/useSubscription'
 import { fmtSalaryRange, fmtExperience, fmtDate } from '../../lib/format'
 import { useIsJobSaved, toggleJobSaved } from '../../lib/savedJobs'
 import ScreenContainer from '../../components/ui/ScreenContainer'
@@ -90,6 +91,7 @@ export default function JobDetailScreen({ route, navigation }) {
   const { data: job, isLoading, isError, refetch, isRefetching } = useJobQuery(id)
   const { data: applications = [] } = useApplicationsQuery()
   const { data: profile, isLoading: profileLoading } = useProfileQuery()
+  const { data: plan } = usePlanQuery()
   const applyMutation = useApplyToJobMutation()
   const [error, setError] = useState('')
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
@@ -157,7 +159,7 @@ export default function JobDetailScreen({ route, navigation }) {
               <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, textAlign: 'center', marginTop: spacing.sm }}>
                 Urgent hiring jobs open with premium.{' '}
                 <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => navigation.navigate('Subscription')}>
-                  Upgrade for ₹499
+                  {plan?.premium?.price ? `Upgrade for ₹${plan.premium.price}` : 'Upgrade to premium'}
                 </Text>
               </Text>
             </View>

@@ -10,6 +10,8 @@ import {
   useConfirmMockSubscriptionPaymentMutation,
 } from '../hooks/useSubscription'
 import { useProfileQuery } from '../hooks/useProfile'
+import { useServiceRequestsQuery } from '../hooks/usePremiumServices'
+import { RequestServiceModal, ServiceRequestCard, OPEN_STATUSES } from '../components/PremiumServiceRequests'
 import { useApplicationsQuery } from '../hooks/useApplications'
 import { fmtDate } from '../lib/format'
 import ScreenContainer from '../components/ui/ScreenContainer'
@@ -41,7 +43,7 @@ const PREMIUM_POINTS = [
   'Get your CV enhanced by an expert, plus an ATS score',
   'Attend live technical, behavioral, and HR mock interviews',
   'Experience one to one HR and career coaching with a personal roadmap',
-  'Gain premium visibility to recruiters',
+  'Get more job-fit picks from a wider pool',
 ]
 
 const NEVER_CHARGED = [
@@ -64,6 +66,10 @@ export default function SubscriptionScreen() {
   const [paying, setPaying] = useState(false)
   const [payError, setPayError] = useState('')
   const [couponResult, setCouponResult] = useState(null)
+  const [requesting, setRequesting] = useState(null)
+  const [requestedNotice, setRequestedNotice] = useState(false)
+  const paidNow = subscription?.status === 'paid'
+  const { data: requests = [], isError: requestsError, refetch: refetchRequests } = useServiceRequestsQuery({ enabled: paidNow })
 
   if (l1 || l2 || l3) return <LoadingSpinner />
   if (planError || !plan) return <ErrorState title="Plans couldn't be loaded" onRetry={refetchPlan} />
@@ -73,6 +79,8 @@ export default function SubscriptionScreen() {
   const used = Math.min(applications.length, limit)
   const shown = (plan.services ?? []).filter((s) => s.category === category)
   const isPaid = subscription.status === 'paid'
+  const openByService = new Map(requests.filter((r) => OPEN_STATUSES.includes(r.status)).map((r) => [r.service, r]))
+  const serviceLabel = (key) => plan.services?.find((s) => s.key === key)?.label ?? key
 
   // Same order -> checkout -> signature-verify flow as the web account page
   // (Website/Frontend/src/pages/Subscription.jsx), via the native Razorpay
@@ -123,7 +131,7 @@ export default function SubscriptionScreen() {
     )
 
   return (
-    <ScreenContainer onRefresh={refetch} refreshing={isRefetching}>
+    <ScreenContainer onRefresh={() => { refetch(); if (isPaid) refetchRequests() }} refreshing={isRefetching}>
       <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 26, lineHeight: 31, letterSpacing: -0.5 }}>Choose how you want to grow</Text>
       <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 14.5, lineHeight: 21, marginTop: 8, marginBottom: spacing.lg }}>
         Start free with {plan.basic.name}. Upgrade to {plan.premium.name} to get unlimited applications and hands-on support from our team, from your CV to your final offer.
@@ -227,11 +235,50 @@ export default function SubscriptionScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14.5 }}>{s.label}</Text>
                 <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 13, lineHeight: 19, marginTop: 3 }}>{s.description}</Text>
+                {isPaid ? (
+                  openByService.has(s.key) ? (
+                    <Text style={{ color: teal, fontFamily: fontFamily.semibold, fontSize: 13, marginTop: 8 }}>Requested, see "Your requests" below</Text>
+                  ) : (
+                    <Pressable onPress={() => setRequesting(s)} accessibilityRole="button" accessibilityLabel={`Request ${s.label}`} style={{ marginTop: 8, alignSelf: 'flex-start' }}>
+                      <Text style={{ color: teal, fontFamily: fontFamily.semibold, fontSize: 13.5 }}>Request this service →</Text>
+                    </Pressable>
+                  )
+                ) : null}
               </View>
             </View>
           ))}
         </View>
       </View>
+
+      {isPaid ? (
+        <View style={{ marginTop: 32 }}>
+          <Text style={sectionTitle}>Your requests</Text>
+          {requestedNotice ? (
+            <Text style={{ color: colors.green, fontFamily: fontFamily.medium, fontSize: 13.5, marginTop: 4 }}>Request sent. The Mzobs team will be in touch.</Text>
+          ) : null}
+          {requestsError ? (
+            <Pressable onPress={() => refetchRequests()} accessibilityRole="button">
+              <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 8 }}>Couldn't load your requests. Tap to retry.</Text>
+            </Pressable>
+          ) : requests.length === 0 ? (
+            <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 }}>You haven't requested anything yet. Pick a service above to get started.</Text>
+          ) : (
+            <View style={{ marginTop: 12, gap: 10 }}>
+              {requests.map((r) => (
+                <ServiceRequestCard key={r.id} request={r} serviceLabel={serviceLabel(r.service)} />
+              ))}
+            </View>
+          )}
+        </View>
+      ) : null}
+
+      <RequestServiceModal
+        service={requesting}
+        onClose={(sent) => {
+          setRequesting(null)
+          if (sent) setRequestedNotice(true)
+        }}
+      />
 
       {/* Compare plans */}
       <View style={{ marginTop: 32 }}>

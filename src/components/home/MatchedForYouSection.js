@@ -145,7 +145,7 @@ function DeckCard({ job, theme, index, total, onPress }) {
 // underlying data (useRecommendedJobsQuery), richer presentation with the
 // match reasons the backend already computes but the plain card list threw
 // away.
-export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob, onSeeAll, onCompleteProfile }) {
+export default function MatchedForYouSection({ jobs = [], isLoading, isPremium = false, onPressJob, onSeeAll, onCompleteProfile }) {
   const { colors, radius, spacing, fontFamily } = useTheme()
   const [active, setActive] = useState(0)
 
@@ -238,6 +238,12 @@ export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob,
             <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 4 }}>
               {n} {n === 1 ? 'opportunity' : 'opportunities'} selected from your profile.
             </Text>
+            {isPremium ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                <Feather name="star" size={12} color="#0b7a6d" />
+                <Text style={{ color: '#0b7a6d', fontFamily: fontFamily.semibold, fontSize: 12.5 }}>Premium: matched from a wider pool, with more picks</Text>
+              </View>
+            ) : null}
             {onSeeAll ? (
               <Pressable onPress={onSeeAll} hitSlop={6} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm }}>
                 <Text style={{ color: '#0b7a6d', fontFamily: fontFamily.bold, fontSize: 13 }}>View all matches</Text>

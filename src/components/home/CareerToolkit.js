@@ -14,14 +14,14 @@ const TOOLS = [
   { key: 'support', label: 'Help & support', icon: 'life-buoy', tone: 'red' },
 ]
 
-export default function CareerToolkit({ onPress }) {
+export default function CareerToolkit({ onPress, isPremium = false }) {
   const { colors, spacing, fontFamily } = useTheme()
 
   return (
     <View style={{ marginTop: 24 }}>
       <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, letterSpacing: -0.3, paddingHorizontal: spacing.lg }}>Career toolkit</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingTop: 16, gap: 14 }}>
-        {TOOLS.map((t) => (
+        {TOOLS.map((t) => (t.key === 'plans' && isPremium ? { ...t, label: 'My Premium', icon: 'star' } : t)).map((t) => (
           <Pressable key={t.key} onPress={() => onPress(t.key)} accessibilityRole="button" style={{ width: 82, alignItems: 'center' }}>
             <View
               style={{

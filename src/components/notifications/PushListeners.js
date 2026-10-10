@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications'
 import { queryClient, queryKeys } from '../../lib/queryClient'
 import { navigationRef } from '../../lib/navigation'
 import { syncPushToken } from '../../lib/pushNotifications'
+import { getPlan } from '../../services/subscriptionService'
 
 // Wires incoming pushes into the app (mounted only while signed in):
 //  - a push arriving while the app is open refreshes the Notifications list + badge
@@ -10,8 +11,19 @@ import { syncPushToken } from '../../lib/pushNotifications'
 //  - if the OS rotates this phone's push token, the new one is registered
 const handled = new Set()
 
-function screenFor(category) {
-  return category === 'applications' ? ['Main', { screen: 'Applications' }] : ['Notifications', undefined]
+// Premium service updates are sent under the shared "training" category with
+// the service's label as the title, so match against the cached plan to land
+// on the Subscription screen (where the requests live) instead of the list.
+async function isServiceUpdate(category, title) {
+  if (category !== 'training' || !title) return false
+  const plan = await queryClient.ensureQueryData({ queryKey: queryKeys.plan, queryFn: getPlan }).catch(() => null)
+  return !!plan?.services?.some((s) => s.label === title)
+}
+
+async function screenFor(category, title) {
+  if (category === 'applications') return ['Main', { screen: 'Applications' }]
+  if (await isServiceUpdate(category, title)) return ['Subscription', undefined]
+  return ['Notifications', undefined]
 }
 
 // getLastNotificationResponseAsync() keeps returning the same response on
@@ -22,13 +34,14 @@ function screenFor(category) {
 // response older than this is never treated as "this launch was a tap."
 const STALE_RESPONSE_MS = 15_000
 
-function open(response) {
+async function open(response) {
   const id = response?.notification?.request?.identifier
   if (id && handled.has(id)) return
   if (id) handled.add(id)
 
   queryClient.invalidateQueries({ queryKey: queryKeys.notifications })
-  const [name, params] = screenFor(response?.notification?.request?.content?.data?.category)
+  const content = response?.notification?.request?.content
+  const [name, params] = await screenFor(content?.data?.category, content?.title)
   if (navigationRef.isReady()) navigationRef.navigate(name, params)
   Notifications.clearLastNotificationResponseAsync?.().catch(() => {})
 }

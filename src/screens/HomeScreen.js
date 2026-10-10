@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { useTheme } from '../theme'
-import { useJobsQuery } from '../hooks/useJobs'
+import { useJobsQuery, useRecommendedJobsQuery } from '../hooks/useJobs'
 import { useApplicationsQuery } from '../hooks/useApplications'
 import { useProfileQuery } from '../hooks/useProfile'
 import { useNotificationsQuery } from '../hooks/useNotifications'
@@ -20,6 +20,7 @@ import CompaniesHiringSection from '../components/home/CompaniesHiringSection'
 import CategoryGrid from '../components/home/CategoryGrid'
 import JobOpeningCard from '../components/home/JobOpeningCard'
 import UrgentHiringSection from '../components/home/UrgentHiringSection'
+import MatchedForYouSection from '../components/home/MatchedForYouSection'
 import CampusSection from '../components/home/CampusSection'
 import JobFeedFilters from '../components/home/JobFeedFilters'
 import JobFiltersSheet from '../components/home/JobFiltersSheet'
@@ -32,6 +33,7 @@ export default function HomeScreen({ navigation, route }) {
   const { data: jobs = [], isLoading, isError, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
   const { data: profile } = useProfileQuery()
+  const { data: recommended = [], isLoading: recommendedLoading } = useRecommendedJobsQuery()
   const { data: notifications = [] } = useNotificationsQuery()
 
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
@@ -130,7 +132,7 @@ export default function HomeScreen({ navigation, route }) {
           </JobSearchSection>
         </Animated.View>
 
-        <CareerToolkit onPress={openTool} />
+        <CareerToolkit onPress={openTool} isPremium={!!profile?.isPremium} />
 
         {/* Job feed — website's JobMarketplace ("Latest opportunities"), a
             vertical list of JobListItem-style cards. */}
@@ -209,6 +211,15 @@ export default function HomeScreen({ navigation, route }) {
         </Animated.View>
 
         <UrgentHiringSection jobs={jobs} appliedJobIds={appliedJobIds} onPressJob={(job) => navigation.navigate('JobDetail', { id: job.id })} />
+
+        <MatchedForYouSection
+          jobs={recommended}
+          isLoading={recommendedLoading}
+          isPremium={!!profile?.isPremium}
+          onPressJob={(job) => navigation.navigate('JobDetail', { id: job.id })}
+          onSeeAll={() => navigation.navigate('Jobs', { screen: 'JobList' })}
+          onCompleteProfile={() => navigation.navigate('Main', { screen: 'Profile' })}
+        />
 
         <Animated.View entering={FadeInDown.delay(220).duration(280)}>
           <CategoryGrid jobs={jobs} onSelectCategory={(id) => setFilters((f) => ({ ...f, category: [id] }))} />

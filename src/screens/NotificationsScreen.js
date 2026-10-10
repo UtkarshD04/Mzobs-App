@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useNavigation } from '@react-navigation/native'
 import { View, Text, Pressable } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
+import { usePlanQuery } from '../hooks/useSubscription'
 import { useNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation } from '../hooks/useNotifications'
 import { selectionTick } from '../lib/haptics'
 import { CATEGORY_META } from '../lib/notificationMeta'
@@ -33,7 +35,7 @@ function Pill({ label, active, onPress }) {
   )
 }
 
-function NotifRow({ n, onOpen, isLast, index }) {
+function NotifRow({ n, onOpen, onGoToService, isLast, index }) {
   const { colors, spacing, fontFamily, radius } = useTheme()
   const meta = CATEGORY_META[n.category] ?? CATEGORY_META.system
   const tintKey = `${meta.tone}Tint`
@@ -41,7 +43,7 @@ function NotifRow({ n, onOpen, isLast, index }) {
 
   return (
     <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(220)}>
-    <Pressable onPress={() => { if (n.unread) { selectionTick(); onOpen(n.id) } }}>
+    <Pressable onPress={() => { if (n.unread) { selectionTick(); onOpen(n.id) } onGoToService?.(n) }}>
       <View
         style={{
           flexDirection: 'row',
@@ -85,6 +87,12 @@ export default function NotificationsScreen() {
   const { data: notifications = [], isLoading, isError, refetch, isRefetching } = useNotificationsQuery()
   const markRead = useMarkNotificationReadMutation()
   const markAllRead = useMarkAllNotificationsReadMutation()
+  const navigation = useNavigation()
+  const { data: plan } = usePlanQuery()
+  // Premium service updates arrive as "training" notifications titled with the service's label.
+  const openService = (n) => {
+    if (n.category === 'training' && plan?.services?.some((s) => s.label === n.title)) navigation.navigate('Subscription')
+  }
 
   if (isLoading) return <LoadingSpinner />
   if (isError && notifications.length === 0)
@@ -145,7 +153,7 @@ export default function NotificationsScreen() {
         ) : (
           <Card style={{ padding: 0 }}>
             {list.map((n, i) => (
-              <NotifRow key={n.id} n={n} onOpen={markRead.mutate} isLast={i === list.length - 1} index={i} />
+              <NotifRow key={n.id} n={n} onOpen={markRead.mutate} onGoToService={openService} isLast={i === list.length - 1} index={i} />
             ))}
           </Card>
         )}
