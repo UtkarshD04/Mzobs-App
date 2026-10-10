@@ -12,10 +12,10 @@ import PressableScale from '../ui/PressableScale'
 // always signed-in, so there's no sample-preview/"sign in" branch to build —
 // this is the equivalent of that component's signed-in state only).
 // mz-primary, mz-secondary, mz-accent — same three-theme rotation as before,
-// re-tinted to the current indigo/violet/teal-green brand family.
+// re-tinted to the current teal brand family.
 const THEMES = [
-  { bg: '#eeefff', border: 'rgba(91,95,239,0.22)', accent: '#5b5fef', markInk: '#4a4ed8' },
-  { bg: '#f1eefc', border: 'rgba(124,108,255,0.24)', accent: '#7c6cff', markInk: '#5b4fd1' },
+  { bg: '#e7f5f1', border: 'rgba(11,122,109,0.22)', accent: '#0b7a6d', markInk: '#075f55' },
+  { bg: '#e9f6f4', border: 'rgba(15,139,125,0.24)', accent: '#0f8b7d', markInk: '#0b6b60' },
   { bg: '#e4f8f1', border: 'rgba(11,138,103,0.24)', accent: '#0b8a67', markInk: '#086f52' },
 ]
 const MATCH_LEVEL_LABEL = (n) => (n >= 3 ? 'Strong match' : n === 2 ? 'Good match' : 'Relevant match')
@@ -129,10 +129,10 @@ function DeckCard({ job, theme, index, total, onPress }) {
               <View />
             )}
             <Pressable onPress={onPress} hitSlop={6} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={{ color: '#5b5fef', fontFamily: fontFamily.bold, fontSize: 11.5, letterSpacing: 0.4, textTransform: 'uppercase' }}>
+              <Text style={{ color: '#0b7a6d', fontFamily: fontFamily.bold, fontSize: 11.5, letterSpacing: 0.4, textTransform: 'uppercase' }}>
                 View opportunity
               </Text>
-              <Feather name="arrow-right" size={13} color="#5b5fef" />
+              <Feather name="arrow-right" size={13} color="#0b7a6d" />
             </Pressable>
           </View>
         </View>
@@ -157,10 +157,10 @@ export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob,
   const theme = THEMES[clampedActive % THEMES.length]
 
   return (
-    <View style={{ marginTop: spacing.xl, paddingHorizontal: spacing.lg }}>
+    <View style={{ marginTop: 32, paddingHorizontal: spacing.lg }}>
       <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 22, lineHeight: 27 }}>
         The right job{'\n'}
-        is <Text style={{ color: '#5b5fef' }}>closer than you think.</Text>
+        is <Text style={{ color: '#0b7a6d' }}>closer than you think.</Text>
       </Text>
       <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13.5, lineHeight: 19, marginTop: spacing.sm }}>
         {n === 0
@@ -233,15 +233,15 @@ export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob,
 
           <View style={{ marginTop: spacing.lg, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border }}>
             <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 11, letterSpacing: 0.6 }}>
-              <Text style={{ color: '#5b5fef' }}>01</Text> / MATCHED FOR YOU
+              <Text style={{ color: '#0b7a6d' }}>01</Text> / MATCHED FOR YOU
             </Text>
             <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 4 }}>
               {n} {n === 1 ? 'opportunity' : 'opportunities'} selected from your profile.
             </Text>
             {onSeeAll ? (
               <Pressable onPress={onSeeAll} hitSlop={6} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm }}>
-                <Text style={{ color: '#5b5fef', fontFamily: fontFamily.bold, fontSize: 13 }}>View all matches</Text>
-                <Feather name="arrow-right" size={13} color="#5b5fef" />
+                <Text style={{ color: '#0b7a6d', fontFamily: fontFamily.bold, fontSize: 13 }}>View all matches</Text>
+                <Feather name="arrow-right" size={13} color="#0b7a6d" />
               </Pressable>
             ) : null}
           </View>
@@ -264,7 +264,7 @@ export default function MatchedForYouSection({ jobs = [], isLoading, onPressJob,
             }}
           >
             The right job{'\n'}
-            <Text style={{ color: '#5b5fef' }}>should find you too.</Text>
+            <Text style={{ color: '#0b7a6d' }}>should find you too.</Text>
           </Text>
           <Pressable
             onPress={onSeeAll}

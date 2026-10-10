@@ -23,3 +23,10 @@ export function verifySubscriptionPayment(payload) {
 export function confirmMockSubscriptionPayment(orderId) {
   return apiClient.post('/subscription/mock-confirm', { orderId }).then((r) => r.data)
 }
+
+// Public — { basic, premium, groups: [{ key, label, features }], services }.
+// Backend's config/premiumPlan.js is the single source of truth, so what this
+// screen lists is exactly what the website shows and the server enforces.
+export function getPlan() {
+  return apiClient.get('/subscription/plan').then((r) => r.data)
+}

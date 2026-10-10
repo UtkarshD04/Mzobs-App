@@ -32,7 +32,7 @@ export default function Button({ title, onPress, variant = 'primary', disabled =
   const v = variants[variant] ?? variants.primary
 
   // Colored glow under the primary CTA — mobile echo of the website's
-  // --shadow-mz-cta (0 10px 24px -8px rgba(91,95,239,.55)). Lives on the
+  // --shadow-mz-cta (0 10px 24px -8px rgba(11,122,109,.55)). Lives on the
   // outer wrapper, not the Pressable, since the Pressable needs
   // overflow: hidden to clip the sheen highlight, which would also clip
   // an iOS shadow if placed there.

@@ -29,6 +29,7 @@ export const queryKeys = {
   hotCities: ['hotCities'],
   applications: ['applications'],
   subscription: ['subscription'],
+  plan: ['subscription', 'plan'],
   notifications: ['notifications'],
   messageThreads: ['messageThreads'],
   supportTickets: ['supportTickets'],

@@ -1,42 +1,41 @@
 import { useMemo, useState } from 'react'
-import { View, Text, RefreshControl, Linking } from 'react-native'
+import { View, Text, Pressable, RefreshControl, Linking } from 'react-native'
+import { Feather } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Animated, { FadeInDown, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated'
+import Animated, { FadeInDown } from 'react-native-reanimated'
 import { useTheme } from '../theme'
-import { useJobsQuery, useRecommendedJobsQuery } from '../hooks/useJobs'
+import { useJobsQuery } from '../hooks/useJobs'
 import { useApplicationsQuery } from '../hooks/useApplications'
+import { useProfileQuery } from '../hooks/useProfile'
 import { useNotificationsQuery } from '../hooks/useNotifications'
 import EmptyState from '../components/ui/EmptyState'
 import HomeSkeleton from '../components/ui/skeletons/HomeSkeleton'
 import ErrorState from '../components/ui/ErrorState'
 import JobSearchSection from '../components/home/JobSearchSection'
-import HomeFloatingNav from '../components/home/HomeFloatingNav'
+import CareerToolkit from '../components/home/CareerToolkit'
+import { openDrawer } from '../lib/navigation'
+import { profileCompletion } from '../lib/dashboard'
 import QuickDiscoveryStrip from '../components/home/QuickDiscoveryStrip'
 import SectionHeader from '../components/home/SectionHeader'
 import DepartmentTabs from '../components/home/DepartmentTabs'
 import CompaniesHiringSection from '../components/home/CompaniesHiringSection'
 import CategoryGrid from '../components/home/CategoryGrid'
-import JobCardCarousel from '../components/home/JobCardCarousel'
-import MatchedForYouSection from '../components/home/MatchedForYouSection'
-import MatchSection from '../components/home/MatchSection'
+import JobOpeningCard from '../components/home/JobOpeningCard'
+import UrgentHiringSection from '../components/home/UrgentHiringSection'
 import CampusSection from '../components/home/CampusSection'
 import { jobMatchesCategory } from '../components/home/categoryData'
 import { locationKey, locationOptions } from '../lib/jobFilters'
 
-const MAX_VISIBLE_JOBS = 5
+const MAX_VISIBLE_JOBS = 4
 
 export default function HomeScreen({ navigation }) {
   const { colors, spacing, fontFamily } = useTheme()
   const { data: jobs = [], isLoading, isError, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
+  const { data: profile } = useProfileQuery()
   const { data: notifications = [] } = useNotificationsQuery()
-  const { data: recommendedJobs = [], isLoading: isLoadingRecommended } = useRecommendedJobsQuery()
 
   const [selectedCategory, setSelectedCategory] = useState('all')
-  const scrollY = useSharedValue(0)
-  const onScroll = useAnimatedScrollHandler((event) => {
-    scrollY.value = event.contentOffset.y
-  })
 
   const unreadCount = notifications.filter((n) => n.unread).length
 
@@ -75,6 +74,15 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate('Jobs', { screen: 'JobFilters', params: { query: keyword, filters, jobs } })
   }
 
+  function openTool(key) {
+    if (key === 'resume') navigation.navigate('Main', { screen: 'Resume' })
+    else if (key === 'applications') navigation.navigate('Main', { screen: 'Applications' })
+    else if (key === 'profile') navigation.navigate('Main', { screen: 'Profile' })
+    else if (key === 'saved') navigation.navigate('SavedJobs')
+    else if (key === 'plans') navigation.navigate('Subscription')
+    else if (key === 'support') navigation.navigate('Support')
+  }
+
   return (
     // No 'top' edge here on purpose — the hero's gradient/bubbles now bleed
     // behind the status bar, with HomeFloatingNav (a position:absolute
@@ -90,37 +98,32 @@ export default function HomeScreen({ navigation }) {
           axis than this container, so no same-direction nesting either. */}
       <Animated.ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: spacing.xxl }}
+        contentContainerStyle={{ paddingBottom: 0 }}
         keyboardShouldPersistTaps="handled"
-        onScroll={onScroll}
-        scrollEventThrottle={16}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.teal} />}
       >
-        {/* 1. Hero — website's Hero.jsx */}
         <Animated.View entering={FadeInDown.duration(280)}>
           <JobSearchSection
             onOpenSearch={openSearch}
-            onExploreJobs={() => goTo('Jobs')}
-            onPostJob={() => Linking.openURL('https://mzobs.com/employers/signup')}
-          />
+            onMenu={() => openDrawer(navigation)}
+            onBell={() => navigation.navigate('Notifications')}
+            onProfile={() => navigation.navigate('Main', { screen: 'Profile' })}
+            unreadCount={unreadCount}
+            profileName={profile?.name}
+            profilePercent={profile ? profileCompletion(profile) : 0}
+          >
+            <QuickDiscoveryStrip onOpenSearch={openSearch} />
+          </JobSearchSection>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(100).duration(280)}>
-          <QuickDiscoveryStrip onOpenSearch={openSearch} />
-        </Animated.View>
+        <CareerToolkit onPress={openTool} />
 
-        {/* 4. JobMarketplace equivalent — "Fresh opportunities" carousel, plus the
-            two mobile-only job rows below it (no website equivalent — kept near
-            this job-listing-flavored group rather than deleted). */}
-        <Animated.View entering={FadeInDown.delay(140).duration(280)} style={{ marginTop: spacing.xl }}>
+        {/* Job feed — website's JobMarketplace ("Latest opportunities"), a
+            vertical list of JobListItem-style cards. */}
+        <Animated.View entering={FadeInDown.delay(140).duration(280)} style={{ marginTop: 24 }}>
           <SectionHeader
-            statusLabel="Job discovery"
-            title="Opportunities Worth Exploring"
-            subtitle={
-              hasActiveFilters
-                ? `${filtered.length} matching opening${filtered.length === 1 ? '' : 's'} — filter by what matters and apply in a couple of taps.`
-                : `${filtered.length} live opening${filtered.length === 1 ? '' : 's'} — filter by what matters and apply in a couple of taps.`
-            }
+            title="Latest opportunities"
+            subtitle={`${filtered.length} live opening${filtered.length === 1 ? '' : 's'}${hasActiveFilters ? ' match this category' : ''}`}
             actionLabel="See all"
             onAction={() => goTo('Jobs')}
           />
@@ -136,55 +139,49 @@ export default function HomeScreen({ navigation }) {
               />
             </View>
           ) : (
-            <View style={{ marginTop: spacing.md }}>
-              <JobCardCarousel
-                jobs={visibleJobs}
-                appliedJobIds={appliedJobIds}
-                onPressJob={(job) => navigation.navigate('JobDetail', { id: job.id })}
-              />
+            <View style={{ marginTop: spacing.md, paddingHorizontal: spacing.lg }}>
+              {visibleJobs.map((job, index) => (
+                <JobOpeningCard
+                  key={job.id}
+                  job={job}
+                  index={index}
+                  applied={appliedJobIds.has(job.id)}
+                  onPress={() => navigation.navigate('JobDetail', { id: job.id })}
+                />
+              ))}
+              {filtered.length > visibleJobs.length ? (
+                <Pressable
+                  onPress={() => goTo('Jobs')}
+                  accessibilityRole="button"
+                  style={{ height: 44, borderRadius: 10, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                >
+                  <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 14 }}>View all {filtered.length} jobs</Text>
+                  <Feather name="arrow-right" size={15} color={colors.ink} />
+                </Pressable>
+              ) : null}
             </View>
           )}
         </Animated.View>
 
-        {/* 5. MatchSection */}
-        <Animated.View entering={FadeInDown.delay(200).duration(280)}>
-          <MatchSection onGetMatches={() => navigation.navigate('Main', { screen: 'Profile' })} onBrowseJobs={() => goTo('Jobs')} />
-        </Animated.View>
+        <UrgentHiringSection jobs={jobs} appliedJobIds={appliedJobIds} onPressJob={(job) => navigation.navigate('JobDetail', { id: job.id })} />
 
-        {/* 6. CategorySection */}
         <Animated.View entering={FadeInDown.delay(220).duration(280)}>
           <CategoryGrid jobs={jobs} onSelectCategory={setSelectedCategory} />
         </Animated.View>
 
-        {/* 8. RecommendedForYou — signed-in-only already (renders the "complete
-            your profile" prompt instead of nothing, since the app has no
-            signed-out state to gate against). */}
-        <Animated.View entering={FadeInDown.delay(260).duration(280)}>
-          <MatchedForYouSection
-            jobs={recommendedJobs}
-            isLoading={isLoadingRecommended}
-            onSeeAll={() => goTo('Jobs')}
-            onPressJob={(job) => navigation.navigate('JobDetail', { id: job.id })}
-            onCompleteProfile={() => navigation.navigate('Main', { screen: 'Profile' })}
-          />
-        </Animated.View>
-
-        {/* 9. CompaniesSection */}
-        <Animated.View entering={FadeInDown.delay(280).duration(280)}>
-          <CompaniesHiringSection onSeeAll={() => goTo('Jobs')} />
-        </Animated.View>
-
-        {/* 10. CampusSection */}
         <Animated.View entering={FadeInDown.delay(300).duration(280)}>
           <CampusSection
-            onPartner={() => Linking.openURL('https://mzobs.com/contact')}
             onCreateProfile={() => navigation.navigate('Main', { screen: 'Profile' })}
             onBecomeAlly={() => Linking.openURL('https://mzobs.com/ally')}
           />
         </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(320).duration(280)}>
+          <CompaniesHiringSection onSeeAll={() => goTo('Jobs')} />
+        </Animated.View>
+
       </Animated.ScrollView>
 
-      <HomeFloatingNav navigation={navigation} unreadCount={unreadCount} scrollY={scrollY} />
     </SafeAreaView>
   )
 }

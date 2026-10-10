@@ -1,5 +1,6 @@
 import { ScrollView, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useTheme } from '../../theme'
 import PressableScale from '../ui/PressableScale'
 
@@ -12,7 +13,6 @@ const CARDS = [
     icon: 'business-outline',
     title: 'Placement cells',
     desc: 'Bring your whole batch onto Mzobs and give students one place to discover employers hiring freshers.',
-    cta: 'Partner with us',
   },
   {
     key: 'students',
@@ -30,89 +30,68 @@ const CARDS = [
   },
 ]
 
-const CARD_WIDTH = 240
+const GRADIENT = ['#0b7a6d', '#0f8b7d']
+
+const CARD_WIDTH = 252
 
 function StatCard() {
-  const { colors, radius, fontFamily } = useTheme()
+  const { fontFamily } = useTheme()
   return (
-    <View
-      style={{
-        width: CARD_WIDTH,
-        minHeight: 220,
-        borderRadius: radius.xl,
-        backgroundColor: colors.navy,
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-      }}
-    >
-      <Text style={{ color: '#fff', fontFamily: fontFamily.bold, fontSize: 38, letterSpacing: -0.5 }}>100+</Text>
-      <Text style={{ color: 'rgba(255,255,255,0.9)', fontFamily: fontFamily.semibold, fontSize: 13.5, marginTop: 4, textAlign: 'center' }}>
-        Campuses on Mzobs
-      </Text>
-    </View>
+    <LinearGradient colors={GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 150, borderRadius: 16, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <Text style={{ color: '#fff', fontFamily: fontFamily.bold, fontSize: 32, letterSpacing: -0.6 }}>100+</Text>
+      <Text style={{ color: 'rgba(255,255,255,0.9)', fontFamily: fontFamily.semibold, fontSize: 13, marginTop: 6, textAlign: 'center' }}>Campuses on Mzobs</Text>
+    </LinearGradient>
   )
 }
 
 function InfoCard({ icon, title, desc, cta, onPress }) {
-  const { colors, radius, fontFamily } = useTheme()
+  const { colors, fontFamily } = useTheme()
   return (
-    <View
-      style={{
-        width: CARD_WIDTH,
-        minHeight: 220,
-        borderRadius: radius.xl,
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-        padding: 18,
-        gap: 10,
-      }}
-    >
-      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.navy, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: CARD_WIDTH, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: 20 }}>
+      <LinearGradient colors={GRADIENT} style={{ position: 'absolute', top: -32, right: -32, width: 96, height: 96, borderRadius: 48, opacity: 0.07 }} />
+      <LinearGradient colors={GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
         <Ionicons name={icon} size={19} color="#fff" />
-      </View>
-      <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 16.5 }}>{title}</Text>
-      <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, lineHeight: 18.5, flexShrink: 1 }}>{desc}</Text>
-      <PressableScale
+      </LinearGradient>
+      <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 17, letterSpacing: -0.2, marginTop: 16 }}>{title}</Text>
+      <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 13.5, lineHeight: 21, marginTop: 6 }}>{desc}</Text>
+      {cta ? (
+        <PressableScale
         onPress={onPress}
-        scaleTo={0.96}
+        scaleTo={0.97}
         accessibilityRole="button"
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 'auto', alignSelf: 'flex-start' }}
+        style={{
+          alignSelf: 'flex-start',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          marginTop: 16,
+          height: 36,
+          paddingHorizontal: 14,
+          borderRadius: 10,
+          borderWidth: 1,
+          borderColor: colors.borderStrong,
+          backgroundColor: colors.surface,
+        }}
       >
-        <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 13 }}>{cta}</Text>
+        <Text style={{ color: colors.ink, fontFamily: fontFamily.semibold, fontSize: 13.5 }}>{cta}</Text>
         <Ionicons name="arrow-forward" size={13} color={colors.ink} />
       </PressableScale>
+      ) : null}
     </View>
   )
 }
 
-export default function CampusSection({ onPartner, onCreateProfile, onBecomeAlly }) {
+export default function CampusSection({ onCreateProfile, onBecomeAlly }) {
   const { colors, spacing, fontFamily } = useTheme()
-  const actions = { placement: onPartner, students: onCreateProfile, ally: onBecomeAlly }
+  const actions = { students: onCreateProfile, ally: onBecomeAlly }
 
   return (
-    <View style={{ marginTop: spacing.xl }}>
-      <View style={{ alignItems: 'center', paddingHorizontal: spacing.lg }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.navy }} />
-          <Text style={{ color: colors.navy, fontFamily: fontFamily.bold, fontSize: 11.5, letterSpacing: 0.6, textTransform: 'uppercase' }}>
-            Campus network
-          </Text>
-        </View>
-        <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 24, lineHeight: 29, marginTop: 6, textAlign: 'center' }}>
+    <View style={{ paddingVertical: 24, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.bg }}>
+      <View style={{ paddingHorizontal: spacing.lg }}>
+        <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, letterSpacing: -0.3 }}>
           From Campus to <Text style={{ color: colors.navy }}>Career.</Text>
         </Text>
-        <Text
-          style={{
-            color: colors.inkSecondary,
-            fontFamily: fontFamily.regular,
-            fontSize: 13.5,
-            lineHeight: 19,
-            marginTop: spacing.sm,
-            textAlign: 'center',
-          }}
-        >
+        <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 }}>
           Mzobs works with colleges to give students a direct route from the classroom to their first job.
         </Text>
       </View>
@@ -120,9 +99,8 @@ export default function CampusSection({ onPartner, onCreateProfile, onBecomeAlly
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        snapToInterval={CARD_WIDTH + spacing.md}
         decelerationRate="fast"
-        contentContainerStyle={{ gap: spacing.md, paddingHorizontal: spacing.lg, paddingTop: spacing.lg }}
+        contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingTop: 20, gap: 12 }}
       >
         <StatCard />
         {CARDS.map((c) => (

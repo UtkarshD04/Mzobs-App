@@ -6,6 +6,10 @@ export function useSubscriptionQuery() {
   return useQuery({ queryKey: queryKeys.subscription, queryFn: subscriptionService.getSubscription })
 }
 
+export function usePlanQuery() {
+  return useQuery({ queryKey: queryKeys.plan, queryFn: subscriptionService.getPlan, staleTime: 5 * 60_000 })
+}
+
 export function useCreateSubscriptionOrderMutation() {
   return useMutation({ mutationFn: (couponCode) => subscriptionService.createSubscriptionOrder(couponCode) })
 }

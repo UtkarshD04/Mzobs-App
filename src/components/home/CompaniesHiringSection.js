@@ -5,13 +5,13 @@ import { useTheme } from '../../theme'
 import PressableScale from '../ui/PressableScale'
 import { COMPANIES_HIRING_DATA } from './companiesHiringData'
 
-// Mirrors the website's CompaniesHiring.jsx: round logo badges gliding
+// Mirrors the website's CompaniesSection.jsx: round logo badges gliding
 // right-to-left in a seamless auto-scroll loop (not a user-dragged row) —
 // the set is rendered twice back to back and translated by exactly one
 // copy's width, so the reset from -width back to 0 is invisible.
-const CIRCLE = 108
-const GAP = 18
-const PX_PER_SEC = 26 // roughly matches the website's 40s-for-desktop-width pace, scaled to a phone
+const CIRCLE = 104
+const GAP = 24
+const PX_PER_SEC = 60 // scroll speed in pixels per second (was 26)
 
 function initialsOf(name) {
   return name
@@ -41,17 +41,17 @@ function CompanyCircle({ company, onPress }) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: 18,
-        shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
-        elevation: 3,
+        shadowColor: '#111827',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 2,
       }}
     >
       {company.logo ? (
         <Image source={company.logo} resizeMode="contain" style={{ width: '100%', height: '100%' }} />
       ) : (
-        <Text style={{ color: colors.teal, fontFamily: fontFamily.bold, fontSize: 16 }}>{initialsOf(company.name)}</Text>
+        <Text style={{ color: '#075f55', fontFamily: fontFamily.bold, fontSize: 24 }}>{initialsOf(company.name)}</Text>
       )}
     </PressableScale>
   )
@@ -62,7 +62,6 @@ export default function CompaniesHiringSection({ onSeeAll }) {
   const [setWidth, setSetWidth] = useState(0)
   const offset = useSharedValue(0)
 
-  const industryCount = new Set(COMPANIES_HIRING_DATA.map((c) => c.industry)).size
   const doubled = [...COMPANIES_HIRING_DATA, ...COMPANIES_HIRING_DATA]
 
   useEffect(() => {
@@ -74,17 +73,12 @@ export default function CompaniesHiringSection({ onSeeAll }) {
   const trackStyle = useAnimatedStyle(() => ({ transform: [{ translateX: offset.value }] }))
 
   return (
-    <View style={{ marginTop: spacing.xl }}>
-      <View style={{ alignItems: 'center', paddingHorizontal: spacing.lg }}>
-        <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, letterSpacing: -0.3, textAlign: 'center' }}>
-          Companies hiring through Mzobs
-        </Text>
-        <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 4, textAlign: 'center' }}>
-          {COMPANIES_HIRING_DATA.length} verified partners across {industryCount} industries.
-        </Text>
+    <View style={{ paddingVertical: 24, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface }}>
+      <View style={{ paddingHorizontal: spacing.lg }}>
+        <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, letterSpacing: -0.3 }}>Companies hiring through Mzobs</Text>
       </View>
 
-      <View style={{ marginTop: spacing.lg, height: CIRCLE + 16, overflow: 'hidden' }}>
+      <View style={{ marginTop: 16, height: CIRCLE + 16, overflow: 'hidden' }}>
         <Animated.View
           style={[{ flexDirection: 'row', paddingVertical: 8 }, trackStyle]}
           onLayout={(e) => {
