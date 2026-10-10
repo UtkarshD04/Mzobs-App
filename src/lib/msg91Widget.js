@@ -6,7 +6,11 @@ import { MSG91_WIDGET_ID, MSG91_TOKEN_AUTH } from './config'
 // backend hop for the SMS itself. Verifying returns an access-token that the
 // backend then confirms with MSG91 (POST /auth/verify-phone-widget) before
 // minting its own phoneToken, so the client can't just claim "verified".
-export const WIDGET_CONFIGURED = Boolean(MSG91_WIDGET_ID && MSG91_TOKEN_AUTH)
+// Switched off on purpose: the app now sends and checks OTPs through the backend (/send-otp and
+// /verify-otp), which texts them via MSG91's SMS API. Set this back to the line below to use the
+// widget again.
+// export const WIDGET_CONFIGURED = Boolean(MSG91_WIDGET_ID && MSG91_TOKEN_AUTH)
+export const WIDGET_CONFIGURED = false
 
 // Failures from MSG91 arrive as { type: 'error', message } in a normal 200
 // body rather than a thrown/HTTP error, so they're rethrown as this type to
