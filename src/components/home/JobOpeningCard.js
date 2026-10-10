@@ -10,15 +10,10 @@ import PressableScale from '../ui/PressableScale'
 const MAX_VISIBLE_SKILLS = 2
 
 // Mirrors the website's JobListItem.jsx: left-edge accent bar, teal company
-// line, icon meta row, tone-rotated skill badges and a "View role" link.
-// SKILL_TONES / accent literals are that component's own.
-const TEAL = '#078B7D'
+// line, icon meta row, neutral skill badges and a "View role" link.
+// One accent (teal) only; everything else is neutral grey.
+const TEAL = '#0b7a6d'
 const NAVY = '#123B5D'
-const SKILL_TONES = [
-  { bg: '#E8F7F4', text: '#078B7D' },
-  { bg: '#EEF5FA', text: '#12304A' },
-  { bg: '#F0EDFF', text: '#5B4FD6' },
-]
 
 export default function JobOpeningCard({ job, applied, index = 0, onPress, distanceKm = null }) {
   const { colors, spacing, fontFamily, isDark } = useTheme()
@@ -26,11 +21,11 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, dista
   const skills = (job.skills ?? []).filter(Boolean).slice(0, MAX_VISIBLE_SKILLS)
   const location = distanceKm != null ? `${job.location} · ${Math.round(distanceKm)} km away` : job.location?.split(',')[0]
   const meta = [
-    { icon: 'map-pin', text: location, color: isDark ? colors.teal : TEAL },
-    { icon: 'briefcase', text: fmtExperience(job), color: isDark ? colors.teal : '#0b7a6d' },
+    { icon: 'map-pin', text: location, color: colors.inkTertiary },
+    { icon: 'briefcase', text: fmtExperience(job), color: colors.inkTertiary },
     { icon: 'monitor', text: job.workMode, color: colors.inkTertiary },
   ].filter((m) => m.text)
-  const accent = index === 0 || index % 2 === 0 ? (isDark ? colors.teal : TEAL) : isDark ? colors.border : '#EEF5FA'
+  const accent = isDark ? colors.teal : TEAL
   const teal = isDark ? colors.teal : TEAL
   const title = isDark ? colors.ink : NAVY
 
@@ -60,7 +55,7 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, dista
           <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 3, backgroundColor: accent }} />
 
           <View style={{ flexDirection: 'row', gap: 14 }}>
-            <Avatar name={job.company} size={44} style={{ borderRadius: 10 }} />
+            <Avatar name={job.company} size={44} tone="gray" style={{ borderRadius: 10 }} />
 
             <View style={{ flex: 1 }}>
               <Text style={{ color: title, fontFamily: fontFamily.semibold, fontSize: 16, lineHeight: 21, paddingRight: 32 }} numberOfLines={2}>
@@ -97,14 +92,11 @@ export default function JobOpeningCard({ job, applied, index = 0, onPress, dista
 
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, flexShrink: 1 }}>
-                  {skills.map((skill, i) => {
-                    const tone = SKILL_TONES[i % SKILL_TONES.length]
-                    return (
-                      <View key={skill} style={{ borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: isDark ? colors.navyTint : tone.bg }}>
-                        <Text style={{ color: isDark ? colors.teal : tone.text, fontFamily: fontFamily.medium, fontSize: 12 }}>{skill}</Text>
-                      </View>
-                    )
-                  })}
+                  {skills.map((skill) => (
+                    <View key={skill} style={{ borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: colors.surfaceSunken }}>
+                      <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.medium, fontSize: 12 }}>{skill}</Text>
+                    </View>
+                  ))}
                   {job.posted ? (
                     <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 12 }}>
                       {skills.length > 0 ? '· ' : ''}

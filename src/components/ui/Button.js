@@ -72,7 +72,7 @@ export default function Button({ title, onPress, variant = 'primary', disabled =
           backgroundColor: v.bg,
           borderWidth: 1,
           borderColor: v.border,
-          borderRadius: radius.md,
+          borderRadius: 10,
           paddingVertical: spacing.md,
           minHeight: 48,
           alignItems: 'center',

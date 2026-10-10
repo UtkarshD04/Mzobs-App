@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { View, ActivityIndicator } from 'react-native'
+import { View } from 'react-native'
+import * as SplashScreen from 'expo-splash-screen'
 import * as SecureStore from 'expo-secure-store'
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../theme'
 import AuthStack from './AuthStack'
 import AppDrawer from './AppDrawer'
-import BrandLogo from '../components/ui/BrandLogo'
 import { navigationRef } from '../lib/navigation'
 import PushListeners from '../components/notifications/PushListeners'
 import NotificationPermissionPrompt from '../components/notifications/NotificationPermissionPrompt'
@@ -37,12 +37,13 @@ function SignedInApp() {
     SecureStore.setItemAsync(skipKey(profile), '1').catch(() => {})
   }
 
-  if (isLoading || (setupPending && skipped === null))
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
-        <ActivityIndicator size="small" color={colors.navy} />
-      </View>
-    )
+  const waiting = isLoading || (setupPending && skipped === null)
+  // Hand over from the native splash once the signed-in app has real content.
+  useEffect(() => {
+    if (!waiting) SplashScreen.hideAsync().catch(() => {})
+  }, [waiting])
+
+  if (waiting) return <View style={{ flex: 1, backgroundColor: colors.bg }} />
   if (setupPending && !skipped) return <ProfileSetupScreen onSkip={skipSetup} />
   return (
     <>
@@ -69,13 +70,13 @@ export default function RootNavigator() {
     },
   }
 
-  if (isBootstrapping)
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg, gap: 20 }}>
-        <BrandLogo height={30} />
-        <ActivityIndicator size="small" color={colors.navy} />
-      </View>
-    )
+  // Signed out: nothing more to wait for once the stored token has been checked.
+  useEffect(() => {
+    if (!isBootstrapping && !isAuthenticated) SplashScreen.hideAsync().catch(() => {})
+  }, [isBootstrapping, isAuthenticated])
+
+  // The native splash (logo) is still up while the stored token is checked.
+  if (isBootstrapping) return null
 
   return (
     <NavigationContainer ref={navigationRef} theme={navTheme}>

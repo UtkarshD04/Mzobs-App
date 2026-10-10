@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { View, Text, Pressable, RefreshControl, Linking } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -16,30 +16,43 @@ import CareerToolkit from '../components/home/CareerToolkit'
 import { openDrawer } from '../lib/navigation'
 import { profileCompletion } from '../lib/dashboard'
 import QuickDiscoveryStrip from '../components/home/QuickDiscoveryStrip'
-import SectionHeader from '../components/home/SectionHeader'
-import DepartmentTabs from '../components/home/DepartmentTabs'
 import CompaniesHiringSection from '../components/home/CompaniesHiringSection'
 import CategoryGrid from '../components/home/CategoryGrid'
 import JobOpeningCard from '../components/home/JobOpeningCard'
 import UrgentHiringSection from '../components/home/UrgentHiringSection'
 import CampusSection from '../components/home/CampusSection'
-import { jobMatchesCategory } from '../components/home/categoryData'
-import { locationKey, locationOptions } from '../lib/jobFilters'
+import JobFeedFilters from '../components/home/JobFeedFilters'
+import JobFiltersSheet from '../components/home/JobFiltersSheet'
+import { DEFAULT_FILTERS, activeFilterCount, locationKey, locationOptions, matchesFilters, matchesQuery, normalizeFilters, sortJobs } from '../lib/jobFilters'
 
 const MAX_VISIBLE_JOBS = 4
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation, route }) {
   const { colors, spacing, fontFamily } = useTheme()
   const { data: jobs = [], isLoading, isError, refetch, isRefetching } = useJobsQuery()
   const { data: applications = [] } = useApplicationsQuery()
   const { data: profile } = useProfileQuery()
   const { data: notifications = [] } = useNotificationsQuery()
 
-  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [filters, setFilters] = useState(DEFAULT_FILTERS)
+  const [feedQuery, setFeedQuery] = useState('')
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  // The filter page hands the applied filters/search back through route params.
+  useEffect(() => {
+    if (route.params?.appliedFilters) setFilters(normalizeFilters(route.params.appliedFilters))
+    if (route.params?.appliedQuery !== undefined) setFeedQuery(route.params.appliedQuery)
+    if (route.params?.appliedFilters || route.params?.appliedQuery !== undefined) {
+      navigation.setParams({ appliedFilters: undefined, appliedQuery: undefined })
+    }
+  }, [route.params?.appliedFilters, route.params?.appliedQuery])
 
   const unreadCount = notifications.filter((n) => n.unread).length
 
-  const filtered = useMemo(() => jobs.filter((job) => jobMatchesCategory(job, selectedCategory)), [jobs, selectedCategory])
+  const filtered = useMemo(
+    () => sortJobs(jobs.filter((job) => matchesFilters(job, filters) && matchesQuery(job, feedQuery)), filters.sort, feedQuery),
+    [jobs, filters, feedQuery],
+  )
 
   if (isLoading) return <HomeSkeleton />
   if (isError && jobs.length === 0)
@@ -51,7 +64,7 @@ export default function HomeScreen({ navigation }) {
 
   const appliedJobIds = new Set(applications.map((a) => a.jobId ?? a.job?.id))
   const visibleJobs = filtered.slice(0, MAX_VISIBLE_JOBS)
-  const hasActiveFilters = selectedCategory !== 'all'
+  const hasActiveFilters = activeFilterCount(filters) > 0 || !!feedQuery
 
   function goTo(screen) {
     navigation.navigate(screen)
@@ -105,6 +118,7 @@ export default function HomeScreen({ navigation }) {
         <Animated.View entering={FadeInDown.duration(280)}>
           <JobSearchSection
             onOpenSearch={openSearch}
+            onFilters={(q) => openSearch({ query: q })}
             onMenu={() => openDrawer(navigation)}
             onBell={() => navigation.navigate('Notifications')}
             onProfile={() => navigation.navigate('Main', { screen: 'Profile' })}
@@ -121,21 +135,52 @@ export default function HomeScreen({ navigation }) {
         {/* Job feed — website's JobMarketplace ("Latest opportunities"), a
             vertical list of JobListItem-style cards. */}
         <Animated.View entering={FadeInDown.delay(140).duration(280)} style={{ marginTop: 24 }}>
-          <SectionHeader
-            title="Latest opportunities"
-            subtitle={`${filtered.length} live opening${filtered.length === 1 ? '' : 's'}${hasActiveFilters ? ' match this category' : ''}`}
-            actionLabel="See all"
-            onAction={() => goTo('Jobs')}
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md, paddingHorizontal: spacing.lg, marginBottom: spacing.md }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, letterSpacing: -0.3 }}>Latest opportunities</Text>
+              <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 2 }}>
+                {filtered.length} open {filtered.length === 1 ? 'role' : 'roles'}
+                {hasActiveFilters ? ' match your filters' : ''}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => setFiltersOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Open filters"
+              style={{
+                height: 40,
+                paddingHorizontal: 14,
+                borderRadius: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                backgroundColor: hasActiveFilters ? colors.navy : colors.surface,
+                borderWidth: 1,
+                borderColor: hasActiveFilters ? colors.navy : colors.borderStrong,
+              }}
+            >
+              <Feather name="sliders" size={16} color={hasActiveFilters ? '#fff' : colors.ink} />
+              <Text style={{ color: hasActiveFilters ? '#fff' : colors.ink, fontFamily: fontFamily.semibold, fontSize: 14 }}>
+                Filters{activeFilterCount(filters) + (feedQuery ? 1 : 0) > 0 ? ` · ${activeFilterCount(filters) + (feedQuery ? 1 : 0)}` : ''}
+              </Text>
+            </Pressable>
+          </View>
 
-          <DepartmentTabs selected={selectedCategory} onSelect={setSelectedCategory} />
+          <JobFeedFilters
+            filters={filters}
+            query={feedQuery}
+            jobs={jobs}
+            onChange={setFilters}
+            onClearQuery={() => setFeedQuery('')}
+            onOpenFilters={() => setFiltersOpen(true)}
+          />
 
           {visibleJobs.length === 0 ? (
             <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.md }}>
               <EmptyState
                 icon="briefcase"
                 title={hasActiveFilters ? 'No matching openings' : 'No live openings right now'}
-                message={hasActiveFilters ? 'Try a different search term or category.' : 'Check back soon for new requirements.'}
+                message={hasActiveFilters ? 'Try removing a filter or searching a different keyword.' : 'Check back soon for new requirements.'}
               />
             </View>
           ) : (
@@ -151,7 +196,7 @@ export default function HomeScreen({ navigation }) {
               ))}
               {filtered.length > visibleJobs.length ? (
                 <Pressable
-                  onPress={() => goTo('Jobs')}
+                  onPress={() => navigation.navigate('Jobs', { screen: 'JobList', params: { appliedFilters: filters, appliedQuery: feedQuery } })}
                   accessibilityRole="button"
                   style={{ height: 44, borderRadius: 10, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 >
@@ -166,7 +211,7 @@ export default function HomeScreen({ navigation }) {
         <UrgentHiringSection jobs={jobs} appliedJobIds={appliedJobIds} onPressJob={(job) => navigation.navigate('JobDetail', { id: job.id })} />
 
         <Animated.View entering={FadeInDown.delay(220).duration(280)}>
-          <CategoryGrid jobs={jobs} onSelectCategory={setSelectedCategory} />
+          <CategoryGrid jobs={jobs} onSelectCategory={(id) => setFilters((f) => ({ ...f, category: [id] }))} />
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(300).duration(280)}>
@@ -181,6 +226,8 @@ export default function HomeScreen({ navigation }) {
         </Animated.View>
 
       </Animated.ScrollView>
+
+      <JobFiltersSheet visible={filtersOpen} onClose={() => setFiltersOpen(false)} filters={filters} query={feedQuery} jobs={jobs} resultCount={filtered.length} onChange={setFilters} />
 
     </SafeAreaView>
   )

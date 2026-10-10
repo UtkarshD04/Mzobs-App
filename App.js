@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar'
-import { View, ActivityIndicator, LogBox } from 'react-native'
+import { LogBox } from 'react-native'
+import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
@@ -9,8 +10,15 @@ import { queryClient } from './src/lib/queryClient'
 import { AuthProvider } from './src/context/AuthContext'
 import { ThemeProvider, useTheme } from './src/theme'
 import RootNavigator from './src/navigation/RootNavigator'
-import BrandLogo from './src/components/ui/BrandLogo'
 import UpdateGate from './src/components/UpdateGate'
+
+// Keep the native splash (the logo) on screen until the app is ready — fonts,
+// theme and the signed-in check — instead of showing extra in-app loading
+// screens after it. RootNavigator / SignedInApp hide it once there is
+// something real to show; the timer below is a safety net so a stuck request
+// can never leave the splash up forever.
+SplashScreen.preventAutoHideAsync().catch(() => {})
+setTimeout(() => SplashScreen.hideAsync().catch(() => {}), 10000)
 
 // Expo Go on Android has no remote-push capability since SDK 53 — expo-notifications
 // logs this on import to warn about it. registerPushToken() in AuthContext already
@@ -36,16 +44,10 @@ Notifications.setNotificationHandler({
 })
 
 function AppContent({ fontsLoaded }) {
-  const { colors, isDark, ready } = useTheme()
+  const { isDark, ready } = useTheme()
 
-  if (!fontsLoaded || !ready) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg, gap: 20 }}>
-        <BrandLogo height={30} />
-        <ActivityIndicator size="small" color={colors.navy} />
-      </View>
-    )
-  }
+  // Native splash is still showing — nothing to render yet.
+  if (!fontsLoaded || !ready) return null
 
   return (
     <UpdateGate>

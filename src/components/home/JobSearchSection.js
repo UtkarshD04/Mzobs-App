@@ -20,7 +20,7 @@ function initialsOf(name) {
   return parts.length === 1 ? parts[0][0].toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-export default function JobSearchSection({ onOpenSearch, onMenu, onBell, onProfile, unreadCount = 0, profileName, profilePercent = 0, children }) {
+export default function JobSearchSection({ onOpenSearch, onFilters, onMenu, onBell, onProfile, unreadCount = 0, profileName, profilePercent = 0, children }) {
   const { colors, fontFamily, isDark } = useTheme()
   const insets = useSafeAreaInsets()
   const [query, setQuery] = useState('')
@@ -94,6 +94,11 @@ export default function JobSearchSection({ onOpenSearch, onMenu, onBell, onProfi
             <Feather name="arrow-right-circle" size={24} color={colors.navy} />
           </Pressable>
         ) : null}
+        <View style={{ width: 1, height: 24, backgroundColor: colors.border }} />
+        <Pressable onPress={() => onFilters?.(query.trim())} hitSlop={8} accessibilityRole="button" accessibilityLabel="Filters" style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+          <Feather name="sliders" size={19} color={colors.navy} />
+          <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 14 }}>Filters</Text>
+        </Pressable>
       </View>
 
       {children ? <View style={{ marginTop: 14 }}>{children}</View> : null}

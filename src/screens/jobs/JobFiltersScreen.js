@@ -137,7 +137,7 @@ function ExperiencePicker({ value, onChange }) {
 
 export default function JobFiltersScreen({ navigation, route }) {
   const { colors, spacing, radius, fontFamily } = useTheme()
-  const { filters: initialFilters, query: initialQuery = '', jobs = [], initialGroup } = route.params ?? {}
+  const { filters: initialFilters, query: initialQuery = '', jobs = [], initialGroup, returnTo } = route.params ?? {}
   const [draft, setDraft] = useState(() => normalizeFilters(initialFilters))
   const [query, setQuery] = useState(initialQuery)
   const [activeGroup, setActiveGroup] = useState(initialGroup ?? 'workMode')
@@ -209,6 +209,13 @@ export default function JobFiltersScreen({ navigation, route }) {
   }
 
   function apply() {
+    if (returnTo === 'Home') {
+      // Opened from the Home feed's filter bar: drop this page off the Jobs
+      // stack, then hand the result back to the Home feed.
+      navigation.popToTop()
+      navigation.navigate('Main', { screen: 'Home', params: { screen: 'HomeFeed', params: { appliedFilters: draft, appliedQuery: query } } })
+      return
+    }
     navigation.navigate('JobList', { appliedFilters: draft, appliedQuery: query })
   }
 

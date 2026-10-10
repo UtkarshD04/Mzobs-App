@@ -9,10 +9,10 @@ const Stack = createNativeStackNavigator()
 // PhoneAuthScreen.js) — "Login" and "Signup" both point at it so any
 // existing navigation.navigate('Login'/'Signup') call elsewhere still works.
 export default function AuthStack() {
-  const { colors } = useTheme()
+  const { colors, fontFamily } = useTheme()
   const legalOptions = {
     headerShown: true,
-    headerStyle: { backgroundColor: colors.bg },
+    headerStyle: { backgroundColor: colors.surface }, headerTitleStyle: { fontFamily: fontFamily.bold, fontSize: 17, color: colors.ink },
     headerTintColor: colors.ink,
     headerShadowVisible: false,
     headerBackTitle: 'Back',

@@ -88,7 +88,7 @@ export default function ApplicationsScreen() {
           const company = typeof a.job?.company === 'string' ? a.job.company : a.job?.company?.name
           const meta = [a.job?.location, a.job?.workMode].filter(Boolean).join(' · ')
           return (
-            <Card key={a.id} style={{ marginTop: spacing.md, padding: spacing.md, borderRadius: 10, borderColor: colors.border }}>
+            <Card key={a.id} style={{ marginTop: spacing.md, padding: spacing.md }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <View style={{ flex: 1, flexDirection: 'row', gap: spacing.sm, paddingRight: spacing.sm }}>
                   <Avatar name={company || a.job?.title} size={44} />

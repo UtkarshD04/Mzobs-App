@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, Pressable, Modal, FlatList } from 'react-native'
+import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 
 export default function SelectField({ label, value, onChange, options, placeholder = 'Select an option', error }) {
@@ -16,15 +17,20 @@ export default function SelectField({ label, value, onChange, options, placehold
         style={{
           borderWidth: 1,
           borderColor: error ? colors.red : colors.border,
-          borderRadius: radius.md,
+          borderRadius: radius.sm,
           paddingVertical: 11,
           paddingHorizontal: spacing.md,
           backgroundColor: colors.surface,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing.sm,
         }}
       >
-        <Text style={{ color: value ? colors.ink : colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 15 }}>
+        <Text style={{ flex: 1, color: value ? colors.ink : colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 15 }} numberOfLines={1}>
           {value || placeholder}
         </Text>
+        <Feather name="chevron-down" size={18} color={colors.inkTertiary} />
       </Pressable>
       {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 12, marginTop: 4 }}>{error}</Text> : null}
 

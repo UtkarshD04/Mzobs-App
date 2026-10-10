@@ -42,6 +42,7 @@ export default function AppTabs() {
       screenOptions={({ route, navigation }) => ({
         headerShown: route.name !== 'Home' && route.name !== 'Jobs',
         headerStyle: { backgroundColor: colors.surface },
+        headerTitleStyle: { fontFamily: fontFamily.bold, fontSize: 17, color: colors.ink },
         headerTintColor: colors.ink,
         headerShadowVisible: false,
         headerLeft: () => <HamburgerButton navigation={navigation} />,

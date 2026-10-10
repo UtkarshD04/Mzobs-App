@@ -12,13 +12,13 @@ import { PrivacyPolicyScreen, TermsAndConditionsScreen } from '../screens/LegalS
 const Drawer = createDrawerNavigator()
 
 export default function AppDrawer() {
-  const { colors } = useTheme()
+  const { colors, fontFamily } = useTheme()
 
   return (
     <Drawer.Navigator
       drawerContent={(props) => <DrawerContent {...props} />}
       screenOptions={{
-        headerStyle: { backgroundColor: colors.bg },
+        headerStyle: { backgroundColor: colors.surface }, headerTitleStyle: { fontFamily: fontFamily.bold, fontSize: 17, color: colors.ink },
         headerTintColor: colors.ink,
         headerShadowVisible: false,
         drawerStyle: { backgroundColor: colors.bg, width: 280 },

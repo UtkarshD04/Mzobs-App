@@ -143,7 +143,7 @@ export default function JobDetailScreen({ route, navigation }) {
     <ScreenContainer
       style={{ paddingBottom: spacing.lg }}
       footer={
-        <View style={{ padding: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.bg }}>
+        <View style={{ padding: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface }}>
           {error ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 12.5, marginBottom: spacing.sm }}>{error}</Text> : null}
           {applied ? (
             <Badge label="Applied — with Mzobs" tone="green" style={{ alignSelf: 'center' }} />

@@ -8,11 +8,11 @@ import JobFiltersScreen from '../screens/jobs/JobFiltersScreen'
 const Stack = createNativeStackNavigator()
 
 export default function JobsStack() {
-  const { colors } = useTheme()
+  const { colors, fontFamily } = useTheme()
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: colors.bg },
+        headerStyle: { backgroundColor: colors.surface }, headerTitleStyle: { fontFamily: fontFamily.bold, fontSize: 17, color: colors.ink },
         headerTintColor: colors.ink,
         headerShadowVisible: false,
       }}
