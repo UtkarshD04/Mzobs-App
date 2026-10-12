@@ -18,6 +18,7 @@ import EligibilityNote, { FREE_APPLICATION_LIMIT } from '../../components/ui/Eli
 import ErrorState from '../../components/ui/ErrorState'
 import JobDetailSkeleton from '../../components/ui/skeletons/JobDetailSkeleton'
 import { notifySuccess, notifyError, tapLight } from '../../lib/haptics'
+import { IOS_SERVICES_ONLY } from '../../lib/storePolicy'
 import Toast from '../../components/ui/Toast'
 
 function daysSince(dateValue) {
@@ -157,15 +158,25 @@ export default function JobDetailScreen({ route, navigation }) {
                 <IconAction icon="share-2" onPress={handleShare} accessibilityLabel="Share job" />
               </View>
               <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12.5, textAlign: 'center', marginTop: spacing.sm }}>
-                Urgent hiring jobs open with premium.{' '}
-                <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => navigation.navigate('Subscription')}>
-                  {plan?.premium?.price ? `Upgrade for ₹${plan.premium.price}` : 'Upgrade to premium'}
-                </Text>
+                {IOS_SERVICES_ONLY ? (
+                  'Urgent hiring jobs are not open on your account.'
+                ) : (
+                  <>
+                    Urgent hiring jobs open with premium.{' '}
+                    <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold }} onPress={() => navigation.navigate('Subscription')}>
+                      {plan?.premium?.price ? `Upgrade for ₹${plan.premium.price}` : 'Upgrade to premium'}
+                    </Text>
+                  </>
+                )}
               </Text>
             </View>
           ) : limitReached ? (
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <Button title="Upgrade to apply" variant="gold" onPress={() => navigation.navigate('Subscription')} style={{ flex: 1 }} />
+              {IOS_SERVICES_ONLY ? (
+                <Button title="Free application limit reached" disabled style={{ flex: 1 }} />
+              ) : (
+                <Button title="Upgrade to apply" variant="gold" onPress={() => navigation.navigate('Subscription')} style={{ flex: 1 }} />
+              )}
               <IconAction icon="bookmark" active={saved} onPress={handleToggleSaved} accessibilityLabel={saved ? 'Remove from saved' : 'Save job'} />
               <IconAction icon="share-2" onPress={handleShare} accessibilityLabel="Share job" />
             </View>

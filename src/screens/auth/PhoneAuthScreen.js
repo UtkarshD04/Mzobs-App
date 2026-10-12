@@ -7,6 +7,8 @@ import { useTheme } from '../../theme'
 import { useAuth } from '../../context/AuthContext'
 import { tokenStore } from '../../lib/api'
 import { googleSignIn, checkPendingGoogleRedirect } from '../../lib/googleSignIn'
+import { appleSignIn } from '../../lib/appleSignIn'
+import * as AppleAuthentication from 'expo-apple-authentication'
 import { useUploadResumeMutation } from '../../hooks/useResume'
 import * as authService from '../../services/authService'
 import { REVIEW_LOGIN_PHONE } from '../../lib/config'
@@ -110,7 +112,12 @@ export default function PhoneAuthScreen() {
   // and email are already known, so only the mobile number is still needed.
   const [googleCredential, setGoogleCredential] = useState(null)
   const [googleLoading, setGoogleLoading] = useState(false)
-
+  // Which provider `googleCredential` came from — it holds a Google or an Apple ID token.
+  const [socialProvider, setSocialProvider] = useState('google')
+  // Always shown on iOS (Apple sign-in exists on every supported iPhone); the check only hides it elsewhere.
+  const appleAvailable = Platform.OS === 'ios'
+  const [appleLoading, setAppleLoading] = useState(false)
+  
   // Email path: proof the address was verified (sent along with signup).
   const [emailToken, setEmailToken] = useState(null)
   const [emailOtp, setEmailOtp] = useState('')
@@ -257,7 +264,7 @@ export default function PhoneAuthScreen() {
     setCreatingAccount(true)
     try {
       const { token: authToken, employee } = googleCredential
-        ? await authService.googleSignup({ credential: googleCredential, phone, phoneToken: token })
+        ? await (socialProvider === 'apple' ? authService.appleSignup : authService.googleSignup)({ credential: googleCredential, name: name.trim(), phone, phoneToken: token })
         : await authService.signup({ name: name.trim(), email: email.trim(), phone, phoneToken: token, emailToken: emailToken ?? undefined })
       await tokenStore.set(authToken)
       setPendingSession({ token: authToken, employee })
@@ -286,6 +293,7 @@ export default function PhoneAuthScreen() {
         return
       }
     }
+    setSocialProvider('google')
     setGoogleCredential(result.idToken)
     setName(result.name || '')
     setEmail(result.email || '')
@@ -303,6 +311,35 @@ export default function PhoneAuthScreen() {
       setError(err.response?.data?.message ?? err.message ?? 'Google sign-in failed. Please try again.')
     } finally {
       setGoogleLoading(false)
+    }
+  }
+
+  // ── Apple path (iOS) ──────────────────────────────────────────────────────
+  // Same shape as Google: an existing account signs straight in, a 404 keeps the Apple token
+  // and asks for a mobile number (verified by OTP) to create one.
+  async function handleApple() {
+    setError('')
+    setAppleLoading(true)
+    try {
+      const result = await appleSignIn()
+      if (!result) return // cancelled
+      try {
+        const { token, employee } = await authService.appleLogin(result.idToken)
+        await tokenStore.set(token)
+        completeSession(token, employee)
+        return
+      } catch (err) {
+        if (err.response?.status !== 404) throw err
+      }
+      setSocialProvider('apple')
+      setGoogleCredential(result.idToken)
+      setName(result.name || '')
+      setEmail(result.email || '')
+    } catch (err) {
+      logError('apple sign-in failed', err)
+      setError(err.response?.data?.message ?? 'Apple sign-in failed. Please try again.')
+    } finally {
+      setAppleLoading(false)
     }
   }
 
@@ -487,9 +524,9 @@ export default function PhoneAuthScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
                 <Feather name="check-circle" size={14} color={colors.green} />
                 <Text style={{ flex: 1, color: colors.inkSecondary, fontFamily: fontFamily.medium, fontSize: 12.5, marginLeft: 6 }} numberOfLines={1}>
-                  Signing up as {name || email} via Google
+                  Signing up as {name || email} via {socialProvider === 'apple' ? 'Apple' : 'Google'}
                 </Text>
-                <Pressable onPress={cancelGoogleSignup} hitSlop={8} accessibilityRole="button" accessibilityLabel="Cancel Google sign-up">
+                <Pressable onPress={cancelGoogleSignup} hitSlop={8} accessibilityRole="button" accessibilityLabel="Cancel sign-up">
                   <Text style={{ color: colors.navy, fontFamily: fontFamily.semibold, fontSize: 12.5 }}>Cancel</Text>
                 </Pressable>
               </View>
@@ -537,6 +574,17 @@ export default function PhoneAuthScreen() {
               <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.medium, fontSize: 12.5 }}>or</Text>
               <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
             </View>
+            {appleAvailable ? (
+              <View style={{ marginBottom: spacing.sm, opacity: appleLoading || sendingOtp ? 0.5 : 1 }} pointerEvents={appleLoading || sendingOtp ? 'none' : 'auto'}>
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={999}
+                  style={{ height: 48 }}
+                  onPress={handleApple}
+                />
+              </View>
+            ) : null}
             <GoogleAuthButton onPress={handleGoogle} loading={googleLoading} disabled={sendingOtp} />
             <View style={{ height: spacing.sm }} />
             <Pressable

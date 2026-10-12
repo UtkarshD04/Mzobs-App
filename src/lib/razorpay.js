@@ -1,5 +1,3 @@
-import RazorpayCheckout from 'react-native-razorpay'
-
 // Native Razorpay Checkout SDK — replaces an earlier WebView + checkout.js
 // approach (RazorpayCheckoutModal.js, now removed). That approach hosted
 // Razorpay's *web* widget inside a WebView, which Razorpay doesn't support
@@ -11,7 +9,17 @@ import RazorpayCheckout from 'react-native-razorpay'
 // Resolves with { razorpay_payment_id, razorpay_order_id, razorpay_signature }
 // on success; rejects with { code, description } on cancel/failure (code 0
 // is a user-initiated cancel — see SubscriptionScreen.js's handling of it).
+//
+// react-native-razorpay touches its native module the moment it is imported, so it is
+// required lazily — a top-level import crashes the whole app on start in Expo Go.
 export function openRazorpayCheckout(order) {
+  let RazorpayCheckout
+  try {
+    RazorpayCheckout = require('react-native-razorpay').default
+  } catch {
+    return Promise.reject({ code: 'UNAVAILABLE', description: 'Payments need the full app build. They aren’t available in Expo Go.' })
+  }
+  if (!RazorpayCheckout?.open) return Promise.reject({ code: 'UNAVAILABLE', description: 'Payments need the full app build. They aren’t available in Expo Go.' })
   return RazorpayCheckout.open({
     key: order.keyId,
     amount: order.amount,

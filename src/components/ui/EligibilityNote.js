@@ -1,4 +1,5 @@
 import { View, Text } from 'react-native'
+import { IOS_SERVICES_ONLY } from '../../lib/storePolicy'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../../theme'
 import Card from './Card'
@@ -27,10 +28,12 @@ export default function EligibilityNote({ verified, limitReached, navigation, st
           </Text>
           <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 12, marginTop: 3, lineHeight: 17 }}>
             {limitReached
-              ? `Free accounts can apply to up to ${FREE_APPLICATION_LIMIT} jobs. Upgrade to premium for unlimited applications.`
+              ? IOS_SERVICES_ONLY
+                ? `Free accounts can apply to up to ${FREE_APPLICATION_LIMIT} jobs.`
+                : `Free accounts can apply to up to ${FREE_APPLICATION_LIMIT} jobs. Upgrade to premium for unlimited applications.`
               : 'Upload your resume in Resume Center to unlock applications. You can apply as soon as it is uploaded.'}
           </Text>
-          {limitReached && navigation ? (
+          {limitReached && navigation && !IOS_SERVICES_ONLY ? (
             <Button title="Upgrade to premium" variant="gold" onPress={() => navigation.navigate('Subscription')} style={{ marginTop: spacing.sm }} />
           ) : null}
           {!limitReached && !verified && navigation ? (

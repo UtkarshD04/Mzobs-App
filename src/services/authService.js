@@ -20,6 +20,14 @@ export function googleSignup(input) {
   return apiClient.post('/auth/google-signup', input).then((r) => r.data)
 }
 
+export function appleLogin(credential) {
+  return apiClient.post('/auth/apple-login', { credential }).then((r) => r.data)
+}
+
+export function appleSignup(input) {
+  return apiClient.post('/auth/apple-signup', input).then((r) => r.data)
+}
+
 export function sendOtp(phone) {
   return apiClient.post('/auth/send-otp', { phone }).then((r) => r.data)
 }

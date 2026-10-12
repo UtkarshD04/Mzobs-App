@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, Pressable } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { IOS_SERVICES_ONLY } from '../../lib/storePolicy'
 import { useTheme } from '../../theme'
 
 // "Career toolkit": one horizontal row of big icon tiles with a label under
@@ -10,7 +11,7 @@ const TOOLS = [
   { key: 'applications', label: 'My applications', icon: 'clipboard', tone: 'violet' },
   { key: 'saved', label: 'Saved jobs', icon: 'bookmark', tone: 'amber' },
   { key: 'profile', label: 'Complete profile', icon: 'user-check', tone: 'green' },
-  { key: 'plans', label: 'Premium plans', icon: 'award', tone: 'gold' },
+  { key: 'plans', label: IOS_SERVICES_ONLY ? 'Career services' : 'Premium plans', icon: 'award', tone: 'gold' },
   { key: 'support', label: 'Help & support', icon: 'life-buoy', tone: 'red' },
 ]
 
@@ -21,7 +22,7 @@ export default function CareerToolkit({ onPress, isPremium = false }) {
     <View style={{ marginTop: 24 }}>
       <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, letterSpacing: -0.3, paddingHorizontal: spacing.lg }}>Career toolkit</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingTop: 16, gap: 14 }}>
-        {TOOLS.map((t) => (t.key === 'plans' && isPremium ? { ...t, label: 'My Premium', icon: 'star' } : t)).map((t) => (
+        {TOOLS.map((t) => (t.key === 'plans' && isPremium ? { ...t, label: IOS_SERVICES_ONLY ? 'My services' : 'My Premium', icon: 'star' } : t)).map((t) => (
           <Pressable key={t.key} onPress={() => onPress(t.key)} accessibilityRole="button" style={{ width: 82, alignItems: 'center' }}>
             <View
               style={{

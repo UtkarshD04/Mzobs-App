@@ -11,6 +11,7 @@
       "bundleIdentifier": "com.mzobs.app",
       "buildNumber": "1",
       "supportsTablet": false,
+      "usesAppleSignIn": true,
       "requireFullScreen": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -133,6 +134,7 @@
     },
     "plugins": [
       "expo-secure-store",
+      "expo-apple-authentication",
       "expo-font",
       [
         "expo-notifications",
@@ -145,7 +147,9 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "MZOBS uses your location to show job openings near you."
+          "locationWhenInUsePermission": "MZOBS uses your location to show job openings near you.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false
         }
       ],
       [

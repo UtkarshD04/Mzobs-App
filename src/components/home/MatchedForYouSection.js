@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, Text, Pressable } from 'react-native'
+import { View, Text, Pressable, Platform } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import Animated, { FadeIn } from 'react-native-reanimated'
 import { useTheme } from '../../theme'
@@ -238,7 +238,7 @@ export default function MatchedForYouSection({ jobs = [], isLoading, isPremium =
             <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 4 }}>
               {n} {n === 1 ? 'opportunity' : 'opportunities'} selected from your profile.
             </Text>
-            {isPremium ? (
+            {isPremium && Platform.OS !== 'ios' ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}>
                 <Feather name="star" size={12} color="#0b7a6d" />
                 <Text style={{ color: '#0b7a6d', fontFamily: fontFamily.semibold, fontSize: 12.5 }}>Premium: matched from a wider pool, with more picks</Text>

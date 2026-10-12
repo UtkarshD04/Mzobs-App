@@ -16,6 +16,7 @@ import { notifyError } from '../lib/haptics'
 import EmptyState from '../components/ui/EmptyState'
 import InterviewsSection from '../components/InterviewsSection'
 import FilterChip from '../components/ui/FilterChip'
+import { IOS_SERVICES_ONLY } from '../lib/storePolicy'
 import ApplicationsSkeleton from '../components/ui/skeletons/ApplicationsSkeleton'
 
 const STAGE_LABEL = {
@@ -145,7 +146,7 @@ export default function ApplicationsScreen() {
         <ErrorState title="Couldn't load your applications" onRetry={refetchProfile} />
       </ScreenContainer>
     )
-  if (!profile.isPremium) return <TrackingLocked />
+  if (!profile.isPremium && !IOS_SERVICES_ONLY) return <TrackingLocked />
   if (isError && applications.length === 0)
     return (
       <ScreenContainer>

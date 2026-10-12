@@ -20,6 +20,7 @@ import CouponBox from '../components/ui/CouponBox'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import ErrorState from '../components/ui/ErrorState'
 import { openRazorpayCheckout } from '../lib/razorpay'
+import { IOS_SERVICES_ONLY } from '../lib/storePolicy'
 
 const FALLBACK_FEE = 499
 
@@ -44,6 +45,13 @@ const PREMIUM_POINTS = [
   'Attend live technical, behavioral, and HR mock interviews',
   'Experience one to one HR and career coaching with a personal roadmap',
   'Get more job-fit picks from a wider pool',
+]
+
+// iOS: only the human-delivered services (see lib/storePolicy.js).
+const IOS_PREMIUM_POINTS = [
+  'Get your CV enhanced by an expert, plus an ATS score',
+  'Attend live technical, behavioral, and HR mock interviews',
+  'Experience one to one HR and career coaching with a personal roadmap',
 ]
 
 const NEVER_CHARGED = [
@@ -134,7 +142,9 @@ export default function SubscriptionScreen() {
     <ScreenContainer onRefresh={() => { refetch(); if (isPaid) refetchRequests() }} refreshing={isRefetching}>
       <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 26, lineHeight: 31, letterSpacing: -0.5 }}>Choose how you want to grow</Text>
       <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 14.5, lineHeight: 21, marginTop: 8, marginBottom: spacing.lg }}>
-        Start free with {plan.basic.name}. Upgrade to {plan.premium.name} to get unlimited applications and hands-on support from our team, from your CV to your final offer.
+        {IOS_SERVICES_ONLY
+          ? `One-to-one help from the Mzobs team, from your CV to your final offer. Delivered by our career experts, with ${plan.premium.name}.`
+          : `Start free with ${plan.basic.name}. Upgrade to ${plan.premium.name} to get unlimited applications and hands-on support from our team, from your CV to your final offer.`}
       </Text>
 
       {/* Premium */}
@@ -161,7 +171,7 @@ export default function SubscriptionScreen() {
         </Text>
 
         <View style={{ marginTop: 16, gap: 10 }}>
-          {PREMIUM_POINTS.map((t) => (
+          {(IOS_SERVICES_ONLY ? IOS_PREMIUM_POINTS : PREMIUM_POINTS).map((t) => (
             <View key={t} style={{ flexDirection: 'row', gap: 8 }}>
               <Feather name="check" size={16} color={teal} style={{ marginTop: 2 }} />
               <Text style={{ flex: 1, color: colors.ink, fontFamily: fontFamily.regular, fontSize: 14, lineHeight: 20 }}>{t}</Text>
@@ -171,7 +181,7 @@ export default function SubscriptionScreen() {
 
         {!isPaid ? (
           <View style={{ marginTop: 20 }}>
-            <Button title={paying ? 'Processing…' : `Upgrade for ₹${couponResult?.finalAmount ?? fee}`} loading={paying} disabled={paying} onPress={payNow} />
+            <Button title={paying ? 'Processing…' : `${IOS_SERVICES_ONLY ? 'Book services' : 'Upgrade'} for ₹${couponResult?.finalAmount ?? fee}`} loading={paying} disabled={paying} onPress={payNow} />
             <View style={{ marginTop: 12 }}>
               <CouponBox applied={couponResult} onApply={setCouponResult} onRemove={() => setCouponResult(null)} />
             </View>
@@ -181,6 +191,7 @@ export default function SubscriptionScreen() {
       </View>
 
       {/* Basic */}
+      {IOS_SERVICES_ONLY ? null : (
       <View style={{ marginTop: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: 20 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 17 }}>{plan.basic.name}</Text>
@@ -219,11 +230,13 @@ export default function SubscriptionScreen() {
         ) : null}
       </View>
 
+      )}
+
       {/* What Premium includes */}
       <View style={{ marginTop: 32 }}>
         <Text style={sectionTitle}>{isPaid ? 'Your Premium services' : 'What Premium services include'}</Text>
         <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 }}>
-          {isPaid ? 'Everything below is included with your plan.' : 'Hands-on help from the Mzobs team, included once you upgrade.'}
+          {isPaid ? 'Everything below is included with your plan.' : IOS_SERVICES_ONLY ? 'Hands-on help from the Mzobs team.' : 'Hands-on help from the Mzobs team, included once you upgrade.'}
         </Text>
         <CategoryTabs categories={SERVICE_CATEGORIES} value={category} onChange={setCategory} colors={colors} fontFamily={fontFamily} />
         <View style={{ marginTop: 12, gap: 10 }}>
@@ -280,7 +293,8 @@ export default function SubscriptionScreen() {
         }}
       />
 
-      {/* Compare plans */}
+      {/* Compare plans — lists the digital perks too, so it isn't shown on iOS */}
+      {IOS_SERVICES_ONLY ? null : (
       <View style={{ marginTop: 32 }}>
         <Text style={sectionTitle}>Compare plans</Text>
         <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 }}>
@@ -321,6 +335,8 @@ export default function SubscriptionScreen() {
           })}
         </View>
       </View>
+
+      )}
 
       {/* Never charged + payment history */}
       <View style={{ marginTop: 32, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: 20 }}>
