@@ -13,6 +13,10 @@ import Badge from '../components/ui/Badge'
 import ProgressBar from '../components/ui/ProgressBar'
 import TextField from '../components/ui/TextField'
 import CityField from '../components/ui/CityField'
+import StateField from '../components/ui/StateField'
+import OptionPicker from '../components/ui/OptionPicker'
+import { INDIAN_CITIES } from '../lib/indianCities'
+import { SKILL_OPTIONS } from '../lib/profileOptions'
 import Button from '../components/ui/Button'
 import { stateForCity } from '../lib/indianCities'
 import Avatar from '../components/ui/Avatar'
@@ -91,15 +95,22 @@ function SectionLabel({ children, style }) {
   )
 }
 
-function ChipListEditor({ label, values, onChange, placeholder }) {
+const CITY_OPTIONS = INDIAN_CITIES.map(([c]) => c).filter((c) => c !== 'Remote')
+
+function ChipListEditor({ label, values, onChange, placeholder, options }) {
   const { colors, radius, spacing, fontFamily } = useTheme()
   const [draft, setDraft] = useState('')
+  const [pickerOpen, setPickerOpen] = useState(false)
+
+  function toggleValue(v) {
+    onChange(values.includes(v) ? values.filter((x) => x !== v) : [...values, v])
+  }
 
   function addValue() {
     const v = draft.trim()
-    if (!v || values.includes(v)) return
-    onChange([...values, v])
-    setDraft('')
+    if (v && !values.includes(v) && !options) onChange([...values, v])
+    if (!options) setDraft('')
+    else setPickerOpen(true)
   }
 
   return (
@@ -137,6 +148,22 @@ function ChipListEditor({ label, values, onChange, placeholder }) {
         </Pressable>
       </View>
       <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 11, marginTop: 4 }}>Tap a tag to remove it.</Text>
+      {options ? (
+        <OptionPicker
+          visible={pickerOpen}
+          title={label || placeholder}
+          options={options}
+          selected={values}
+          multi
+          allowCustom
+          initialQuery={draft.trim()}
+          onSelect={toggleValue}
+          onClose={() => {
+            setPickerOpen(false)
+            setDraft('')
+          }}
+        />
+      ) : null}
     </View>
   )
 }
@@ -441,13 +468,16 @@ export default function ProfileScreen() {
                   />
                 )
               }
+              if (key === 'state') {
+                return <StateField key={key} label={label} value={form[key]} onChange={set('state')} />
+              }
               return <TextField key={key} label={label} value={form[key]} onChangeText={set(key)} />
             })}
           </View>
         ))}
 
         <SectionLabel>Skills</SectionLabel>
-        <ChipListEditor values={form.skills} onChange={set('skills')} placeholder="Add a skill" />
+        <ChipListEditor values={form.skills} onChange={set('skills')} placeholder="Add a skill" options={SKILL_OPTIONS} />
 
         <View style={{ marginTop: spacing.sm, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -501,7 +531,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <ChipListEditor label="Preferred locations" values={form.preferredLocations} onChange={set('preferredLocations')} placeholder="Add a city" />
+        <ChipListEditor label="Preferred locations" values={form.preferredLocations} onChange={set('preferredLocations')} placeholder="Add a city" options={CITY_OPTIONS} />
 
         <MultiSelectChips label="Work mode" options={WORK_MODES} values={form.workModePreference} onChange={set('workModePreference')} />
         <MultiSelectChips label="Job type" options={JOB_TYPES} values={form.jobTypePreference} onChange={set('jobTypePreference')} />

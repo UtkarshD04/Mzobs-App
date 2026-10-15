@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "bundleIdentifier": "com.mzobs.app",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "supportsTablet": false,
       "usesAppleSignIn": true,
       "requireFullScreen": false,

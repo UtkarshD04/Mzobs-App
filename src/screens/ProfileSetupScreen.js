@@ -24,7 +24,10 @@ import {
 import TextField from '../components/ui/TextField'
 import SelectField from '../components/ui/SelectField'
 import CityField from '../components/ui/CityField'
-import { stateForCity } from '../lib/indianCities'
+import { stateForCity, INDIAN_CITIES } from '../lib/indianCities'
+import { SKILL_OPTIONS } from '../lib/profileOptions'
+import StateField from '../components/ui/StateField'
+import OptionPicker from '../components/ui/OptionPicker'
 import FilterChip from '../components/ui/FilterChip'
 import Button from '../components/ui/Button'
 import ProgressBar from '../components/ui/ProgressBar'
@@ -46,9 +49,15 @@ function Chips({ options, values, onToggle }) {
   )
 }
 
-function TagListEditor({ label, values, onChange, placeholder, suggestions }) {
+const CITY_OPTIONS = INDIAN_CITIES.map(([c]) => c).filter((c) => c !== 'Remote')
+
+function TagListEditor({ label, values, onChange, placeholder, suggestions, options }) {
   const { colors, radius, spacing } = useTheme()
   const [draft, setDraft] = useState('')
+  const [pickerOpen, setPickerOpen] = useState(false)
+  function toggle(v) {
+    onChange(values.includes(v) ? values.filter((x) => x !== v) : [...values, v])
+  }
   function add(v) {
     const t = v.trim()
     if (!t || values.includes(t)) return
@@ -72,7 +81,7 @@ function TagListEditor({ label, values, onChange, placeholder, suggestions }) {
           <TextField value={draft} onChangeText={setDraft} placeholder={placeholder} onSubmitEditing={() => add(draft)} returnKeyType="done" style={{ marginBottom: 0 }} />
         </View>
         <Pressable
-          onPress={() => add(draft)}
+          onPress={() => (options ? setPickerOpen(true) : add(draft))}
           accessibilityLabel={`Add ${label}`}
           style={{ width: 48, height: 48, borderRadius: radius.md, backgroundColor: colors.navyTint, alignItems: 'center', justifyContent: 'center' }}
         >
@@ -87,6 +96,22 @@ function TagListEditor({ label, values, onChange, placeholder, suggestions }) {
               <FilterChip key={s} label={s} active={false} onPress={() => add(s)} />
             ))}
         </View>
+      ) : null}
+      {options ? (
+        <OptionPicker
+          visible={pickerOpen}
+          title={label}
+          options={options}
+          selected={values}
+          multi
+          allowCustom
+          initialQuery={draft.trim()}
+          onSelect={toggle}
+          onClose={() => {
+            setPickerOpen(false)
+            setDraft('')
+          }}
+        />
       ) : null}
     </View>
   )
@@ -195,7 +220,7 @@ export default function ProfileSetupScreen({ onSkip }) {
                   if (state) set('state')(state === 'Remote' ? '' : state)
                 }}
               />
-              <TextField label="State" value={form.state} onChangeText={set('state')} placeholder="Auto-filled from city, or type your own" />
+              <StateField value={form.state} onChange={set('state')} />
               <TextField label="Pincode" value={form.pincode} onChangeText={(v) => set('pincode')(v.replace(/\D/g, ''))} placeholder="6 digits" keyboardType="number-pad" maxLength={6} />
               <Label>Willing to relocate?</Label>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
@@ -214,7 +239,7 @@ export default function ProfileSetupScreen({ onSkip }) {
               <View style={{ marginBottom: spacing.md }}>
                 <Chips options={INTEREST_OPTIONS} values={form.interests} onToggle={toggle('interests')} />
               </View>
-              <TagListEditor label="Preferred locations" values={form.preferredLocations} onChange={set('preferredLocations')} placeholder="Add a city" suggestions={LOCATION_SUGGESTIONS} />
+              <TagListEditor label="Preferred locations" values={form.preferredLocations} onChange={set('preferredLocations')} placeholder="Add a city" suggestions={LOCATION_SUGGESTIONS} options={CITY_OPTIONS} />
               <SelectField label="Expected annual salary (optional)" value={form.salary} onChange={set('salary')} options={SALARY_OPTIONS} />
             </>
           ) : null}
@@ -223,7 +248,7 @@ export default function ProfileSetupScreen({ onSkip }) {
             <>
               <Text style={heading}>Skills and headline</Text>
               <Text style={sub}>Last step. Then you can upload your resume.</Text>
-              <TagListEditor label="Key skills" values={form.skills} onChange={set('skills')} placeholder="Type a skill" suggestions={SKILL_SUGGESTIONS} />
+              <TagListEditor label="Key skills" values={form.skills} onChange={set('skills')} placeholder="Type a skill" suggestions={SKILL_SUGGESTIONS} options={SKILL_OPTIONS} />
               <TextField label="Resume headline" value={form.resumeHeadline} onChangeText={set('resumeHeadline')} placeholder="e.g. Aspiring analyst | SQL, Excel" />
               <TextField label="Portfolio link (optional)" value={form.portfolioLink} onChangeText={set('portfolioLink')} autoCapitalize="none" autoCorrect={false} keyboardType="url" />
               <TextField label="LinkedIn (optional)" value={form.linkedin} onChangeText={set('linkedin')} autoCapitalize="none" autoCorrect={false} />

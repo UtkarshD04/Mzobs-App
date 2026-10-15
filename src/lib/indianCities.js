@@ -104,6 +104,46 @@ export const INDIAN_CITIES = [
   ['Remote', 'Remote'],
 ]
 
+const MORE_CITIES = {
+  'Maharashtra': ['Kolhapur','Solapur','Amravati','Navi Mumbai','Pimpri-Chinchwad','Kalyan','Vasai-Virar','Mira-Bhayandar','Sangli','Jalgaon','Akola','Latur','Dhule','Ahmednagar','Nanded','Satara','Ratnagiri','Chandrapur','Bhiwandi','Ulhasnagar'],
+  'Karnataka': ['Belagavi','Davanagere','Ballari','Vijayapura','Shivamogga','Tumakuru','Udupi','Kalaburagi','Hassan','Mandya'],
+  'Telangana': ['Karimnagar','Nizamabad','Khammam','Secunderabad','Mahbubnagar'],
+  'Tamil Nadu': ['Madurai','Tiruchirappalli','Salem','Tirunelveli','Erode','Vellore','Thoothukudi','Tiruppur','Thanjavur','Hosur','Kanchipuram','Dindigul','Nagercoil'],
+  'Andhra Pradesh': ['Visakhapatnam','Vijayawada','Guntur','Tirupati','Nellore','Kurnool','Rajahmundry','Kakinada','Kadapa','Anantapur','Amaravati','Eluru','Ongole'],
+  'Gujarat': ['Ahmedabad','Surat','Vadodara','Rajkot','Gandhinagar','Bhavnagar','Jamnagar','Junagadh','Anand','Morbi','Mehsana','Bharuch','Navsari','Vapi','Bhuj'],
+  'Rajasthan': ['Jaipur','Jodhpur','Udaipur','Kota','Ajmer','Bikaner','Alwar','Bhilwara','Sikar','Sri Ganganagar','Pali','Bharatpur'],
+  'Uttar Pradesh': ['Lucknow','Kanpur','Noida','Greater Noida','Ghaziabad','Agra','Varanasi','Prayagraj','Meerut','Bareilly','Aligarh','Moradabad','Gorakhpur','Saharanpur','Jhansi','Mathura','Firozabad','Ayodhya','Muzaffarnagar'],
+  'West Bengal': ['Kolkata','Howrah','Durgapur','Asansol','Siliguri','Kharagpur','Bardhaman','Haldia','Malda'],
+  'Bihar': ['Patna','Gaya','Bhagalpur','Muzaffarpur','Darbhanga','Purnia','Arrah','Begusarai','Katihar'],
+  'Madhya Pradesh': ['Bhopal','Indore','Jabalpur','Gwalior','Ujjain','Sagar','Dewas','Satna','Ratlam','Rewa','Katni'],
+  'Haryana': ['Gurugram','Faridabad','Panipat','Ambala','Karnal','Hisar','Rohtak','Sonipat','Yamunanagar','Panchkula','Bhiwani'],
+  'Punjab': ['Ludhiana','Amritsar','Jalandhar','Patiala','Bathinda','Mohali','Hoshiarpur','Pathankot','Moga'],
+  'Kerala': ['Thiruvananthapuram','Kochi','Kozhikode','Thrissur','Kollam','Kannur','Alappuzha','Palakkad','Malappuram','Kottayam'],
+  'Odisha': ['Bhubaneswar','Cuttack','Rourkela','Berhampur','Sambalpur','Puri','Balasore'],
+  'Jharkhand': ['Ranchi','Jamshedpur','Dhanbad','Bokaro Steel City','Hazaribagh','Deoghar'],
+  'Assam': ['Guwahati','Dibrugarh','Silchar','Jorhat','Tezpur','Nagaon'],
+  'Uttarakhand': ['Dehradun','Haridwar','Haldwani','Roorkee','Rishikesh','Rudrapur'],
+  'Chhattisgarh': ['Raipur','Durg','Korba','Raigarh','Jagdalpur'],
+  'Himachal Pradesh': ['Solan','Mandi','Kullu','Manali','Baddi'],
+  'Jammu and Kashmir': ['Anantnag','Baramulla'],
+  'Ladakh': ['Leh','Kargil'],
+  'Goa': ['Vasco da Gama','Mapusa','Ponda'],
+  'Delhi': ['Dwarka','Rohini','Saket'],
+  'Chandigarh': ['Chandigarh'],
+  'Puducherry': ['Karaikal'],
+  'Andaman and Nicobar Islands': ['Port Blair'],
+}
+const seen = new Set(INDIAN_CITIES.map(([c]) => c.toLowerCase()))
+for (const [state, cities] of Object.entries(MORE_CITIES)) {
+  for (const c of cities) {
+    if (!seen.has(c.toLowerCase())) {
+      seen.add(c.toLowerCase())
+      INDIAN_CITIES.splice(INDIAN_CITIES.length - 1, 0, [c, state])
+    }
+  }
+}
+INDIAN_CITIES.sort((a, b) => (a[0] === 'Remote' ? -1 : b[0] === 'Remote' ? 1 : a[0].localeCompare(b[0])))
+
 export const CITY_TO_STATE = Object.fromEntries(INDIAN_CITIES.map(([city, state]) => [city.toLowerCase(), state]))
 
 export function stateForCity(city) {

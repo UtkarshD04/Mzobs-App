@@ -506,14 +506,15 @@ export default function PhoneAuthScreen() {
   return (
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ alignItems: 'center', paddingTop: spacing.lg, marginBottom: spacing.lg }}>
-          <BrandLogo height={40} />
+        <View style={{ alignItems: 'center', paddingTop: spacing.xl, marginBottom: spacing.xl }}>
+          <BrandLogo height={84} />
+          <View style={{ width: 36, height: 3, borderRadius: 2, backgroundColor: colors.navy, opacity: 0.18, marginTop: spacing.md }} />
         </View>
 
-        <Card style={{ padding: spacing.lg }}>
+        <Card style={{ padding: spacing.xl, borderRadius: 20, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 4 }}>
         {step === 'phone' ? (
           <>
-            <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, textAlign: 'center' }}>
+            <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 24, textAlign: 'center' }}>
               Find your next job faster
             </Text>
             <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4, marginBottom: spacing.lg, textAlign: 'center' }}>

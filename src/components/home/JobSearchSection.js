@@ -87,7 +87,9 @@ export default function JobSearchSection({ onOpenSearch, onFilters, onMenu, onBe
           returnKeyType="search"
           onSubmitEditing={search}
           accessibilityLabel="Search jobs by title, skills or company"
-          style={{ flex: 1, color: colors.ink, fontFamily: fontFamily.regular, fontSize: 15.5, paddingVertical: 0 }}
+          // iOS stretches the placeholder's letter-spacing when it's drawn in a custom
+          // font, so fall back to the system font while the field is empty.
+          style={{ flex: 1, color: colors.ink, fontFamily: query ? fontFamily.regular : undefined, letterSpacing: 0, fontSize: 15.5, paddingVertical: 0 }}
         />
         {query ? (
           <Pressable onPress={search} hitSlop={8} accessibilityRole="button" accessibilityLabel="Search">
