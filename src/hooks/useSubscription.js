@@ -42,3 +42,14 @@ export function useConfirmMockSubscriptionPaymentMutation() {
     },
   })
 }
+
+export function useVerifyApplePurchaseMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: subscriptionService.verifyApplePurchase,
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.subscription, data)
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+    },
+  })
+}

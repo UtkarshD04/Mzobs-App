@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { View, Text, Pressable, ScrollView } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '../theme'
@@ -8,6 +8,7 @@ import {
   useCreateSubscriptionOrderMutation,
   useVerifySubscriptionPaymentMutation,
   useConfirmMockSubscriptionPaymentMutation,
+  useVerifyApplePurchaseMutation,
 } from '../hooks/useSubscription'
 import { useProfileQuery } from '../hooks/useProfile'
 import { useServiceRequestsQuery } from '../hooks/usePremiumServices'
@@ -20,6 +21,7 @@ import CouponBox from '../components/ui/CouponBox'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import ErrorState from '../components/ui/ErrorState'
 import { openRazorpayCheckout } from '../lib/razorpay'
+import { iapEnabled, getStorePrice, buyProduct, getPurchasedTransactions } from '../lib/iap'
 import { IOS_SERVICES_ONLY } from '../lib/storePolicy'
 
 const FALLBACK_FEE = 499
@@ -68,6 +70,7 @@ export default function SubscriptionScreen() {
   const { data: applications = [] } = useApplicationsQuery()
   const [category, setCategory] = useState('resume')
   const [openGroups, setOpenGroups] = useState(['jobs', 'profile'])
+  const verifyApple = useVerifyApplePurchaseMutation()
   const createOrder = useCreateSubscriptionOrderMutation()
   const verifyPayment = useVerifySubscriptionPaymentMutation()
   const confirmMockPayment = useConfirmMockSubscriptionPaymentMutation()
@@ -76,8 +79,18 @@ export default function SubscriptionScreen() {
   const [couponResult, setCouponResult] = useState(null)
   const [requesting, setRequesting] = useState(null)
   const [requestedNotice, setRequestedNotice] = useState(false)
+  const [storePrice, setStorePrice] = useState(null)
+  const [restoring, setRestoring] = useState(false)
   const paidNow = subscription?.status === 'paid'
   const { data: requests = [], isError: requestsError, refetch: refetchRequests } = useServiceRequestsQuery({ enabled: paidNow })
+
+  const appleProductId = plan?.premium?.appleProductId
+  // On iOS Premium is bought with Apple In-App Purchase, so show the price Apple will charge.
+  const useApple = iapEnabled && !!appleProductId
+
+  useEffect(() => {
+    if (useApple) getStorePrice(appleProductId).then(setStorePrice)
+  }, [useApple, appleProductId])
 
   if (l1 || l2 || l3) return <LoadingSpinner />
   if (planError || !plan) return <ErrorState title="Plans couldn't be loaded" onRetry={refetchPlan} />
@@ -127,6 +140,52 @@ export default function SubscriptionScreen() {
     }
   }
 
+  // Apple purchase: the App Store sheet gives a signed transaction, the backend verifies it
+  // against Apple and grants Premium, and only then is the transaction finished with Apple (so
+  // an interrupted grant is retried instead of lost).
+  async function grantFromApple(transaction) {
+    await verifyApple.mutateAsync(transaction.signedTransaction)
+    await transaction.finish()
+  }
+
+  async function buyWithApple() {
+    setPayError('')
+    setPaying(true)
+    try {
+      let transaction
+      try {
+        transaction = await buyProduct(appleProductId)
+      } catch (err) {
+        setPayError(err.code === 0 ? '' : err.description || 'Purchase failed. Please try again.')
+        return
+      }
+      try {
+        await grantFromApple(transaction)
+      } catch (err) {
+        setPayError(err.response?.data?.message ?? 'Your purchase went through, but Premium could not be activated yet. Tap Restore purchases to try again.')
+      }
+    } finally {
+      setPaying(false)
+    }
+  }
+
+  async function restoreWithApple() {
+    setPayError('')
+    setRestoring(true)
+    try {
+      const transactions = await getPurchasedTransactions(appleProductId)
+      if (!transactions.length) {
+        setPayError('No earlier Premium purchase was found for this Apple ID.')
+        return
+      }
+      await grantFromApple(transactions[0])
+    } catch (err) {
+      setPayError(err.response?.data?.message ?? err.description ?? 'Could not restore purchases. Please try again.')
+    } finally {
+      setRestoring(false)
+    }
+  }
+
   const teal = colors.navy
   const sectionTitle = { color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, letterSpacing: -0.3 }
   const Cell = ({ value, premium }) =>
@@ -164,7 +223,7 @@ export default function SubscriptionScreen() {
           {!isPaid && couponResult ? (
             <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 16, textDecorationLine: 'line-through' }}>₹{fee}</Text>
           ) : null}
-          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 34, letterSpacing: -0.6 }}>₹{!isPaid && couponResult ? couponResult.finalAmount : fee}</Text>
+          <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 34, letterSpacing: -0.6 }}>{useApple && !isPaid && storePrice ? storePrice : `₹${!isPaid && couponResult ? couponResult.finalAmount : fee}`}</Text>
         </View>
         <Text style={{ color: colors.inkTertiary, fontFamily: fontFamily.regular, fontSize: 13 }}>
           {isPaid ? `Paid once${subscription.paidOn ? ` on ${fmtDate(subscription.paidOn)}` : ''} · valid for life` : 'Paid once, valid for life. No renewals.'}
@@ -181,10 +240,21 @@ export default function SubscriptionScreen() {
 
         {!isPaid ? (
           <View style={{ marginTop: 20 }}>
-            <Button title={paying ? 'Processing…' : `${IOS_SERVICES_ONLY ? 'Book services' : 'Upgrade'} for ₹${couponResult?.finalAmount ?? fee}`} loading={paying} disabled={paying} onPress={payNow} />
-            <View style={{ marginTop: 12 }}>
-              <CouponBox applied={couponResult} onApply={setCouponResult} onRemove={() => setCouponResult(null)} />
-            </View>
+            {useApple ? (
+              <>
+                <Button title={paying ? 'Processing…' : `Buy Premium for ${storePrice ?? `₹${fee}`}`} loading={paying} disabled={paying || restoring} onPress={buyWithApple} />
+                <Pressable onPress={restoreWithApple} disabled={paying || restoring} hitSlop={8} style={{ alignSelf: 'center', marginTop: 12, minHeight: 32, justifyContent: 'center' }}>
+                  <Text style={{ color: colors.navy, fontFamily: fontFamily.medium, fontSize: 13.5 }}>{restoring ? 'Restoring…' : 'Restore purchases'}</Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <Button title={paying ? 'Processing…' : `${IOS_SERVICES_ONLY ? 'Book services' : 'Upgrade'} for ₹${couponResult?.finalAmount ?? fee}`} loading={paying} disabled={paying} onPress={payNow} />
+                <View style={{ marginTop: 12 }}>
+                  <CouponBox applied={couponResult} onApply={setCouponResult} onRemove={() => setCouponResult(null)} />
+                </View>
+              </>
+            )}
             {payError ? <Text style={{ color: colors.red, fontFamily: fontFamily.regular, fontSize: 13, marginTop: 8 }}>{payError}</Text> : null}
           </View>
         ) : null}

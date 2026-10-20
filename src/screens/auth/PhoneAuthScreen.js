@@ -394,6 +394,18 @@ export default function PhoneAuthScreen() {
     setStep('phone')
   }
 
+  // Back from "Almost there": drop the verified-email token so the email (or a
+  // different one) can be entered and confirmed again.
+  function leaveEmailProfile() {
+    setEmailToken(null)
+    setEmailOtp('')
+    setEmailError('')
+    setError('')
+    setInfoMessage('')
+    setResendIn(0)
+    setStep('email')
+  }
+
   async function handleSendEmailCode() {
     setEmailError('')
     if (!EMAIL_RE.test(email.trim())) return setEmailError('Enter a valid email address.')
@@ -700,6 +712,9 @@ export default function PhoneAuthScreen() {
           </>
         ) : step === 'emailProfile' ? (
           <>
+            <Pressable onPress={leaveEmailProfile} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back" style={{ alignSelf: 'flex-start', marginBottom: spacing.sm }}>
+              <Feather name="arrow-left" size={18} color={colors.inkSecondary} />
+            </Pressable>
             <Text style={{ color: colors.ink, fontFamily: fontFamily.bold, fontSize: 20, textAlign: 'center' }}>Almost there</Text>
             <Text style={{ color: colors.inkSecondary, fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4, marginBottom: spacing.lg, textAlign: 'center' }}>
               {email.trim()} is verified. Add your name and mobile number so employers can reach you.

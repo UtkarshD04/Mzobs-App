@@ -30,3 +30,9 @@ export function confirmMockSubscriptionPayment(orderId) {
 export function getPlan() {
   return apiClient.get('/subscription/plan').then((r) => r.data)
 }
+
+// iOS in-app purchase: the signed transaction StoreKit returned. The backend verifies it
+// against Apple's root certificate before granting Premium.
+export function verifyApplePurchase(signedTransaction) {
+  return apiClient.post('/subscription/apple', { signedTransaction }).then((r) => r.data)
+}
