@@ -58,9 +58,11 @@ export async function buyProduct(productId) {
       failed.remove()
       fn(arg)
     }
-    const updated = iap.purchaseUpdatedListener(
-      finish((purchase) => resolve({ signedTransaction: purchase.purchaseToken, finish: () => iap.finishTransaction({ purchase, isConsumable: false }) })),
-    )
+    // StoreKit also replays unfinished transactions through this listener; only react to ours.
+    const updated = iap.purchaseUpdatedListener((purchase) => {
+      if (purchase?.productId === productId && purchase.purchaseToken) onPurchase(purchase)
+    })
+    const onPurchase = finish((purchase) => resolve({ signedTransaction: purchase.purchaseToken, finish: () => iap.finishTransaction({ purchase, isConsumable: false }) }))
     const failed = iap.purchaseErrorListener(
       finish((error) =>
         reject(error?.code === 'user-cancelled' ? { code: 0, description: 'Payment cancelled' } : { code: 'STORE', description: error?.message ?? 'The App Store purchase failed.' }),
