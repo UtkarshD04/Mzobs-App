@@ -21,7 +21,7 @@ import CouponBox from '../components/ui/CouponBox'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import ErrorState from '../components/ui/ErrorState'
 import { openRazorpayCheckout } from '../lib/razorpay'
-import { iapEnabled, getStorePrice, buyProduct, getPurchasedTransactions } from '../lib/iap'
+import { iapEnabled, getStorePrice, buyProduct, getPurchasedTransactions, redeemOfferCode } from '../lib/iap'
 import { IOS_SERVICES_ONLY } from '../lib/storePolicy'
 
 const FALLBACK_FEE = 499
@@ -169,6 +169,17 @@ export default function SubscriptionScreen() {
     }
   }
 
+  async function redeemWithApple() {
+    setPayError('')
+    try {
+      await redeemOfferCode()
+    } catch (err) {
+      setPayError(err.description || err.message || 'Could not open the code redemption sheet.')
+      return
+    }
+    await restoreWithApple()
+  }
+
   async function restoreWithApple() {
     setPayError('')
     setRestoring(true)
@@ -245,6 +256,9 @@ export default function SubscriptionScreen() {
                 <Button title={paying ? 'Processing…' : `Buy Premium for ${storePrice ?? `₹${fee}`}`} loading={paying} disabled={paying || restoring} onPress={buyWithApple} />
                 <Pressable onPress={restoreWithApple} disabled={paying || restoring} hitSlop={8} style={{ alignSelf: 'center', marginTop: 12, minHeight: 32, justifyContent: 'center' }}>
                   <Text style={{ color: colors.navy, fontFamily: fontFamily.medium, fontSize: 13.5 }}>{restoring ? 'Restoring…' : 'Restore purchases'}</Text>
+                </Pressable>
+                <Pressable onPress={redeemWithApple} disabled={paying || restoring} hitSlop={8} style={{ alignSelf: 'center', marginTop: 4, minHeight: 32, justifyContent: 'center' }}>
+                  <Text style={{ color: colors.navy, fontFamily: fontFamily.medium, fontSize: 13.5 }}>Have a coupon code?</Text>
                 </Pressable>
               </>
             ) : (

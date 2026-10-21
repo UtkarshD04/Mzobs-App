@@ -84,3 +84,9 @@ export async function getPurchasedTransactions(productId) {
     .filter((p) => p.productId === productId && p.purchaseToken)
     .map((purchase) => ({ signedTransaction: purchase.purchaseToken, finish: () => iap.finishTransaction({ purchase, isConsumable: false }) }))
 }
+
+/** Opens Apple's "Redeem code" sheet (App Store Connect offer codes). Reconcile afterwards with getPurchasedTransactions. */
+export async function redeemOfferCode() {
+  const iap = await ready()
+  await iap.openRedeemOfferCode()
+}
